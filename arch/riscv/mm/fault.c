@@ -141,7 +141,19 @@ static inline void vmalloc_fault(struct pt_regs *regs, int code, unsigned long a
 		no_context(regs, addr);
 		return;
 	}
+
+#ifdef CONFIG_ARCH_RV64ILP32
+	/*
+	 * The pg_dir[2,510,3,511] has been set during early
+	 * boot, so we only make a check here.
+	 */
+	if (pgd_val(*pgd) != pgd_val(*pgd_k)) {
+		no_context(regs, addr);
+		return;
+	}
+#else
 	set_pgd(pgd, pgdp_get(pgd_k));
+#endif
 
 	p4d_k = p4d_offset(pgd_k, addr);
 	if (!p4d_present(p4dp_get(p4d_k))) {
