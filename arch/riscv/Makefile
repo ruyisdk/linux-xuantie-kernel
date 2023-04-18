@@ -134,15 +134,16 @@ ifeq ($(KBUILD_EXTMOD),)
 ifeq ($(CONFIG_MMU),y)
 prepare: vdso_prepare
 vdso_prepare: prepare0
-	$(Q)$(MAKE) $(build)=arch/riscv/kernel/vdso include/generated/vdso-offsets.h
-	$(if $(CONFIG_COMPAT),$(Q)$(MAKE) \
-		$(build)=arch/riscv/kernel/compat_vdso include/generated/compat_vdso-offsets.h)
-
+	$(if $(CONFIG_VDSO32),$(Q)$(MAKE) \
+		$(build)=arch/riscv/kernel/vdso include/generated/vdso32-offsets.h)
+	$(if $(CONFIG_VDSO64),$(Q)$(MAKE) \
+		$(build)=arch/riscv/kernel/vdso include/generated/vdso64-offsets.h)
 endif
 endif
 
 vdso-install-y			+= arch/riscv/kernel/vdso/vdso.so.dbg
-vdso-install-$(CONFIG_COMPAT)	+= arch/riscv/kernel/compat_vdso/compat_vdso.so.dbg:../compat_vdso/compat_vdso.so
+vdso-install-$(CONFIG_VDSO32)	+= arch/riscv/kernel/vdso/vdso32.so.dbg:vdso32.so
+vdso-install-$(CONFIG_VDSO64)	+= arch/riscv/kernel/vdso/vdso64.so.dbg:vdso64.so
 
 ifneq ($(CONFIG_XIP_KERNEL),y)
 ifeq ($(CONFIG_RISCV_M_MODE)$(CONFIG_ARCH_CANAAN),yy)
