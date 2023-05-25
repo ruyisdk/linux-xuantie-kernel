@@ -72,6 +72,18 @@ do {									\
 	___p1;								\
 })
 
+#define smp_cond_load_acquire(ptr, cond_expr) ({			\
+	typeof(ptr) __PTR = (ptr);					\
+	__unqual_scalar_typeof(*ptr) VAL;				\
+	for (;;) {							\
+		VAL = __smp_load_acquire(__PTR);			\
+		if (cond_expr)						\
+			break;						\
+		cpu_relax();						\
+	}								\
+	(typeof(*ptr))VAL;						\
+})
+
 #ifdef CONFIG_RISCV_ISA_ZAWRS
 #define smp_cond_load_relaxed(ptr, cond_expr) ({			\
 	typeof(ptr) __PTR = (ptr);					\
