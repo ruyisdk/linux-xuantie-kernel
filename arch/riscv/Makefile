@@ -138,12 +138,15 @@ vdso_prepare: prepare0
 		$(build)=arch/riscv/kernel/vdso include/generated/vdso32-offsets.h)
 	$(if $(CONFIG_VDSO64),$(Q)$(MAKE) \
 		$(build)=arch/riscv/kernel/vdso include/generated/vdso64-offsets.h)
+	$(if $(CONFIG_VDSO64ILP32),$(Q)$(MAKE) \
+		$(build)=arch/riscv/kernel/vdso include/generated/vdso64ilp32-offsets.h)
 endif
 endif
 
 vdso-install-y			+= arch/riscv/kernel/vdso/vdso.so.dbg
 vdso-install-$(CONFIG_VDSO32)	+= arch/riscv/kernel/vdso/vdso32.so.dbg:vdso32.so
 vdso-install-$(CONFIG_VDSO64)	+= arch/riscv/kernel/vdso/vdso64.so.dbg:vdso64.so
+vdso-install-$(CONFIG_VDSO64ILP32)	+= arch/riscv/kernel/vdso/vdso64ilp32.so.dbg:vdso64ilp32.so
 
 ifneq ($(CONFIG_XIP_KERNEL),y)
 ifeq ($(CONFIG_RISCV_M_MODE)$(CONFIG_ARCH_CANAAN),yy)
