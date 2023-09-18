@@ -7,6 +7,7 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/clock/light-fm-ap-clock.h>
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/reset/thead,th1520-reset.h>
 
 / {
 	compatible = "thead,th1520";
@@ -660,6 +661,12 @@
 			clocks = <&osc_32k>, <&osc_24m>, <&rc_24m>;
 			clock-names = "osc_32k", "osc_24m", "rc_24m";
 			status = "okay";
+		};
+
+		rst: reset-controller@ffef014000 {
+			compatible = "thead,th1520-reset", "syscon";
+			reg = <0xff 0xef014000 0x0 0x1000>;
+			#reset-cells = <1>;
 		};
 
 		sys_reg: sys_reg@ffef010100 {
