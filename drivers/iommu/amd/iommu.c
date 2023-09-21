@@ -1297,7 +1297,7 @@ static void amd_iommu_flush_irt_all(struct amd_iommu *iommu)
 
 void iommu_flush_all_caches(struct amd_iommu *iommu)
 {
-	if (iommu_feature(iommu, FEATURE_IA)) {
+	if (check_feature(FEATURE_IA)) {
 		amd_iommu_flush_all(iommu);
 	} else {
 		amd_iommu_flush_dte_all(iommu);
