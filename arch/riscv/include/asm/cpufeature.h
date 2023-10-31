@@ -7,7 +7,10 @@
 #define _ASM_CPUFEATURE_H
 
 #include <linux/bitmap.h>
+#include <linux/jump_label.h>
 #include <asm/hwcap.h>
+#include <asm/alternative-macros.h>
+#include <asm/errno.h>
 
 /*
  * These are probed via a device_initcall(), via either the SBI or directly
@@ -113,5 +116,7 @@ static __always_inline bool riscv_cpu_has_extension_unlikely(int cpu, const unsi
 
 	return __riscv_isa_extension_available(hart_isa[cpu].isa, ext);
 }
+
+unsigned long riscv_get_elf_hwcap(void);
 
 #endif
