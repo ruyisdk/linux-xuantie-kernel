@@ -41,6 +41,8 @@ struct riscv_isa_ext_data {
         const unsigned int id;
         const char *name;
         const char *property;
+	const unsigned int *subset_ext_ids;
+	const unsigned int subset_ext_size;
 };
 
 extern const struct riscv_isa_ext_data riscv_isa_ext[];
@@ -51,7 +53,7 @@ unsigned long riscv_isa_extension_base(const unsigned long *isa_bitmap);
 
 #define riscv_isa_extension_mask(ext) BIT_MASK(RISCV_ISA_EXT_##ext)
 
-bool __riscv_isa_extension_available(const unsigned long *isa_bitmap, int bit);
+bool __riscv_isa_extension_available(const unsigned long *isa_bitmap, unsigned bit);
 #define riscv_isa_extension_available(isa_bitmap, ext)  \
         __riscv_isa_extension_available(isa_bitmap, RISCV_ISA_EXT_##ext)
 
