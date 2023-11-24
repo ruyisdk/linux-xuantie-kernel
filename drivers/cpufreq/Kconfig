@@ -312,5 +312,15 @@ config QORIQ_CPUFREQ
 	  This adds the CPUFreq driver support for Freescale QorIQ SoCs
 	  which are capable of changing the CPU's frequency dynamically.
 
+config RISV_THEAD_LIGHT_CPUFREQ
+	tristate "CPU frequency scaling driver for Thead light SoCs"
+	depends on OF && COMMON_CLK
+	select CLK_LIGHT
+	select PM_OPP
+	help
+	  This adds the CPUFreq driver support for Thead light SoCs
+	  which are capable of changing the CPU's frequency dynamically.
+
+
 endif
 endmenu

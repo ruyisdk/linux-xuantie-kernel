@@ -5,6 +5,8 @@
  */
 
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/clock/light-fm-ap-clock.h>
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	compatible = "thead,th1520";
@@ -29,6 +31,30 @@
 			d-cache-sets = <512>;
 			next-level-cache = <&l2_cache>;
 			mmu-type = "riscv,sv39";
+			cpu-freq = "1.848Ghz";
+			cpu-cacheline = "64Bytes";
+
+			operating-points = <
+				/* kHz    uV */
+				300000	600000
+				800000	700000
+				1500000	800000
+				1848000	1000000
+			>;
+			light,dvddm-operating-points = <
+				/* kHz   uV */
+				300000	750000
+				800000	800000
+				1500000	800000
+				1848000	1000000
+			>;
+			clock-latency = <61036>;
+			clocks = <&clk C910_CCLK>,
+				 <&clk C910_CCLK_I0>,
+				 <&clk CPU_PLL1_FOUTPOSTDIV>,
+				 <&clk CPU_PLL0_FOUTPOSTDIV>;
+			clock-names = "c910_cclk", "c910_cclk_i0",
+				      "cpu_pll1_foutpostdiv", "cpu_pll0_foutpostdiv";
 
 			cpu0_intc: interrupt-controller {
 				compatible = "riscv,cpu-intc";
@@ -50,6 +76,30 @@
 			d-cache-sets = <512>;
 			next-level-cache = <&l2_cache>;
 			mmu-type = "riscv,sv39";
+			cpu-freq = "1.848Ghz";
+			cpu-cacheline = "64Bytes";
+
+			operating-points = <
+				/* kHz    uV */
+				300000	600000
+				800000	700000
+				1500000	800000
+				1848000	1000000
+			>;
+			light,dvddm-operating-points = <
+				/* kHz   uV */
+				300000	750000
+				800000	800000
+				1500000	800000
+				1848000	1000000
+			>;
+			clock-latency = <61036>;
+			clocks = <&clk C910_CCLK>,
+				 <&clk C910_CCLK_I0>,
+				 <&clk CPU_PLL1_FOUTPOSTDIV>,
+				 <&clk CPU_PLL0_FOUTPOSTDIV>;
+			clock-names = "c910_cclk", "c910_cclk_i0",
+				      "cpu_pll1_foutpostdiv", "cpu_pll0_foutpostdiv";
 
 			cpu1_intc: interrupt-controller {
 				compatible = "riscv,cpu-intc";
@@ -71,6 +121,30 @@
 			d-cache-sets = <512>;
 			next-level-cache = <&l2_cache>;
 			mmu-type = "riscv,sv39";
+			cpu-freq = "1.848Ghz";
+			cpu-cacheline = "64Bytes";
+
+			operating-points = <
+				/* kHz    uV */
+				300000	600000
+				800000	700000
+				1500000	800000
+				1848000	1000000
+			>;
+			light,dvddm-operating-points = <
+				/* kHz   uV */
+				300000	750000
+				800000	800000
+				1500000	800000
+				1848000	1000000
+			>;
+			clock-latency = <61036>;
+			clocks = <&clk C910_CCLK>,
+				 <&clk C910_CCLK_I0>,
+				 <&clk CPU_PLL1_FOUTPOSTDIV>,
+				 <&clk CPU_PLL0_FOUTPOSTDIV>;
+			clock-names = "c910_cclk", "c910_cclk_i0",
+				      "cpu_pll1_foutpostdiv", "cpu_pll0_foutpostdiv";
 
 			cpu2_intc: interrupt-controller {
 				compatible = "riscv,cpu-intc";
@@ -92,6 +166,30 @@
 			d-cache-sets = <512>;
 			next-level-cache = <&l2_cache>;
 			mmu-type = "riscv,sv39";
+			cpu-freq = "1.848Ghz";
+			cpu-cacheline = "64Bytes";
+
+			operating-points = <
+				/* kHz    uV */
+				300000	600000
+				800000	700000
+				1500000	800000
+				1848000	1000000
+			>;
+			light,dvddm-operating-points = <
+				/* kHz   uV */
+				300000	750000
+				800000	800000
+				1500000	800000
+				1848000	1000000
+			>;
+			clock-latency = <61036>;
+			clocks = <&clk C910_CCLK>,
+				 <&clk C910_CCLK_I0>,
+				 <&clk CPU_PLL1_FOUTPOSTDIV>,
+				 <&clk CPU_PLL0_FOUTPOSTDIV>;
+			clock-names = "c910_cclk", "c910_cclk_i0",
+				      "cpu_pll1_foutpostdiv", "cpu_pll0_foutpostdiv";
 
 			cpu3_intc: interrupt-controller {
 				compatible = "riscv,cpu-intc";
@@ -190,17 +288,26 @@
 			<0x00000000 0x00000029 0xffffffff 0xffffffff 0x0007fff8>,
 			<0x00000000 0x0000002a 0xffffffff 0xffffffff 0x0007fff8>;
 	};
-	
-	osc: oscillator {
+		
+	osc_32k: clock-osc-32k {
 		compatible = "fixed-clock";
-		clock-output-names = "osc_24m";
 		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "osc_32k";
 	};
 
-	osc_32k: 32k-oscillator {
+	osc_24m: clock-osc-24m {
 		compatible = "fixed-clock";
-		clock-output-names = "osc_32k";
 		#clock-cells = <0>;
+		clock-frequency = <24000000>;
+		clock-output-names = "osc_24m";
+	};
+
+	rc_24m: clock-rc-24m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <24000000>;
+		clock-output-names = "rc_24m";
 	};
 
 	aonsys_clk: aonsys-clk {
@@ -532,7 +639,22 @@
 			compatible = "thead,th1520-pwm";
 			reg = <0xff 0xec01c000 0x0 0x4000>;
 			#pwm-cells = <3>;
-			clocks = <&osc>;
+			clocks = <&osc_24m>;
+		};
+
+		clk: clock-controller@ffef010000 {
+			compatible = "thead,light-fm-ree-clk";
+			reg = <0xff 0xef010000 0x0 0x1000>;
+			#clock-cells = <1>;
+			clocks = <&osc_32k>, <&osc_24m>, <&rc_24m>;
+			clock-names = "osc_32k", "osc_24m", "rc_24m";
+			status = "okay";
+		};
+
+		sys_reg: sys_reg@ffef010100 {
+			compatible = "thead,light_sys_reg";
+			reg = <0xff 0xef010100 0x0 0x100>;
+			status = "okay";
 		};
 
 		misc_sysreg: misc_sysreg@ffec02c000 {
@@ -746,6 +868,21 @@
 				#interrupt-cells = <2>;
 				interrupts = <55 IRQ_TYPE_LEVEL_HIGH>;
 			};
+		};
+		
+		mbox_910t: mbox@ffffc38000 {
+			compatible = "thead,light-mbox";
+			reg = <0xff 0xffc38000 0x0 0x4000>,
+				<0xff 0xffc44000 0x0 0x1000>,
+				<0xff 0xffc4c000 0x0 0x1000>,
+				<0xff 0xffc54000 0x0 0x1000>;
+			reg-names = "local_base", "remote_icu0", "remote_icu1", "remote_icu2";
+			#interrupt-cells = <2>;
+			interrupts = <28 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&apb_clk>;
+			clock-names = "ipg";
+			icu_cpu_id = <0>;
+			#mbox-cells = <2>;
 		};
 	};
 };

@@ -295,4 +295,12 @@ config QCOM_IPCC
 	  acts as an interrupt controller for receiving interrupts from clients.
 	  Say Y here if you want to build this driver.
 
+config THEAD_LIGHT_MBOX
+		bool "Thead light Mailbox"
+		depends on ARCH_THEAD || COMPILE_TEST
+		default y
+		help
+		  Mailbox implementation for Thead light SoCs.
+
+
 endif

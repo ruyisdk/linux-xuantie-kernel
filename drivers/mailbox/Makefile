@@ -62,3 +62,6 @@ obj-$(CONFIG_SPRD_MBOX)		+= sprd-mailbox.o
 obj-$(CONFIG_QCOM_IPCC)		+= qcom-ipcc.o
 
 obj-$(CONFIG_APPLE_MAILBOX)	+= apple-mailbox.o
+
+obj-$(CONFIG_THEAD_LIGHT_MBOX)  += light-mailbox.o
+#obj-$(CONFIG_THEAD_LIGHT_MBOX) += light-mailbox-client.o

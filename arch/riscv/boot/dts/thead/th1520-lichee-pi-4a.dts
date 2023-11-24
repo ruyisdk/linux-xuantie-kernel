@@ -111,6 +111,336 @@
 			};
 		};
 	};
+
+	hub_5v: regulator-hub_5v {
+		compatible = "regulator-fixed";
+		regulator-name = "HUB_5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&ioexp3 3 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	vcc5v_usb: regulator-vcc5v_usb {
+		compatible = "regulator-fixed";
+		regulator-name = "VCC5V_USB";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpio1 22 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	wcn_wifi: wireless-wlan {
+		compatible = "wlan-platdata";
+		clock-names = "clk_wifi";
+		ref-clock-frequency = <24000000>;
+		keep_wifi_power_on;
+		pinctrl-names = "default";
+		wifi_chip_type = "rtl8723ds";
+		WIFI,poweren_gpio = <&ioexp2 5 0>;
+		status = "okay";
+	};
+
+	wcn_bt: wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		pinctrl-names = "default", "rts_gpio";
+		BT,power_gpio    = <&ioexp2 6 0>;
+		status = "okay";
+	};
+
+	aon: aon {
+		compatible = "thead,light-aon";
+		mbox-names = "aon";
+		mboxes = <&mbox_910t 1 0>;
+		status = "okay";
+
+		pd: light-aon-pd {
+			compatible = "thead,light-aon-pd";
+			#power-domain-cells = <1>;
+		};
+
+		soc_aud_3v3_en_reg: soc_aud_3v3_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_aud_3v3_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_aud_1v8_en_reg: soc_aud_1v8_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_aud_1v8_en";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_vdd_3v3_en_reg: soc_vdd_3v3_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_vdd_3v3_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio0 30 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_vdd33_lcd0_en_reg: soc_lcd0_vdd33_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_lcd0_vdd33_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&ioexp2 5 1>;
+			enable-active-high;
+		};
+
+		soc_vdd18_lcd0_en_reg: soc_lcd0_vdd18_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_lcd0_vdd18_en";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			gpio = <&ioexp2 6 1>;
+			enable-active-high;
+		};
+
+		soc_vdd5v_se_en_reg: soc_vdd5v_se_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_vdd5v_se_en";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpio2 14 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_wcn33_en_reg: soc_wcn33_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_wcn33_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio2 29 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_vbus_en_reg: soc_vbus_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_vbus_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio1 22 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+
+		soc_avdd28_rgb_reg: soc_avdd28_rgb {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_avdd28_rgb";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			gpio = <&ioexp2 1 1>;
+			enable-active-high;
+		};
+
+		soc_dovdd18_rgb_reg: soc_dovdd18_rgb {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_dovdd18_rgb";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			gpio = <&ioexp2 2 1>;
+			enable-active-high;
+		};
+
+		soc_dvdd12_rgb_reg: soc_dvdd12_rgb {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_dvdd12_rgb";
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			gpio = <&ioexp2 0 1>;
+			enable-active-high;
+		};
+
+		soc_avdd25_ir_reg: soc_avdd25_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_avdd25_ir";
+			regulator-min-microvolt = <2500000>;
+			regulator-max-microvolt = <2500000>;
+			gpio = <&ioexp2 5 1>;
+			enable-active-high;
+		};
+
+		soc_dovdd18_ir_reg: soc_dovdd18_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_dovdd18_ir";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			gpio = <&ioexp2 3 1>;
+			enable-active-high;
+		};
+
+		soc_dvdd12_ir_reg: soc_dvdd12_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_dvdd12_ir";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+			gpio = <&ioexp2 4 1>;
+			enable-active-high;
+		};
+
+		soc_cam2_avdd25_ir_reg: soc_cam2_avdd25_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_cam2_avdd25_ir";
+			regulator-min-microvolt = <2500000>;
+			regulator-max-microvolt = <2500000>;
+			gpio = <&ioexp2 7 1>;
+			enable-active-high;
+		};
+
+		soc_cam2_dovdd18_ir_reg: soc_cam2_dovdd18_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_cam2_dovdd18_ir";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			gpio = <&ioexp2 6 1>;
+			enable-active-high;
+		};
+
+		soc_cam2_dvdd12_ir_reg: soc_cam2_dvdd12_ir {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_cam2_dvdd12_ir";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+			gpio = <&ioexp2 0 1>;
+			enable-active-high;
+		};
+
+		aon_reg_dialog: light-dialog-reg {
+			compatible = "thead,light-dialog-pmic-ant";
+			status = "okay";
+
+			dvdd_cpu_reg: appcpu_dvdd {
+				regulator-name = "appcpu_dvdd";
+				regulator-min-microvolt = <300000>;
+				regulator-max-microvolt = <1570000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			dvddm_cpu_reg: appcpu_dvddm {
+				regulator-name = "appcpu_dvddm";
+				regulator-min-microvolt = <300000>;
+				regulator-max-microvolt = <1570000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_dvdd18_aon_reg: soc_dvdd18_aon {
+				regulator-name = "soc_dvdd18_aon";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_avdd33_usb3_reg: soc_avdd33_usb3 {
+				regulator-name = "soc_avdd33_usb3";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_dvdd08_aon_reg: soc_dvdd08_aon {
+				regulator-name = "soc_dvdd08_aon";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_dvdd08_ddr_reg: soc_dvdd08_ddr {
+				regulator-name = "soc_dvdd08_ddr";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_vdd_ddr_1v8_reg: soc_vdd_ddr_1v8 {
+				regulator-name = "soc_vdd_ddr_1v8";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_vdd_ddr_1v1_reg: soc_vdd_ddr_1v1 {
+				regulator-name = "soc_vdd_ddr_1v1";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_vdd_ddr_0v6_reg: soc_vdd_ddr_0v6 {
+				regulator-name = "soc_vdd_ddr_0v6";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_dvdd18_ap_reg: soc_dvdd18_ap {
+				regulator-name = "soc_dvdd18_ap";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_avdd08_mipi_hdmi_reg: soc_avdd08_mipi_hdmi {
+				regulator-name = "soc_avdd08_mipi_hdmi";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_avdd18_mipi_hdmi_reg: soc_avdd18_mipi_hdmi {
+				regulator-name = "soc_avdd18_mipi_hdmi";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_vdd33_emmc_reg: soc_vdd33_emmc {
+				regulator-name = "soc_vdd33_emmc";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_vdd18_emmc_reg: soc_vdd18_emmc {
+				regulator-name = "soc_vdd18_emmc";
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			soc_dovdd18_scan_reg: soc_dovdd18_scan {
+				regulator-name = "soc_dovdd18_scan";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <3600000>;
+			};
+
+			soc_dvdd12_scan_reg: soc_dvdd12_scan {
+				regulator-name = "soc_dvdd12_scan";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <3600000>;
+			};
+
+			soc_avdd28_scan_en_reg: soc_avdd28_scan_en {
+				regulator-name = "soc_avdd28_scan_en";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <3600000>;
+			};
+
+		};
+
+		c910_cpufreq {
+			compatible = "thead,light-mpw-cpufreq";
+			status = "okay";
+		};
+
+		test: light-aon-test {
+			compatible = "thead,light-aon-test";
+		};
+	};
+	
 };
 
 &aogpio {
