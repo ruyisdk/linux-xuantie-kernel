@@ -353,6 +353,11 @@
 		snps,blen = <0 0 64 32 0 0 0>;
 	};
 
+	aon_iram: aon-iram@ffffef8000 {
+        compatible = "syscon";
+        reg = <0xff 0xffef8000 0x0 0x10000>;
+    };
+
 	soc {
 		compatible = "simple-bus";
 		interrupt-parent = <&plic>;
@@ -360,6 +365,12 @@
 		#size-cells = <2>;
 		dma-noncoherent;
 		ranges;
+
+		light_event: light-event {
+			compatible = "thead,light-event";
+			aon-iram-regmap = <&aon_iram>;
+			status = "okay";
+		};
 
 		audio_i2c0: i2c@ffcb01a000 {
 			compatible = "snps,designware-i2c";
