@@ -14,7 +14,8 @@
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 
-#define MAX_RX_TIMEOUT		(msecs_to_jiffies(300))
+/* wait for response for 3000ms instead of 300ms (fix me pls)*/
+#define MAX_RX_TIMEOUT		(msecs_to_jiffies(3000))
 #define MAX_TX_TIMEOUT		(msecs_to_jiffies(500))
 
 struct light_aon_chan {
@@ -230,10 +231,26 @@ static const struct of_device_id light_aon_match[] = {
 	{ /* Sentinel */ }
 };
 
+static int __maybe_unused light_aon_resume_noirq(struct device *dev)
+{
+	struct light_aon_chan *aon_chan;
+	int ret;
+
+	aon_chan = &light_aon_ipc_handle->chans;
+
+	complete(&aon_chan->tx_done);
+	return 0;
+}
+
+static const struct dev_pm_ops light_aon_pm_ops = {
+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(NULL,
+				      light_aon_resume_noirq)
+};
 static struct platform_driver light_aon_driver = {
 	.driver = {
 		.name = "light-aon",
 		.of_match_table = light_aon_match,
+		.pm = &light_aon_pm_ops,
 	},
 	.probe = light_aon_probe,
 };
