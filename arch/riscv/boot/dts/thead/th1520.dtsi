@@ -902,5 +902,27 @@
 			icu_cpu_id = <0>;
 			#mbox-cells = <2>;
 		};
+
+		watchdog0: watchdog@ffefc30000 {
+			compatible = "snps,dw-wdt";
+			reg = <0xff 0xefc30000 0x0 0x1000>;
+			interrupt-parent = <&plic>;
+			interrupts = <24>;
+			clocks = <&clk CLKGEN_WDT0_PCLK>;
+			clock-names = "tclk";
+			resets = <&rst TH1520_RESET_WDT0>; 
+			status = "okay";
+		};
+
+		watchdog1: watchdog@ffefc31000 {
+			compatible = "snps,dw-wdt";
+			reg = <0xff 0xefc31000 0x0 0x1000>;
+			interrupt-parent = <&plic>;
+			interrupts = <25>;
+			clocks = <&clk CLKGEN_WDT1_PCLK>;
+			clock-names = "tclk";
+			resets = <&rst TH1520_RESET_WDT1>; 
+			status = "okay";
+		};
 	};
 };
