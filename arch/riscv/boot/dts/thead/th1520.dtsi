@@ -654,6 +654,27 @@
 			clocks = <&osc_24m>;
 		};
 
+		audio_mbox: audio_mbox@0xffefc48000 {
+			compatible = "thead,light-audio-mbox-reg", "syscon";
+			reg = <0xff 0xefc48000 0x0 0x1000>;
+			status = "okay";
+		};
+
+		mbox_910t_client1: mbox_910t_client1 {
+			compatible = "thead,light-mbox-client";
+			mbox-names = "902";
+			mboxes = <&mbox_910t 1 0>;
+			status = "disabled";
+		};
+
+		mbox_910t_client2: mbox_910t_client2 {
+			compatible = "thead,light-mbox-client";
+			mbox-names = "906";
+			mboxes = <&mbox_910t 2 0>;
+			audio-mbox-regmap = <&audio_mbox>;
+			status = "okay";
+		};
+
 		clk: clock-controller@ffef010000 {
 			compatible = "thead,light-fm-ree-clk";
 			reg = <0xff 0xef010000 0x0 0x1000>;
