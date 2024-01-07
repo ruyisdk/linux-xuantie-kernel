@@ -15,6 +15,30 @@
 		device_type = "memory";
 		reg = <0x0 0x00000000 0x2 0x00000000>;
 	};
+
+	resmem: reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		//Note: with "no-map" reserv mem not saved in hibernation
+		rpmsgmem: memory@1E000000 {
+			reg = <0x0 0x1E000000 0x0 0x10000>;
+		};
+	};
+
+	light_rpmsg: light_rpmsg {
+		compatible = "light,rpmsg-bus", "simple-bus";
+		memory-region = <&rpmsgmem>;
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		rpmsg: rpmsg {
+			vdev-nums = <1>;
+			reg = <0x0 0x1E000000 0 0x10000>;
+			compatible = "light,light-rpmsg";
+			status = "okay";
+		};
+	};
 };
 
 &osc_24m {
