@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (C) 2024 NekoRouter <nekorouter@outlook.com>
+ */
+
+/dts-v1/;
+
+#include "th1520-lichee-pi-4a.dts"
+
+/ {
+	model = "Sipeed Lichee Cluster 4A";
+	compatible = "sipeed,lichee-cluster-4a", "sipeed,lichee-module-4a", "thead,th1520";
+
+	/delete-node/ regulator-hub_5v;
+
+	/delete-node/ regulator-vcc5v_usb;
+
+	/delete-node/ regulator-hub_5v;
+
+	/delete-node/ regulator-vcc5v_usb;
+
+	/delete-node/ wireless-wlan;
+
+	/delete-node/ wireless-bluetooth;
+	
+	/delete-node/ soc_wcn33_en;
+};
+
+&i2c0 {
+	status = "okay";
+
+	/delete-node/ gpio@18;
+};
+
+&i2c3 {
+	status = "okay";
+
+	/delete-node/ gpio@18;
+};
+
+&usb_dwc3 {
+	/delete-node/ hub@1;
+
+	/delete-node/ hub@2;
+};
