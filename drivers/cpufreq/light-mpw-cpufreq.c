@@ -272,7 +272,6 @@ static int panic_cpufreq_notifier_call(struct notifier_block *nb,
 {
 	int cpu = smp_processor_id();
 	struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
-	u32 val = readl(ap_sys_reg);
 
 	pr_info("enter panic_cpufreq_notifier_call\n");
 
