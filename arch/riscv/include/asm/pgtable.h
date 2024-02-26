@@ -115,6 +115,10 @@
 #define XIP_OFFSET		0
 #endif
 
+#ifndef CONFIG_MMU_SV32
+#define MAX_POSSIBLE_PHYSMEM_BITS 43
+#endif
+
 #ifndef __ASSEMBLY__
 
 #include <asm/page.h>
@@ -261,7 +265,7 @@ static inline void pmd_clear(pmd_t *pmdp)
 	set_pmd(pmdp, __pmd(0));
 }
 
-static inline pgd_t pfn_pgd(unsigned long pfn, pgprot_t prot)
+static inline pgd_t pfn_pgd(phys_addr_t pfn, pgprot_t prot)
 {
 	ptval_t prot_val = pgprot_val(prot);
 
@@ -341,7 +345,7 @@ static inline unsigned long pte_pfn(pte_t pte)
 #define pte_page(x)     pfn_to_page(pte_pfn(x))
 
 /* Constructs a page table entry */
-static inline pte_t pfn_pte(unsigned long pfn, pgprot_t prot)
+static inline pte_t pfn_pte(phys_addr_t pfn, pgprot_t prot)
 {
 	ptval_t prot_val = pgprot_val(prot);
 
