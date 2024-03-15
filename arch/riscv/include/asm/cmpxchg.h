@@ -134,11 +134,35 @@
 	r = (__typeof__(*(p)))((__retx & __mask) >> __s);		\
 })
 
+#ifdef CONFIG_ARCH_RV64ILP32
+#define SEXTW	"\tsext.w  %z3, %z3\n"
+#else
+#define SEXTW	""
+#endif
+
 #define __arch_cmpxchg(lr_sfx, sc_sfx, prepend, append, r, p, co, o, n)	\
 ({									\
 	register unsigned int __rc;					\
 									\
 	__asm__ __volatile__ (						\
+		prepend							\
+		"0:	lr" lr_sfx " %0, %2\n"				\
+		"	bne  %0, %z3, 1f\n"				\
+		"	sc" sc_sfx " %1, %z4, %2\n"			\
+		"	bnez %1, 0b\n"					\
+		append							\
+		"1:\n"							\
+		: "=&r" (r), "=&r" (__rc), "+A" (*(p))			\
+		: "rJ" (co o), "rJ" (n)					\
+		: "memory");						\
+})
+
+#define __arch_cmpxchg4(lr_sfx, sc_sfx, prepend, append, r, p, co, o, n)	\
+({									\
+	register unsigned int __rc;					\
+									\
+	__asm__ __volatile__ (						\
+		SEXTW							\
 		prepend							\
 		"0:	lr" lr_sfx " %0, %2\n"				\
 		"	bne  %0, %z3, 1f\n"				\
@@ -165,7 +189,7 @@
 					__ret, __ptr, __old, __new);	\
 		break;							\
 	case 4:								\
-		__arch_cmpxchg(".w", ".w" sc_sfx, prepend, append,	\
+		__arch_cmpxchg4(".w", ".w" sc_sfx, prepend, append,	\
 				__ret, __ptr, (long), __old, __new);	\
 		break;							\
 	case 8:								\
