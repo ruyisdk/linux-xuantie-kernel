@@ -111,7 +111,8 @@ int riscv_v_thread_zalloc(struct task_struct *tsk);
 
 static __always_inline bool has_vector(void)
 {
-	return riscv_has_extension_unlikely(RISCV_ISA_EXT_v);
+	return riscv_has_extension_unlikely(RISCV_ISA_EXT_v) ||
+	  riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADVECTOR);
 }
 
 static inline void __riscv_v_vstate_clean(struct pt_regs *regs)
