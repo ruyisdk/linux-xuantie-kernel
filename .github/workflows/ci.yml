@@ -8,12 +8,12 @@ on:
     - cron: "0 2 * * *"
 
 env:
-  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1695643844189
-  xt64_toolchain_file_name: Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.2-20230916.tar.gz
-  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.02.02
-  rv32_toolchain_file_name: riscv32-glibc-ubuntu-22.04-gcc-nightly-2024.02.02-nightly.tar.gz
-  rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.02.02
-  rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.02.02-nightly.tar.gz
+  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1705395627867
+  xt64_toolchain_file_name: Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1-20240115.tar.gz
+  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
+  rv32_toolchain_file_name: riscv32-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
+  rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
+  rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
   rv64ilp32_toolchain: https://github.com/ruyisdk/riscv-gnu-toolchain-rv64ilp32/releases/download/2024.03.08
   rv64ilp32_toolchain_file_name: riscv64ilp32-elf-ubuntu-22.04-gcc-nightly-2024.03.08-nightly.tar.gz
 
