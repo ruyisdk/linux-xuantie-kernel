@@ -65,6 +65,13 @@
 		#clock-cells = <0>;
 	};
 
+	clk_dummy: clock-dummy {
+		compatible = "fixed-clock";
+		clock-frequency = <0>;
+		clock-output-names = "clk_dummy";
+		#clock-cells = <0>;
+	};
+
 	soc {
 		compatible = "simple-bus";
 		interrupt-parent = <&plic>;
@@ -137,6 +144,28 @@
 			reg-io-width = <4>;
 			reg-shift = <2>;
 			status = "disabled";
+		};
+
+		usb0: usb@91500000 {
+			compatible = "canaan,k230-otg", "snps,dwc2";
+			reg = <0x0 0x91500000 0x0 0x40000>;
+			interrupts = <173 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clk_dummy>;
+			clock-names = "otg";
+			g-rx-fifo-size = <512>;
+			g-np-tx-fifo-size = <64>;
+			g-tx-fifo-size = <512 1024 64 64 64 64>;
+		};
+
+		usb1: usb@91540000 {
+			compatible = "canaan,k230-otg", "snps,dwc2";
+			reg = <0x0 0x91540000 0x0 0x40000>;
+			interrupts = <174 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clk_dummy>;
+			clock-names = "otg";
+			g-rx-fifo-size = <512>;
+			g-np-tx-fifo-size = <64>;
+			g-tx-fifo-size = <512 1024 64 64 64 64>;
 		};
 	};
 };
