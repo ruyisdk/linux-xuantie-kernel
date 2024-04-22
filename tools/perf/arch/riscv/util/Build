@@ -1,6 +1,7 @@
 perf-y += perf_regs.o
 perf-y += header.o
 
+perf-$(CONFIG_LIBTRACEEVENT) += kvm-stat.o
 perf-$(CONFIG_DWARF) += dwarf-regs.o
 perf-$(CONFIG_LIBDW_DWARF_UNWIND) += unwind-libdw.o
 perf-$(CONFIG_AUXTRACE) += pmu.o auxtrace.o
