@@ -1,0 +1,84 @@
+name: th1520-build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
+
+env:
+  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1705395627867
+  xt64_toolchain_file_name: Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1-20240115.tar.gz
+  rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
+  rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
+  ARCH: riscv
+  KBUILD_BUILD_USER: builder
+  KBUILD_BUILD_HOST: ci-riscv-builder
+  KDEB_COMPRESS: none
+  KDEB_CHANGELOG_DIST: unstable
+
+jobs:
+  kernel:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-64lp64-xt
+            toolchain_tripe: riscv64-unknown-linux-gnu-
+          - name: linux-64lp64
+            toolchain_tripe: riscv64-unknown-linux-gnu-
+
+    runs-on: ubuntu-22.04
+    env:
+      CROSS_COMPILE: ${{ matrix.toolchain_tripe }}
+
+    steps:
+      - name: Install software
+        run: |
+              sudo apt update && \
+              sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+                                  libncurses-dev gawk flex bison openssl libssl-dev tree \
+                                  dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf device-tree-compiler \
+                                  devscripts debhelper pahole
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+            path: 'kernel'
+
+      - name: Configure toolchains
+        run: |
+              if [ x"${{ matrix.name }}" = x"linux-64lp64" ]; then
+                wget ${rv64_toolchain}/${rv64_toolchain_file_name}
+                tar -xvf ${rv64_toolchain_file_name} -C /opt
+                rm -v ${rv64_toolchain_file_name}
+              fi
+              if [ x"${{ matrix.name }}" = x"linux-64lp64-xt" ]; then
+                wget ${xt64_toolchain}/${xt64_toolchain_file_name}
+                tar -xvf ${xt64_toolchain_file_name} -C /opt
+                rm -v ${xt64_toolchain_file_name}
+              fi
+
+      - name: Compile
+        run: |
+              mkdir artifact
+              if [ x"${{ matrix.name }}" = x"linux-64lp64" ]; then
+                export PATH="/opt/riscv/bin:$PATH"
+              fi
+              if [ x"${{ matrix.name }}" = x"linux-64lp64-xt" ]; then
+                export PATH="/opt/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1/bin:$PATH"
+              fi
+              pushd kernel
+                make defconfig
+                export KDEB_PKGVERSION="$(make kernelversion)-$(date "+%Y.%m.%d.%H.%M")+$(git rev-parse --short HEAD)"
+                make -j$(nproc) bindeb-pkg
+                dcmd cp -v ../*.changes ${GITHUB_WORKSPACE}/artifact
+              popd
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}.tar.gz
+          path: artifact/*
+          retention-days: 90
