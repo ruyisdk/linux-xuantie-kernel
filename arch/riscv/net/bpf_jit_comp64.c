@@ -148,7 +148,7 @@ static int emit_addr(u8 rd, u64 addr, bool extra_pass, struct rv_jit_context *ct
 	 * Use the ro_insns(RX) to calculate the offset as the BPF program will
 	 * finally run from this memory region.
 	 */
-	u64 ip = (u64)(ctx->ro_insns + ctx->ninsns);
+	u64 ip = (u64)(ulong)(ctx->ro_insns + ctx->ninsns);
 	s64 off = addr - ip;
 	s64 upper = (off + (1 << 11)) >> 12;
 	s64 lower = off & 0xfff;
@@ -745,10 +745,10 @@ static int invoke_bpf_prog(struct bpf_tramp_link *l, int args_off, int retval_of
 	}
 
 	/* arg1: prog */
-	emit_imm(RV_REG_A0, (const s64)p, ctx);
+	emit_imm(RV_REG_A0, (const s64)(ulong)p, ctx);
 	/* arg2: &run_ctx */
 	emit_addi(RV_REG_A1, RV_REG_FP, -run_ctx_off, ctx);
-	ret = emit_call((const u64)bpf_trampoline_enter(p), true, ctx);
+	ret = emit_call((const u64)(ulong)bpf_trampoline_enter(p), true, ctx);
 	if (ret)
 		return ret;
 
@@ -766,8 +766,8 @@ static int invoke_bpf_prog(struct bpf_tramp_link *l, int args_off, int retval_of
 	emit_addi(RV_REG_A0, RV_REG_FP, -args_off, ctx);
 	if (!p->jited)
 		/* arg2: progs[i]->insnsi for interpreter */
-		emit_imm(RV_REG_A1, (const s64)p->insnsi, ctx);
-	ret = emit_call((const u64)p->bpf_func, true, ctx);
+		emit_imm(RV_REG_A1, (const s64)(ulong)p->insnsi, ctx);
+	ret = emit_call((const u64)(ulong)p->bpf_func, true, ctx);
 	if (ret)
 		return ret;
 
@@ -784,12 +784,12 @@ static int invoke_bpf_prog(struct bpf_tramp_link *l, int args_off, int retval_of
 	}
 
 	/* arg1: prog */
-	emit_imm(RV_REG_A0, (const s64)p, ctx);
+	emit_imm(RV_REG_A0, (const s64)(ulong)p, ctx);
 	/* arg2: prog start time */
 	emit_mv(RV_REG_A1, RV_REG_S1, ctx);
 	/* arg3: &run_ctx */
 	emit_addi(RV_REG_A2, RV_REG_FP, -run_ctx_off, ctx);
-	ret = emit_call((const u64)bpf_trampoline_exit(p), true, ctx);
+	ret = emit_call((const u64)(ulong)bpf_trampoline_exit(p), true, ctx);
 
 	return ret;
 }
@@ -919,7 +919,7 @@ static int __arch_prepare_bpf_trampoline(struct bpf_tramp_image *im,
 
 	/* store ip address of the traced function */
 	if (flags & BPF_TRAMP_F_IP_ARG) {
-		emit_imm(RV_REG_T1, (const s64)func_addr, ctx);
+		emit_imm(RV_REG_T1, (const s64)(ulong)func_addr, ctx);
 		emit_sd(RV_REG_FP, -ip_off, RV_REG_T1, ctx);
 	}
 
@@ -933,8 +933,8 @@ static int __arch_prepare_bpf_trampoline(struct bpf_tramp_image *im,
 		orig_call += RV_FENTRY_NINSNS * 4;
 
 	if (flags & BPF_TRAMP_F_CALL_ORIG) {
-		emit_imm(RV_REG_A0, (const s64)im, ctx);
-		ret = emit_call((const u64)__bpf_tramp_enter, true, ctx);
+		emit_imm(RV_REG_A0, (const s64)(ulong)im, ctx);
+		ret = emit_call((const u64)(ulong)__bpf_tramp_enter, true, ctx);
 		if (ret)
 			return ret;
 	}
@@ -967,7 +967,7 @@ static int __arch_prepare_bpf_trampoline(struct bpf_tramp_image *im,
 
 	if (flags & BPF_TRAMP_F_CALL_ORIG) {
 		restore_args(nregs, args_off, ctx);
-		ret = emit_call((const u64)orig_call, true, ctx);
+		ret = emit_call((const u64)(ulong)orig_call, true, ctx);
 		if (ret)
 			goto out;
 		emit_sd(RV_REG_FP, -retval_off, RV_REG_A0, ctx);
@@ -994,8 +994,8 @@ static int __arch_prepare_bpf_trampoline(struct bpf_tramp_image *im,
 
 	if (flags & BPF_TRAMP_F_CALL_ORIG) {
 		im->ip_epilogue = ctx->insns + ctx->ninsns;
-		emit_imm(RV_REG_A0, (const s64)im, ctx);
-		ret = emit_call((const u64)__bpf_tramp_exit, true, ctx);
+		emit_imm(RV_REG_A0, (const s64)(ulong)im, ctx);
+		ret = emit_call((const u64)(ulong)__bpf_tramp_exit, true, ctx);
 		if (ret)
 			goto out;
 	}
