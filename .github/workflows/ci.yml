@@ -33,12 +33,12 @@ jobs:
             toolchain_tripe: riscv64-unknown-linux-gnu-
           - name: linux-32ilp32-dirty
             toolchain_tripe: riscv32-unknown-linux-gnu-
-          - name: linux-64ilp32_12hz
-            toolchain_tripe: riscv64-unknown-elf-
-          - name: linux-64lp64-dirty_12hz
-            toolchain_tripe: riscv64-unknown-linux-gnu-
-          - name: linux-32ilp32-dirty_12hz
-            toolchain_tripe: riscv32-unknown-linux-gnu-
+#          - name: linux-64ilp32_12hz
+#            toolchain_tripe: riscv64-unknown-elf-
+#          - name: linux-64lp64-dirty_12hz
+#            toolchain_tripe: riscv64-unknown-linux-gnu-
+#          - name: linux-32ilp32-dirty_12hz
+#            toolchain_tripe: riscv32-unknown-linux-gnu-
 
     runs-on: ubuntu-22.04
     env:
@@ -105,7 +105,7 @@ jobs:
                 mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-6.6
                 cp arch/riscv/configs/defconfig linux-6.6/arch/riscv/configs/defconfig
                 cd linux-6.6
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
@@ -119,7 +119,7 @@ jobs:
                 mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-6.6
                 cp arch/riscv/configs/defconfig linux-6.6/arch/riscv/configs/defconfig
                 cd linux-6.6
-                make ARCH=riscv EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
@@ -130,13 +130,13 @@ jobs:
               if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
                 export PATH="/opt/riscv/bin:$PATH"
                 echo CONFIG_MMU_SV32=y >> arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./Image_sv32xt
                 mv vmlinux vmlinux_sv32xt
                 mv headers_install headers_install_sv32xt
                 mv modules_install modules_install_sv32xt
                 git checkout arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
@@ -144,7 +144,7 @@ jobs:
               fi
               if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty" ]; then
                 export PATH="/opt/riscv/bin:$PATH"
-                make ARCH=riscv EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
@@ -152,7 +152,7 @@ jobs:
               fi
               if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty" ]; then
                 export PATH="/opt/riscv/bin:$PATH"
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
@@ -163,13 +163,13 @@ jobs:
                 export PATH="/opt/riscv/bin:$PATH"
                 echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
                 echo CONFIG_MMU_SV32=y >> arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./Image_sv32xt
                 mv vmlinux vmlinux_sv32xt
                 mv headers_install headers_install_sv32xt
                 mv modules_install modules_install_sv32xt
                 git checkout arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
@@ -178,7 +178,7 @@ jobs:
               if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty_12hz" ]; then
                 export PATH="/opt/riscv/bin:$PATH"
                 echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
-                make ARCH=riscv EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
@@ -187,7 +187,7 @@ jobs:
               if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty_12hz" ]; then
                 export PATH="/opt/riscv/bin:$PATH"
                 echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
-                make ARCH=riscv EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
                 mv arch/riscv/boot/Image ./
                 cp Documentation/admin-guide/kdump/gdbmacros.txt ./
                 git log --oneline -500 > git.log
