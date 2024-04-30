@@ -17,6 +17,10 @@ env:
   KBUILD_BUILD_HOST: ci-riscv-builder
   KDEB_COMPRESS: none
   KDEB_CHANGELOG_DIST: unstable
+  TH1520_IMAGE_BASE_URL: https://mirror.iscas.ac.cn/revyos/extra/images/lpi4amain
+  TH1520_IMAGE_DATE: 20240127
+  TH1520_BOOT: boot-lpi4amain-20240127_105111.ext4.zst
+  TH1520_ROOT: root-lpi4amain-20240127_105111.ext4.zst
 
 jobs:
   kernel:
@@ -40,7 +44,7 @@ jobs:
               sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
                                   libncurses-dev gawk flex bison openssl libssl-dev tree \
                                   dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf device-tree-compiler \
-                                  devscripts debhelper pahole
+                                  devscripts debhelper pahole qemu-user-static binfmt-support zstd ninja-build wget
 
       - name: Checkout source
         uses: actions/checkout@v4
@@ -82,3 +86,59 @@ jobs:
           name: ${{ matrix.name }}.tar.gz
           path: artifact/*
           retention-days: 90
+
+      - name: Checkout qemu
+        uses: actions/checkout@v4
+        with:
+          repository: revyos/qemu
+          path: qemu
+          ref: ab8f84892a89feea60f1bb24432ff58ce6d2885c  # TODO: remove this line
+
+      - name: build qemu
+        run: |
+            pushd qemu
+              ./configure \
+                --prefix=$HOME/qemu-install \
+                --static \
+                --target-list=riscv64-linux-user \
+                --disable-system \
+                --disable-pie \
+                --interp-prefix=/etc/qemu-binfmt/%M
+              make -j$(nproc)
+              make install
+
+              sudo cp -fv $HOME/qemu-install/bin/qemu-riscv64 /usr/bin/qemu-riscv64-static
+            popd
+            ls -al /usr/bin/qemu-riscv64-static
+            sudo dpkg-reconfigure binfmt-support
+
+      - name: Download th1520 boot/root
+        run: |
+            wget ${TH1520_IMAGE_BASE_URL}/${TH1520_IMAGE_DATE}/${TH1520_BOOT}
+            wget ${TH1520_IMAGE_BASE_URL}/${TH1520_IMAGE_DATE}/${TH1520_ROOT}
+
+      - name: Reconfigure th1520 boot/root
+        run: |
+            export TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            zstd -d ${TH1520_BOOT}
+            mv boot*.ext4 boot-lpi4amain-ci-${TIMESTAMP}.ext4
+            zstd -d ${TH1520_ROOT}
+            mv root*.ext4 root-lpi4amain-ci-${TIMESTAMP}.ext4
+            rm -rf ${TH1520_BOOT} ${TH1520_ROOT}
+            mkdir -p mnt
+            sudo mount root-lpi4amain-ci-${TIMESTAMP}.ext4 mnt
+            sudo mount boot-lpi4amain-ci-${TIMESTAMP}.ext4 mnt/boot
+            sudo chroot mnt sh -c 'apt remove -y linux-image* linux-headers*'
+            sudo dcmd cp -v ${GITHUB_WORKSPACE}/artifact/*.changes mnt/root
+            sudo chroot mnt sh -c 'dpkg -i /root/*.deb'
+            sudo umount -l mnt
+            zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
+            zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
+
+      - name: 'Upload Artifact EMMC'
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 30
+          name: th1520-${{ matrix.name }}
+          path: |
+                  *.ext4.zst
