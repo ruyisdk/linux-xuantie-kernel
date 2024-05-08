@@ -1,4 +1,4 @@
-name: ci-build
+name: xuantie-kernel-ci
 
 on:
   push:
@@ -18,7 +18,7 @@ env:
   rv64ilp32_toolchain_file_name: riscv64ilp32-elf-ubuntu-22.04-gcc-nightly-2024.03.08-nightly.tar.gz
 
 jobs:
-  kernel:
+  kernel-build:
     strategy:
       fail-fast: false
       matrix:
@@ -200,3 +200,43 @@ jobs:
           name: ${{ matrix.name }}.tar.gz
           path: ${{ matrix.name }}.tar.gz
           retention-days: 90
+
+
+  qemu-boot-64lp64:
+    needs: kernel-build
+    runs-on: ubuntu-latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
+        kernel: [ linux-64lp64 , linux-64lp64-dirty ]
+        include:
+          - core_count: 4
+          - cpu: c906fdv
+            core_count: 1
+
+    steps:
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.kernel }}.tar.gz
+
+      - name: Download rootfs
+        run: |
+              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/920v2_images.tar.gz
+              tar -xvf 920v2_images.tar.gz
+              tar -xvf ${{ matrix.kernel }}.tar.gz
+
+      - name: Run Qemu
+        run: |
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./images/rootfs.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial file:qemu_boot.log &
+          QEMU_PID=$!
+          sleep 180
+          kill -9 $QEMU_PID
+
+      - name: Check Boot Success
+        run: |
+          cat qemu_boot.log
+          grep -q "login:" qemu_boot.log
