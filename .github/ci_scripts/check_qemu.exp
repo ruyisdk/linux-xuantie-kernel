@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+if { $argc < 1 } {
+    puts "Usage: $argv0 <COMMAND> <TIMEOUT> <FAIL STR> <PASS STR>"
+    puts "Arguments:"
+    puts "    COMMAND : is requred:"
+    puts "    TIMEOUT : if NOT supplied, will wait forever untill command finshed"
+    puts "    FAIL STR: if supplied, find a match will always FAIL the test"
+    puts "    PASS STR: if supplied, NOT find a match will FAIL the test"
+    puts "              if NOT supplied, COMMAND finished will be treated as PASS"
+    exit 1
+}
+
+
+set COMMAND [lindex $argv 0]
+set TIMEOUT [lindex $argv 1]
+set EXP_FAIL [lindex $argv 2]
+set EXP_PASS [lindex $argv 3]
+
+send_user "\n== Check QEMU ==\n"
+send_user "COMMAND : $COMMAND\n"
+send_user "TIMEOUT : $TIMEOUT\n"
+send_user "FAIL STR: $EXP_FAIL\n"
+send_user "PASS STR: $EXP_PASS\n"
+send_user "================\n\n"
+
+if { $TIMEOUT == "" } { set timeout -1 } else { set timeout $TIMEOUT }
+if { $EXP_FAIL == "" } { set EXP_FAIL THIS_WILL_NEVER_MATCH } ; set fail_flag 0
+if { $EXP_PASS == "" } { set EXP_PASS THIS_WILL_NEVER_MATCH ; set pass_flag 1 } else { set pass_flag 0 }
+
+
+# default telnet connection port
+spawn telnet localhost 5678
+send "\r"
+
+# login handler and send command
+expect {
+    "# " {
+        send "$COMMAND ;echo Finished $? ExitCode\r\r"
+    }
+    "login:" {
+        send "root\r"
+        exp_continue
+
+    }
+    default {
+        send_user "\n== CheckQemu == ERROR: Timeout! Unable to login!\n"
+        exit 1
+    }
+}
+
+# pass expect handler
+expect {
+    "$EXP_PASS" {
+        set pass_flag 1
+        exp_continue
+    }
+    "$EXP_FAIL" {
+        set fail_flag 1
+        exp_continue
+    }
+    "Finished 0 ExitCode" {
+        if {$fail_flag == 1} {
+            send_user "\n== CheckQemu == FAILED: log output contains FAIL Expect string '$EXP_FAIL' \n"
+            exit 1
+        }
+
+        if {$pass_flag == 1} {
+            send_user "\n== CheckQemu == PASSED\n"
+        } else {
+            send_user "\n== CheckQemu == FAILED: log output NOT contains PASS Expect string '$EXP_PASS' \n"
+            exit 1
+        }
+
+    }
+    -re "Finished \\d+ ExitCode" {
+        send_user "\n== CheckQemu == FAILED: Exit Code is not 0! \n"
+        exit 3
+    }
+    timeout {
+        send_user "\n== CheckQemu == ERROR: Timeout! commnd NOT finished untill $TIMEOUT sec timeout \n"
+        exit 2
+    }
+}
