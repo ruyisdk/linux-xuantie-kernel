@@ -219,6 +219,44 @@ jobs:
           - cpu: c906fdv
             core_count: 1
 
+    steps:
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.kernel }}.tar.gz
+
+      - name: Download rootfs and unpack artifacts
+        run: |
+              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv64.ext2.tar.gz
+              tar -xvf rootfs_rv64.ext2.tar.gz
+              tar -xvf ${{ matrix.kernel }}.tar.gz
+
+      - name: Run Qemu
+        run: |
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial file:qemu_boot.log &
+          QEMU_PID=$!
+          sleep 180
+          kill -9 $QEMU_PID
+
+      - name: Check Boot Success
+        run: |
+          cat qemu_boot.log
+          grep -q "login:" qemu_boot.log
+
+
+
+  qemu-boot-32ilp32:
+    needs: kernel-build
+    runs-on: ubuntu-latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu: [ c907fdvm-rv32 ]
+        kernel: [ linux-32ilp32 , linux-32ilp32-dirty ]
+        include:
+          - core_count: 4
 
     steps:
 
@@ -227,15 +265,15 @@ jobs:
         with:
           name: ${{ matrix.kernel }}.tar.gz
 
-      - name: Download rootfs
+      - name: Download rootfs and unpack artifacts
         run: |
-              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/920v2_images.tar.gz
-              tar -xvf 920v2_images.tar.gz
+              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv32.ext2.tar.gz
+              tar -xvf rootfs_rv32.ext2.tar.gz
               tar -xvf ${{ matrix.kernel }}.tar.gz
 
       - name: Run Qemu
         run: |
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./images/rootfs.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial file:qemu_boot.log &
+          qemu-system-riscv32 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv32.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial file:qemu_boot.log &
           QEMU_PID=$!
           sleep 180
           kill -9 $QEMU_PID
