@@ -211,9 +211,6 @@ jobs:
       matrix:
         cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
         kernel: [ linux-64lp64 , linux-64lp64-dirty ]
-        exclude:
-          - cpu: c920 
-            kernel: linux-64lp64-dirty
         include:
           - core_count: 4
           - cpu: c906fdv
