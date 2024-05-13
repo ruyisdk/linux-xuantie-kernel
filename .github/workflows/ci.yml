@@ -242,6 +242,8 @@ jobs:
       - name: Check perf test
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62' 180 FAILED
 
+      - name: Check perf stat
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
 
   xt-qemu-32ilp32:
@@ -280,6 +282,9 @@ jobs:
       - name: Check perf test
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
 
+      - name: Check perf stat
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
 
   ruyi-qemu-64ilp32:
     needs: kernel-build
@@ -317,3 +322,6 @@ jobs:
 
       - name: Check perf test
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
+
+      - name: Check perf stat
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
