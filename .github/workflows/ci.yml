@@ -243,7 +243,10 @@ jobs:
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62' 180 FAILED
 
       - name: Check perf stat
-        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
+
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 30 'Error'
 
 
   xt-qemu-32ilp32:
@@ -283,7 +286,10 @@ jobs:
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
 
       - name: Check perf stat
-        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
+
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 30 'Error'
 
 
   ruyi-qemu-64ilp32:
@@ -324,4 +330,7 @@ jobs:
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
 
       - name: Check perf stat
-        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
+
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 30 'Error'
