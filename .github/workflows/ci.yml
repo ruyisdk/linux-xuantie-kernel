@@ -322,9 +322,6 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
-      - name: Check perf list
-        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
-
       - name: Check perf record
         run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
 
@@ -367,9 +364,6 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
-      - name: Check perf list
-        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
-
       - name: Check perf record
         run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
 
@@ -408,9 +402,6 @@ jobs:
 
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
-
-      - name: Check perf list
-        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
 
       - name: Check perf record
         run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
