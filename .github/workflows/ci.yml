@@ -296,7 +296,6 @@ jobs:
         kernel: [ linux-64lp64 , linux-64lp64-dirty ]
 
     steps:
-
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -323,8 +322,11 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
+
       - name: Check perf record
-        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 60
+        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
 
 
   ruyi-qemu-64ilp32:
@@ -339,7 +341,6 @@ jobs:
           - kernel: linux-64ilp32
 
     steps:
-
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -366,6 +367,11 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
+
+      - name: Check perf record
+        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
 
   ruyi-qemu-32ilp32:
     needs: kernel-build
@@ -377,7 +383,6 @@ jobs:
         kernel: [ linux-32ilp32 , linux-32ilp32-dirty ]
 
     steps:
-
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -404,5 +409,8 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
+      - name: Check perf list
+        run: .github/ci_scripts/check_qemu.exp 'perf --no-pager list' 60 'Error'
+
       - name: Check perf record
-        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 60
+        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 180
