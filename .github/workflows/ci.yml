@@ -286,6 +286,47 @@ jobs:
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
 
+  ruyi-qemu-64lp64:
+    needs: kernel-build
+    runs-on: ubuntu-latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/ruyi-toolchain:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kernel: [ linux-64lp64 , linux-64lp64-dirty ]
+
+    steps:
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.kernel }}.tar.gz
+
+      - name: Download rootfs and unpack artifacts
+        run: |
+              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv64.ext2.tar.gz
+              tar -xvf rootfs_rv64.ext2.tar.gz
+              tar -xvf ${{ matrix.kernel }}.tar.gz
+
+      - name: Run Qemu
+        run: qemu-system-riscv64 -cpu rv64,sscofpmf=true -nographic -smp 4 -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial telnet:localhost:5678,server &
+
+      - name: Check Qemu Booting Kernel
+        run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
+
+      - name: Check perf test
+        run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
+
+      - name: Check perf stat
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
+      - name: Check perf record
+        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 60
+
+
   ruyi-qemu-64ilp32:
     needs: kernel-build
     runs-on: ubuntu-latest
@@ -295,7 +336,6 @@ jobs:
       matrix:
         variant: [ Image ]
         include:
-          - cpu: rv64
           - kernel: linux-64ilp32
 
     steps:
@@ -315,7 +355,7 @@ jobs:
               tar -xvf ${{ matrix.kernel }}.tar.gz
 
       - name: Run Qemu
-        run: qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp 4 -M virt -kernel ./${{ matrix.variant }} -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv32.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial telnet:localhost:5678,server &
+        run: qemu-system-riscv64 -cpu rv64,sscofpmf=true -nographic -smp 4 -M virt -kernel ./${{ matrix.variant }} -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv32.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
@@ -325,3 +365,44 @@ jobs:
 
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
+
+  ruyi-qemu-32ilp32:
+    needs: kernel-build
+    runs-on: ubuntu-latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/ruyi-toolchain:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kernel: [ linux-32ilp32 , linux-32ilp32-dirty ]
+
+    steps:
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.kernel }}.tar.gz
+
+      - name: Download rootfs and unpack artifacts
+        run: |
+              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv32.ext2.tar.gz
+              tar -xvf rootfs_rv32.ext2.tar.gz
+              tar -xvf ${{ matrix.kernel }}.tar.gz
+
+      - name: Run Qemu
+        run: qemu-system-riscv32 -cpu rv32,sscofpmf=true -nographic -smp 4 -M virt -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv32.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -serial telnet:localhost:5678,server &
+
+      - name: Check Qemu Booting Kernel
+        run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
+
+      - name: Check perf test
+        run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,50,60,62' 180 FAILED
+
+      - name: Check perf stat
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
+      - name: Check perf record
+        run: .github/ci_scripts/check_qemu.exp 'perf record -a tar -czf test.tar.gz /bin' 60
