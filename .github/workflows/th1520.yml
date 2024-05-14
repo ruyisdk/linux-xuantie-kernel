@@ -128,6 +128,8 @@ jobs:
             mkdir -p mnt
             sudo mount root-lpi4amain-ci-${TIMESTAMP}.ext4 mnt
             sudo mount boot-lpi4amain-ci-${TIMESTAMP}.ext4 mnt/boot
+            sudo chroot mnt sh -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"
+            sudo chroot mnt sh -c "echo root:root | chpasswd"
             sudo chroot mnt sh -c 'apt remove -y linux-image* linux-headers*'
             sudo dcmd cp -v ${GITHUB_WORKSPACE}/artifact/*.changes mnt/root
             sudo chroot mnt sh -c 'dpkg -i /root/*.deb'
