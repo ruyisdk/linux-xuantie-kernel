@@ -28,6 +28,8 @@
 		serial3 = &uart3;
 		serial4 = &uart4;
 		serial5 = &uart5;
+                mmc0 = &emmc;
+                mmc1 = &sdio0;
 	};
 
 	chosen {
@@ -76,7 +78,7 @@
 	};
 };
 
-&osc {
+&osc_24m {
 	clock-frequency = <24000000>;
 };
 

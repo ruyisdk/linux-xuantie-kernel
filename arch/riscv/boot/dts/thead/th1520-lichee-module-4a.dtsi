@@ -15,9 +15,33 @@
 		device_type = "memory";
 		reg = <0x0 0x00000000 0x2 0x00000000>;
 	};
+
+	resmem: reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		//Note: with "no-map" reserv mem not saved in hibernation
+		rpmsgmem: memory@1E000000 {
+			reg = <0x0 0x1E000000 0x0 0x10000>;
+		};
+	};
+
+	light_rpmsg: light_rpmsg {
+		compatible = "light,rpmsg-bus", "simple-bus";
+		memory-region = <&rpmsgmem>;
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		rpmsg: rpmsg {
+			vdev-nums = <1>;
+			reg = <0x0 0x1E000000 0 0x10000>;
+			compatible = "light,light-rpmsg";
+			status = "okay";
+		};
+	};
 };
 
-&osc {
+&osc_24m {
 	clock-frequency = <24000000>;
 };
 
@@ -122,4 +146,81 @@
 	gpio-line-names = "", "",
 			  "GPIO09",
 			  "GPIO10";
+};
+
+&cpus {
+	c910_0: cpu@0 {
+		operating-points = <
+			/* kHz    uV */
+			300000	650000
+			800000	700000
+			1500000	800000
+			1848000 1000000
+		>;
+		light,dvddm-operating-points = <
+			/* kHz   uV */
+			300000	800000
+			800000	800000
+			1500000	800000
+			1848000 1000000
+		>;
+		dvdd-supply = <&dvdd_cpu_reg>;
+		dvddm-supply = <&dvddm_cpu_reg>;
+	};
+	c910_1: cpu@1 {
+		operating-points = <
+			/* kHz    uV */
+			300000	650000
+			800000	700000
+			1500000	800000
+			1848000 1000000
+		>;
+		light,dvddm-operating-points = <
+			/* kHz   uV */
+			300000	800000
+			800000	800000
+			1500000	800000
+			1848000 1000000
+		>;
+		dvdd-supply = <&dvdd_cpu_reg>;
+		dvddm-supply = <&dvddm_cpu_reg>;
+	};
+	c910_2: cpu@2 {
+
+		operating-points = <
+			/* kHz    uV */
+			300000	650000
+			800000	700000
+			1500000	800000
+			1848000 1000000
+		>;
+		light,dvddm-operating-points = <
+			/* kHz   uV */
+			300000	800000
+			800000	800000
+			1500000	800000
+			1848000 1000000
+		>;
+		dvdd-supply = <&dvdd_cpu_reg>;
+		dvddm-supply = <&dvddm_cpu_reg>;
+	};
+	c910_3: cpu@3 {
+
+		operating-points = <
+			/* kHz    uV */
+			300000	650000
+			800000	700000
+			1500000	800000
+			1848000 1000000
+		>;
+		light,dvddm-operating-points = <
+			/* kHz   uV */
+			300000	800000
+			800000	800000
+			1500000	800000
+			1848000 1000000
+		>;
+		dvdd-supply = <&dvdd_cpu_reg>;
+		dvddm-supply = <&dvddm_cpu_reg>;
+	};
 };

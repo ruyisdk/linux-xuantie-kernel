@@ -1663,4 +1663,13 @@ config REGULATOR_QCOM_LABIBB
 	  boost regulator and IBB can be used as a negative boost regulator
 	  for LCD display panel.
 
+config REGULATOR_LIGHT_AON
+        tristate "Thead Light Aon regulator"
+        depends on LIGHT_AON
+        default y
+        help
+          This driver provides support for the thead light virtal regulators that
+          inmplemented on Light Aon system.
+
+
 endif

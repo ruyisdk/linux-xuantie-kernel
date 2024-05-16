@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Thead SoC drivers"
+
+config LIGHT_REBOOTMODE
+	bool "Thead light rebootmode support"
+	default y
+	help
+	 This driver supports check rebootmode feature in Light FM platform
+
+endmenu
