@@ -747,5 +747,23 @@
 				interrupts = <55 IRQ_TYPE_LEVEL_HIGH>;
 			};
 		};
+
+		mbox_910t: mbox@ffffc38000 {
+			compatible = "xuantie,th1520-mbox";
+			reg = <0xff 0xffc38000 0x0 0x4000>,
+			      <0xff 0xffc44000 0x0 0x1000>,
+			      <0xff 0xffc4c000 0x0 0x1000>,
+			      <0xff 0xffc54000 0x0 0x1000>;
+			reg-names = "local_base",
+				    "remote_icu0",
+				    "remote_icu1",
+				    "remote_icu2";
+			interrupt-parent = <&intc>;
+			interrupts = <28>;
+			clocks = <&dummy_clock_apb>;
+			clock-names = "ipg";
+			icu_cpu_id = <0>;
+			#mbox-cells = <2>;
+		};
 	};
 };
