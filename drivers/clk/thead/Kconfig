@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config THEAD_CLK
+	bool
+	def_bool ARCH_THEAD
+
+config CLK_TH1520_FM
+	bool "Thead Th1520 Fullmask Clock Driver"
+	depends on ARCH_THEAD
+	default n
+	help
+	    Build the driver for th1520 fullmask Clock Driver
