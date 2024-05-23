@@ -166,3 +166,36 @@ jobs:
             wget ${TH1520_IMAGE_BASE_URL}/${TH1520_IMAGE_DATE}/${TH1520_UBOOT}
       - name: 'List all downloaded files'
         run: ls -R $GITHUB_WORKSPACE
+      - name: Decompress image files
+        run: |
+            zstd -df ./th1520-linux-64lp64/*.zst
+            zstd -df ./th1520-linux-64lp64-xt/*.zst
+      - name: 'Burn images into board'
+        run: |
+            init_cp2112.sh
+            # hold boot -> press reset -> flash uboot to ram -> fastboot reboot -> flash uboot,root,boot
+            # --hold boot key and reset--
+            board_reset_to_boot.sh
+            # --flash u-boot--
+            fastboot flash ram ${TH1520_UBOOT}
+            # --reset board--
+            sleep 2
+            fastboot reboot
+            # --flash root & boot--
+            fastboot flash uboot ${TH1520_UBOOT}
+            sleep 2
+            fastboot flash boot ./th1520-linux-64lp64-xt/boot*.ext4
+            fastboot flash root ./th1520-linux-64lp64-xt/root*.ext4
+            # --reset board--
+            board_reset.sh
+      - name: 'Cleanup folder'
+        if: always()
+        run: |
+            # Remove all hidden files that have a dot as first character, including the .git folder
+            rm -rf ./.??*
+
+            rm -rv ./linux-64lp64.tar.gz
+            rm -rv ./linux-64lp64-xt.tar.gz
+            rm -rv ./th1520-linux-64lp64
+            rm -rv ./th1520-linux-64lp64-xt
+            rm ${TH1520_UBOOT}
