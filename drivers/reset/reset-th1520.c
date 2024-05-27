@@ -134,3 +134,7 @@ static struct platform_driver th1520_reset_driver = {
 	},
 };
 builtin_platform_driver(th1520_reset_driver);
+
+MODULE_AUTHOR("zenglinghui.zlh <zenglinghui.zlh@linux.alibaba.com>");
+MODULE_DESCRIPTION("Thead th1520 reset driver");
+MODULE_LICENSE("GPL v2");
