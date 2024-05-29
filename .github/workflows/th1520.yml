@@ -21,6 +21,7 @@ env:
   TH1520_IMAGE_DATE: 20240127
   TH1520_BOOT: boot-lpi4amain-20240127_105111.ext4.zst
   TH1520_ROOT: root-lpi4amain-20240127_105111.ext4.zst
+  TH1520_UBOOT_BASE_URL: https://github.com/revyos/thead-u-boot/releases/download/20240529/
   TH1520_UBOOT: u-boot-with-spl-lpi4a-main.bin
 
 jobs:
@@ -163,7 +164,7 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Download th1520 u-boot
         run: |
-            wget ${TH1520_IMAGE_BASE_URL}/${TH1520_IMAGE_DATE}/${TH1520_UBOOT}
+            wget ${TH1520_UBOOT_BASE_URL}/${TH1520_UBOOT}
       - name: 'List all downloaded files'
         run: ls -R $GITHUB_WORKSPACE
       - name: Decompress image files
