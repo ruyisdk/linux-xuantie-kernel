@@ -136,6 +136,9 @@ jobs:
             sudo chroot mnt sh -c 'apt remove -y linux-image* linux-headers*'
             sudo dcmd cp -v ${GITHUB_WORKSPACE}/artifact/*.changes mnt/root
             sudo chroot mnt sh -c 'dpkg -i /root/*.deb'
+            sudo chroot mnt sh -c 'apt update && apt dist-upgrade -y'
+            # Add preinstalled software
+            sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml'
             sudo umount -l mnt
             zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
             zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
