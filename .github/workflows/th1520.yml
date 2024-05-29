@@ -162,6 +162,10 @@ jobs:
     steps:
       - name: 'Download artifact'
         uses: actions/download-artifact@v4
+        with:
+          name: th1520-linux-64lp64-xt
+          path: th1520-linux-64lp64-xt
+
       - name: Download th1520 u-boot
         run: |
             wget ${TH1520_UBOOT_BASE_URL}/${TH1520_UBOOT}
@@ -169,7 +173,7 @@ jobs:
         run: ls -R $GITHUB_WORKSPACE
       - name: Decompress image files
         run: |
-            zstd -df ./th1520-linux-64lp64/*.zst
+            #zstd -df ./th1520-linux-64lp64/*.zst
             zstd -df ./th1520-linux-64lp64-xt/*.zst
       - name: 'Burn images into board'
         run: |
@@ -195,8 +199,6 @@ jobs:
             # Remove all hidden files that have a dot as first character, including the .git folder
             rm -rf ./.??*
 
-            rm -rv ./linux-64lp64.tar.gz
-            rm -rv ./linux-64lp64-xt.tar.gz
-            rm -rv ./th1520-linux-64lp64
-            rm -rv ./th1520-linux-64lp64-xt
-            rm ${TH1520_UBOOT}
+            #rm -rfv ./th1520-linux-64lp64
+            rm -rfv ./th1520-linux-64lp64-xt
+            rm -f ${TH1520_UBOOT}
