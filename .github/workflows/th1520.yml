@@ -193,6 +193,10 @@ jobs:
             fastboot flash root ./th1520-linux-64lp64-xt/root*.ext4
             # --reset board--
             board_reset.sh
+      - name: 'Set up board'
+        run: |
+            sleep 90s
+            kermit_script.sh
       - name: 'Cleanup folder'
         if: always()
         run: |
