@@ -197,6 +197,12 @@ jobs:
         run: |
             sleep 90s
             kermit_script.sh
+      - name: 'Run test on board'
+        run: |
+            # source ~/.venv/bin/activate
+            export PATH=/home/debian/.venv/bin:$PATH
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1
+            xtbsptest --run test_memtester_1
       - name: 'Cleanup folder'
         if: always()
         run: |
