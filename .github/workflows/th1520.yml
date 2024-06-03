@@ -140,7 +140,7 @@ jobs:
             sudo chroot mnt sh -c 'dpkg -i /root/*.deb'
             sudo chroot mnt sh -c 'apt update && apt dist-upgrade -y'
             # Add preinstalled software
-            sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml'
+            sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml iperf'
             sudo umount -l mnt
             zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
             zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
@@ -197,12 +197,30 @@ jobs:
         run: |
             sleep 90s
             kermit_script.sh
-      - name: 'Run test on board'
+      - name: 'Run CPU test'
         run: |
-            # source ~/.venv/bin/activate
-            export PATH=/home/debian/.venv/bin:$PATH
-            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1
-            xtbsptest --run test_memtester_1
+            source ~/.venv/bin/activate
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            xtbsptest --run test_multicore_cpu_coremark
+            xtbsptest --run test_multicore_cpu_dhrystone
+            xtbsptest --run test_multicore_cpu_task_affinity
+      - name: 'Run Ethernet test'
+        run: |
+            export PC_IP=10.9.124.51
+            export DUT_IP=10.9.124.1
+            source ~/.venv/bin/activate
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            xtbsptest --run test_ethernet_as_server_TCP
+            xtbsptest --run test_ethernet_as_server_UDP
+            xtbsptest --run test_ethernet_as_client_TCP
+            xtbsptest --run test_ethernet_as_client_UDP
+            xtbsptest --run test_ethernet_ipv6
+            xtbsptest --run test_ethernet_mac
+      - name: 'Run Memory test'
+        run: |
+            source ~/.venv/bin/activate
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            xtbsptest --run test_memtester_16M_1
       - name: 'Cleanup folder'
         if: always()
         run: |
