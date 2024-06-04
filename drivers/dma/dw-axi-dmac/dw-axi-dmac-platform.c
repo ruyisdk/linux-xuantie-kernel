@@ -1204,13 +1204,38 @@ static int dma_chan_pause(struct dma_chan *dchan)
 
 	spin_unlock_irqrestore(&chan->vc.lock, flags);
 
+	chan->ch_sar = axi_chan_ioread32(chan, CH_SAR);
+	chan->ch_dar = axi_chan_ioread32(chan, CH_DAR);
+	chan->ch_dar_h = axi_chan_ioread32(chan, CH_DAR_H);
+	chan->ch_block_ts = axi_chan_ioread32(chan, CH_BLOCK_TS);
+	chan->ch_ctl_l = axi_chan_ioread32(chan, CH_CTL_L);
+	chan->ch_ctl_h = axi_chan_ioread32(chan, CH_CTL_H);
+	chan->ch_cfg_l = axi_chan_ioread32(chan, CH_CFG_L);
+	chan->ch_cfg_h = axi_chan_ioread32(chan, CH_CFG_H);
+	chan->ch_llp = axi_chan_ioread32(chan, CH_LLP);
+
 	return timeout ? 0 : -EAGAIN;
 }
 
 /* Called in chan locked context */
 static inline void axi_chan_resume(struct axi_dma_chan *chan)
 {
-	u32 val;
+	u32 val, irq_mask;
+
+	axi_chan_iowrite32(chan, CH_SAR, chan->ch_sar);
+	axi_chan_iowrite32(chan, CH_DAR, chan->ch_dar);
+	axi_chan_iowrite32(chan, CH_DAR_H, chan->ch_dar_h);
+	axi_chan_iowrite32(chan, CH_BLOCK_TS, chan->ch_block_ts);
+	axi_chan_iowrite32(chan, CH_CTL_L, chan->ch_ctl_l);
+	axi_chan_iowrite32(chan, CH_CTL_H, chan->ch_ctl_h);
+	axi_chan_iowrite32(chan, CH_CFG_L, chan->ch_cfg_l);
+	axi_chan_iowrite32(chan, CH_CFG_H, chan->ch_cfg_h);
+	axi_chan_iowrite32(chan, CH_LLP, chan->ch_llp);
+	irq_mask = DWAXIDMAC_IRQ_DMA_TRF | DWAXIDMAC_IRQ_ALL_ERR;
+	axi_chan_irq_sig_set(chan, irq_mask);
+	/* Generate 'suspend' status but don't generate interrupt */
+	irq_mask |= DWAXIDMAC_IRQ_SUSPENDED;
+	axi_chan_irq_set(chan, irq_mask);
 
 	if (chan->chip->dw->hdata->reg_map_8_channels) {
 		val = axi_dma_ioread32(chan->chip, DMAC_CHEN);
@@ -1224,7 +1249,11 @@ static inline void axi_chan_resume(struct axi_dma_chan *chan)
 		axi_dma_iowrite32(chan->chip, DMAC_CHSUSPREG, val);
 	}
 
+	axi_chan_enable(chan);
+
 	chan->is_paused = false;
+
+	return;
 }
 
 static int dma_chan_resume(struct dma_chan *dchan)
@@ -1283,6 +1312,40 @@ static int __maybe_unused axi_dma_runtime_resume(struct device *dev)
 	struct axi_dma_chip *chip = dev_get_drvdata(dev);
 
 	return axi_dma_resume(chip);
+}
+
+static int __maybe_unused axi_dma_sleep_suspend(struct device *dev)
+{
+	//struct axi_dma_chip *chip = dev_get_drvdata(dev);
+	//axi_dma_irq_disable(chip);
+	//axi_dma_disable(chip);
+
+	//clk_disable_unprepare(chip->core_clk);
+	//clk_disable_unprepare(chip->cfgr_clk);
+
+	dev_dbg(dev, "%s, %d\n", __func__, __LINE__);
+
+	return 0;
+}
+
+static int __maybe_unused axi_dma_sleep_resume(struct device *dev)
+{
+	struct axi_dma_chip *chip = dev_get_drvdata(dev);
+	int ret = 0;
+
+	ret = clk_prepare_enable(chip->cfgr_clk);
+	if (ret < 0)
+		return ret;
+
+	ret = clk_prepare_enable(chip->core_clk);
+	if (ret < 0)
+		return ret;
+
+	axi_dma_enable(chip);
+	axi_dma_irq_enable(chip);
+	dev_dbg(dev, "%s, %d\n", __func__, __LINE__);
+
+	return 0;
 }
 
 static struct dma_chan *dw_axi_dma_of_xlate(struct of_phandle_args *dma_spec,
@@ -1568,9 +1631,16 @@ static int dw_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_PM
+static const struct dev_pm_ops dw_axi_dma_pm_ops = {
+	SET_LATE_SYSTEM_SLEEP_PM_OPS(axi_dma_sleep_suspend, axi_dma_sleep_resume)
+	SET_RUNTIME_PM_OPS(axi_dma_runtime_suspend, axi_dma_runtime_resume, NULL)
+};
+#else
 static const struct dev_pm_ops dw_axi_dma_pm_ops = {
 	SET_RUNTIME_PM_OPS(axi_dma_runtime_suspend, axi_dma_runtime_resume, NULL)
 };
+#endif
 
 static const struct of_device_id dw_dma_of_id_table[] = {
 	{
