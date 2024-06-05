@@ -8,8 +8,8 @@ on:
     - cron: "0 3 * * *"
 
 env:
-  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1705395627867
-  xt64_toolchain_file_name: Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1-20240115.tar.gz
+  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1715148262346
+  xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0-20240419.tar.gz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
   ARCH: riscv
@@ -71,7 +71,7 @@ jobs:
                 export PATH="/opt/riscv/bin:$PATH"
               fi
               if [ x"${{ matrix.name }}" = x"linux-64lp64-xt" ]; then
-                export PATH="/opt/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1/bin:$PATH"
+                export PATH="/opt/Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0/bin:$PATH"
               fi
               pushd kernel
                 make th1520_defconfig
