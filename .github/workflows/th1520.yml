@@ -74,7 +74,7 @@ jobs:
                 export PATH="/opt/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1/bin:$PATH"
               fi
               pushd kernel
-                make defconfig
+                make th1520_defconfig
                 export KDEB_PKGVERSION="$(make kernelversion)-$(date "+%Y.%m.%d.%H.%M")+$(git rev-parse --short HEAD)"
                 make -j$(nproc) bindeb-pkg
                 dcmd cp -v ../*.changes ${GITHUB_WORKSPACE}/artifact
