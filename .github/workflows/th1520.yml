@@ -154,6 +154,10 @@ jobs:
                   *.ext4.zst
 
   test:
+    # env needed on target system:
+    # DUT_SERIAL: /dev/tty[device]
+    # DUT_IP: IP for th1520 board
+    # PC_IP: IP for host machine
     runs-on: [self-hosted, th1520]
     needs: [
       kernel
@@ -196,20 +200,21 @@ jobs:
       - name: 'Set up board'
         run: |
             sleep 90s
-            kermit_script.sh
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            kermit_script.sh $DUT_SERIAL $DUT_IP
       - name: 'Run CPU test'
         run: |
             source ~/.venv/bin/activate
-            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test_multicore_cpu_coremark
             xtbsptest --run test_multicore_cpu_dhrystone
             xtbsptest --run test_multicore_cpu_task_affinity
       - name: 'Run Ethernet test'
         run: |
-            export PC_IP=10.9.124.51
-            export DUT_IP=10.9.124.1
             source ~/.venv/bin/activate
-            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test_ethernet_as_server_TCP
             xtbsptest --run test_ethernet_as_server_UDP
             xtbsptest --run test_ethernet_as_client_TCP
@@ -219,7 +224,8 @@ jobs:
       - name: 'Run Memory test'
         run: |
             source ~/.venv/bin/activate
-            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip 10.9.124.1 --dut_login root --dut_password root
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test_memtester_16M_1
       - name: 'Cleanup folder'
         if: always()
