@@ -284,9 +284,7 @@ static int th1520_aon_probe(struct platform_device *pdev)
 	}
 	aon_chan->log_mem = ioremap(aon_chan->log_phy, aon_chan->log_size);
 	if (!IS_ERR(aon_chan->log_mem)) {
-		printk("%s:virtual_log_mem=0x%p, phy base=0x%llx,size:%ld\n",
-		       __func__, aon_chan->log_mem, aon_chan->log_phy,
-		       aon_chan->log_size);
+		pr_info("virtual_log_mem=0x%p, phy base=0x%pa\n",aon_chan->log_mem, &aon_chan->log_phy);
 	} else {
 		aon_chan->log_mem = NULL;
 		dev_err(dev, "%s:get aon log region fail\n", __func__);
