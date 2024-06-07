@@ -8,8 +8,8 @@ on:
     - cron: "0 3 * * *"
 
 env:
-  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1705395627867
-  xt64_toolchain_file_name: Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1-20240115.tar.gz
+  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1715148262346
+  xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0-20240419.tar.gz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
   ARCH: riscv
@@ -21,6 +21,8 @@ env:
   TH1520_IMAGE_DATE: 20240127
   TH1520_BOOT: boot-lpi4amain-20240127_105111.ext4.zst
   TH1520_ROOT: root-lpi4amain-20240127_105111.ext4.zst
+  TH1520_UBOOT_BASE_URL: https://github.com/revyos/thead-u-boot/releases/download/20240529/
+  TH1520_UBOOT: u-boot-with-spl-lpi4a-main.bin
 
 jobs:
   kernel:
@@ -71,7 +73,7 @@ jobs:
                 export PATH="/opt/riscv/bin:$PATH"
               fi
               if [ x"${{ matrix.name }}" = x"linux-64lp64-xt" ]; then
-                export PATH="/opt/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.8.1/bin:$PATH"
+                export PATH="/opt/Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0/bin:$PATH"
               fi
               pushd kernel
                 make th1520_defconfig
@@ -138,15 +140,99 @@ jobs:
             sudo chroot mnt sh -c 'dpkg -i /root/*.deb'
             sudo chroot mnt sh -c 'apt update && apt dist-upgrade -y'
             # Add preinstalled software
-            sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml'
+            sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml iperf'
             sudo umount -l mnt
             zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
             zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
 
       - name: 'Upload Artifact EMMC'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           retention-days: 30
           name: th1520-${{ matrix.name }}
           path: |
                   *.ext4.zst
+
+  test:
+    # env needed on target system:
+    # DUT_SERIAL: /dev/tty[device]
+    # DUT_IP: IP for th1520 board
+    # PC_IP: IP for host machine
+    runs-on: [self-hosted, th1520]
+    needs: [
+      kernel
+    ]
+    if: ${{ always() && !cancelled() && needs.kernel.result == 'success' }}
+    steps:
+      - name: 'Download artifact'
+        uses: actions/download-artifact@v4
+        with:
+          name: th1520-linux-64lp64-xt
+          path: th1520-linux-64lp64-xt
+
+      - name: Download th1520 u-boot
+        run: |
+            wget ${TH1520_UBOOT_BASE_URL}/${TH1520_UBOOT}
+      - name: 'List all downloaded files'
+        run: ls -R $GITHUB_WORKSPACE
+      - name: Decompress image files
+        run: |
+            #zstd -df ./th1520-linux-64lp64/*.zst
+            zstd -df ./th1520-linux-64lp64-xt/*.zst
+      - name: 'Burn images into board'
+        run: |
+            init_cp2112.sh
+            # hold boot -> press reset -> flash uboot to ram -> fastboot reboot -> flash uboot,root,boot
+            # --hold boot key and reset--
+            board_reset_to_boot.sh
+            # --flash u-boot--
+            fastboot flash ram ${TH1520_UBOOT}
+            # --reset board--
+            sleep 2
+            fastboot reboot
+            # --flash root & boot--
+            fastboot flash uboot ${TH1520_UBOOT}
+            sleep 2
+            fastboot flash boot ./th1520-linux-64lp64-xt/boot*.ext4
+            fastboot flash root ./th1520-linux-64lp64-xt/root*.ext4
+            # --reset board--
+            board_reset.sh
+      - name: 'Set up board'
+        run: |
+            sleep 90s
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            kermit_script.sh $DUT_SERIAL $DUT_IP
+      - name: 'Run CPU test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_multicore_cpu_coremark
+            xtbsptest --run test_multicore_cpu_dhrystone
+            xtbsptest --run test_multicore_cpu_task_affinity
+      - name: 'Run Ethernet test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_ethernet_as_server_TCP
+            xtbsptest --run test_ethernet_as_server_UDP
+            xtbsptest --run test_ethernet_as_client_TCP
+            xtbsptest --run test_ethernet_as_client_UDP
+            xtbsptest --run test_ethernet_ipv6
+            xtbsptest --run test_ethernet_mac
+      - name: 'Run Memory test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_memtester_16M_1
+      - name: 'Cleanup folder'
+        if: always()
+        run: |
+            # Remove all hidden files that have a dot as first character, including the .git folder
+            rm -rf ./.??*
+
+            #rm -rfv ./th1520-linux-64lp64
+            rm -rfv ./th1520-linux-64lp64-xt
+            rm -f ${TH1520_UBOOT}
