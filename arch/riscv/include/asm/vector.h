@@ -115,6 +115,11 @@ static __always_inline bool has_vector(void)
 	  riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADVECTOR);
 }
 
+static __always_inline bool has_xtheadvector(void)
+{
+        return riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADVECTOR);
+}
+
 static inline void __riscv_v_vstate_clean(struct pt_regs *regs)
 {
 	xlen_t sr_vs, sr_vs_clean;
@@ -416,6 +421,7 @@ struct pt_regs;
 static inline int riscv_v_setup_vsize(void) { return -EOPNOTSUPP; }
 static __always_inline bool has_vector(void) { return false; }
 static __always_inline bool has_matrix(void) { return false; }
+static __always_inline bool has_xtheadvector(void) { return false; }
 static inline bool riscv_v_first_use_handler(struct pt_regs *regs) { return false; }
 static inline bool riscv_v_vstate_query(struct pt_regs *regs) { return false; }
 static inline bool riscv_v_vstate_ctrl_user_allowed(void) { return false; }
