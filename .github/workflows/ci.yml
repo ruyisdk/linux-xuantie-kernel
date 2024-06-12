@@ -333,3 +333,16 @@ jobs:
 
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
+  checkpatch:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+    - name: 'Calculate PR commits + 1'
+      run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+    - name: Run checkpatch review
+      uses: webispy/checkpatch-action@v9
