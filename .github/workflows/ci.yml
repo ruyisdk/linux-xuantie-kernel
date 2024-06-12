@@ -249,6 +249,9 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
+      - name: Check ftrace state
+        run: .github/ci_scripts/check_qemu.exp 'zcat /proc/config.gz | grep FTRACE' 60
+
 
   xt-qemu-32ilp32:
     needs: kernel-build
@@ -259,7 +262,6 @@ jobs:
       matrix:
         cpu: [ c907fdvm-rv32 ]
         kernel: [ linux-32ilp32 , linux-32ilp32-dirty ]
-
 
     steps:
 
@@ -293,6 +295,8 @@ jobs:
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
 
+      - name: Check ftrace state
+        run: .github/ci_scripts/check_qemu.exp 'zcat /proc/config.gz | grep FTRACE' 60
 
   ruyi-qemu-64ilp32:
     needs: kernel-build
@@ -333,3 +337,6 @@ jobs:
 
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+
+      - name: Check ftrace state
+        run: .github/ci_scripts/check_qemu.exp 'zcat /proc/config.gz | grep FTRACE' 60
