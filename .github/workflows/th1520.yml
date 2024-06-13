@@ -227,6 +227,20 @@ jobs:
             source /opt/linux-xuantie-kernel-CI/env_setup.source
             xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test_memtester_16M_1
+      - name: 'Run eMMC test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_eMMC_func_blocklevel_dd_write
+            xtbsptest --run test_eMMC_func_blocklevel_dd_read
+      - name: 'Run RTC test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_generic_rtc_probe
+            xtbsptest --run test_generic_rtc_alarm
       - name: 'Cleanup folder'
         if: always()
         run: |
