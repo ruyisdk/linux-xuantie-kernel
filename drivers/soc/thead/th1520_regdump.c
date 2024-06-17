@@ -88,7 +88,7 @@ static long regdump_ioctl(struct file *file, unsigned int cmd,
 
 		ret = th1520_aon_call_rpc(ipc, &priv->msg, &ack_msg, true);
 		if (ret)
-			printk("failed to REGDUMP_IOC_CONFIG_DONE\n");
+			pr_err("failed to REGDUMP_IOC_CONFIG_DONE\n");
 	} break;
 	default:
 		break;
@@ -105,9 +105,10 @@ static int regdump_mmap(struct file *file, struct vm_area_struct *vma)
 		pr_err("-->%s: remap_pfn_range error!\n", __func__);
 		return -EIO;
 	}
-	pr_info("phy: 0x%llx, size: 0x%lx PAGE_SHIFT: %d vma->vm_pgoff: 0x%lx vma->vm_start: 0x%lx\n",
-		pfn_to_phys(vma->vm_pgoff), vma->vm_end - vma->vm_start,
-		PAGE_SHIFT, vma->vm_pgoff, vma->vm_start);
+	pr_info("phy: 0x%llx, size: 0x%llx PAGE_SHIFT: %d vma->vm_pgoff: 0x%lx vma->vm_start: 0x%llx\n",
+		(uint64_t)pfn_to_phys(vma->vm_pgoff),
+		(uint64_t)vma->vm_end - vma->vm_start, PAGE_SHIFT,
+		vma->vm_pgoff, (uint64_t)vma->vm_start);
 
 	return 0;
 }
