@@ -106,9 +106,9 @@ static int regdump_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EIO;
 	}
 	pr_info("phy: 0x%llx, size: 0x%llx PAGE_SHIFT: %d vma->vm_pgoff: 0x%lx vma->vm_start: 0x%llx\n",
-		(uint64_t)pfn_to_phys(vma->vm_pgoff),
-		(uint64_t)vma->vm_end - vma->vm_start, PAGE_SHIFT,
-		vma->vm_pgoff, (uint64_t)vma->vm_start);
+		(long long unsigned int)pfn_to_phys(vma->vm_pgoff),
+		(long long unsigned int)vma->vm_end - vma->vm_start, PAGE_SHIFT,
+		vma->vm_pgoff, (long long unsigned int)vma->vm_start);
 
 	return 0;
 }
