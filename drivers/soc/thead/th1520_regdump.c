@@ -105,9 +105,12 @@ static int regdump_mmap(struct file *file, struct vm_area_struct *vma)
 		pr_err("-->%s: remap_pfn_range error!\n", __func__);
 		return -EIO;
 	}
-	/* pr_info("phy: %p, size: %d PAGE_SHIFT: %d vma->vm_pgoff: 0x%lx vma->vm_start: %p\n", (uintptr_t)pfn_to_phys(vma->vm_pgoff), \
+	uintptr_t phy_addr = (uintptr_t)pfn_to_phys(vma->vm_pgoff);
+    uintptr_t start_addr = (uintptr_t)vma->vm_start;
+
+	pr_info("phy: %p, size: %ld PAGE_SHIFT: %d vma->vm_pgoff: 0x%lx vma->vm_start: %p\n", &phy_addr, \
 	    (vma->vm_end - vma->vm_start), PAGE_SHIFT,   \
-	    vma->vm_pgoff, (uintptr_t)vma->vm_start); */
+	    vma->vm_pgoff, &start_addr);
 
 	return 0;
 }
@@ -128,6 +131,8 @@ static int th1520_regdump_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	dev_t devid;
 	struct th1520_aon_ipc *ipc_handle;
+	u64 start_addr;
+	u64 size;
 
 	ret = th1520_aon_get_handle(&ipc_handle);
 	if (ret == -EPROBE_DEFER) {
@@ -148,9 +153,11 @@ static int th1520_regdump_probe(struct platform_device *pdev)
 	ret = of_address_to_resource(np, 0, &priv->mem);
 	if (ret)
 		return ret;
+    start_addr =  (u64)priv->mem.start;
+	size  = (u64)resource_size(&priv->mem);
 
 	pr_info("%s got mem start 0x%llx size 0x%llx\n", __func__,
-		priv->mem.start, resource_size(&priv->mem));
+		start_addr, size);
 	priv->meminfo.startaddr = priv->mem.start;
 	priv->meminfo.size = resource_size(&priv->mem);
 	priv->meminfo.cfg_offset = 0x2800;
