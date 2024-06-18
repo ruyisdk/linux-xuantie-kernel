@@ -28,3 +28,10 @@
     cap-sd-highspeed;
     mshc_ctrl_r = <0x00>;
 };
+
+&usb0 {
+	status = "okay";
+};
+&usb1 {
+	status = "okay";
+};
