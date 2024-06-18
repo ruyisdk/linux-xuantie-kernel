@@ -11,6 +11,7 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+		bootargs = "root=/dev/mmcblk0p2 loglevel=8 rw rootdelay=4 rootfstype=ext4 console=ttyS0,115200  earlycon=sbi";
 	};
 
 	ddr: memory@0 {
@@ -27,4 +28,10 @@
     no-1-8-v;
     cap-sd-highspeed;
     mshc_ctrl_r = <0x00>;
+};
+&usb0 {
+	status = "okay";
+};
+&usb1 {
+	status = "okay";
 };
