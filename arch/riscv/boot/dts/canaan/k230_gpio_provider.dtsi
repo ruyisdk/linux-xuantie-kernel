@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
 /* Copyright (c) 2023, Canaan Bright Sight Co., Ltd
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation.
 */
 #include <dt-bindings/interrupt-controller/irq.h>
 / {
