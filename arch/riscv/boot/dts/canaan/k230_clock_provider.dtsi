@@ -7,7 +7,7 @@
 */
 
 
-/**********************************************************************************************************************
+/**************************************************************************************************
 *
 * K230 sysctl_boot clk tree, include osc24m, pll0-3, pll0-3_div2/div3/div4.
 * 锁相环pllx输出4路信号，分别是pllx、div2、div3、div4。div2~4由CCF框架注册，节点属性为fixed
@@ -16,57 +16,57 @@
 *   2. pll0-3: 由provider注册，定义为“canaan,k230-pll”
 *   3. pll0-3_div2/div3/div4: 由CCF框架注册，fixed-factor-clock
 *
-**********************************************************************************************************************/
+**************************************************************************************************/
 
 &sysctl_boot {
-	/* sysctl_boot clk tree
-		osc24m----------------->|-->pll0----->|--------->pll0	  clk output--->to sysctl_clock module
-								|			 |--div2--->pll0_div2 clk output--->to sysctl_clock module
-								|			 |--div3--->pll0_div3 clk output--->to sysctl_clock module
-								|			 |--div4--->pll0_div4 clk output--->to sysctl_clock module
-								|
-								|-->pll1----->|--------->pll1	  clk output--->to sysctl_clock module
-								|			 |--div2--->pll1_div2 clk output--->to sysctl_clock module
-								|			 |--div3--->pll1_div3 clk output--->to sysctl_clock module
-								|			 |--div4--->pll1_div4 clk output--->to sysctl_clock module
-								|
-								|-->pll2----->|--------->pll2	  clk output--->to sysctl_clock module
-								|			 |--div2--->pll2_div2 clk output--->to sysctl_clock module
-								|			 |--div3--->pll2_div3 clk output--->to sysctl_clock module
-								|			 |--div4--->pll2_div4 clk output--->to sysctl_clock module
-								|
-								|-->pll3----->|--------->pll3	  clk output--->to sysctl_clock module
-								|			 |--div2--->pll3_div2 clk output--->to sysctl_clock module
-								|			 |--div3--->pll3_div3 clk output--->to sysctl_clock module
-								|			 |--div4--->pll3_div4 clk output--->to sysctl_clock module
-								|
-								|----------------------------------------------->to sysctl_clock module
+/* sysctl_boot clk tree
+	osc24m----------------->|-->pll0----->|--------->pll0	  clk output--->to sysctl_clock module
+							|			 |--div2--->pll0_div2 clk output--->to sysctl_clock module
+							|			 |--div3--->pll0_div3 clk output--->to sysctl_clock module
+							|			 |--div4--->pll0_div4 clk output--->to sysctl_clock module
+							|
+							|-->pll1----->|--------->pll1	  clk output--->to sysctl_clock module
+							|			 |--div2--->pll1_div2 clk output--->to sysctl_clock module
+							|			 |--div3--->pll1_div3 clk output--->to sysctl_clock module
+							|			 |--div4--->pll1_div4 clk output--->to sysctl_clock module
+							|
+							|-->pll2----->|--------->pll2	  clk output--->to sysctl_clock module
+							|			 |--div2--->pll2_div2 clk output--->to sysctl_clock module
+							|			 |--div3--->pll2_div3 clk output--->to sysctl_clock module
+							|			 |--div4--->pll2_div4 clk output--->to sysctl_clock module
+							|
+							|-->pll3----->|--------->pll3	  clk output--->to sysctl_clock module
+							|			 |--div2--->pll3_div2 clk output--->to sysctl_clock module
+							|			 |--div3--->pll3_div3 clk output--->to sysctl_clock module
+							|			 |--div4--->pll3_div4 clk output--->to sysctl_clock module
+							|
+							|----------------------------------------------->to sysctl_clock module
 
 	*/
 	/* osc24m clock */
 	osc24m: osc24m {
-		#clock-cells							= <0>;						  /* only one clock output */
-		compatible							  = "fixed-clock";				/* It's clock source, no parent */
-		clock-frequency						 = <24000000>;				 /* clock freqence is 24MHz */
-		clock-accuracy						  = <0>;					/* software assume clock no jitter/wander.*/
+		#clock-cells							= <0>;					/* only one clock output */
+		compatible							  = "fixed-clock";	/* It's clock source, no parent */
+		clock-frequency						 = <24000000>;		 /* clock freqence is 24MHz */
+		clock-accuracy						  = <0>;	/* software assume clock no jitter/wander.*/
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	/* pll clock */
 	pll0: pll0 {
-		#clock-cells							= <0>;						  /* only one output */
+		#clock-cells							= <0>;			/* only one output */
 		compatible							  = "canaan,k230-pll";
 		/* pll0/1/2/3 match same clk driver, comptible is k230-pll(not k230-pll0,1,2,3)*/
-		clocks								  = <&osc24m>;					/* clk parent is osc24m */
+		clocks								  = <&osc24m>;		/* clk parent is osc24m */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* PLL0_CFG0 */
-		clk-divide-reg-offset				   = <0x0>;						/* pll divider register offset */
-		clk-divide-out-reg-value-shift		  = <24>;						 /* start bit is 24 */
+		clk-divide-reg-offset				   = <0x0>;		/* pll divider register offset */
+		clk-divide-out-reg-value-shift		  = <24>;		/* start bit is 24 */
 		clk-divide-out-reg-value-mask		   = <0xF>;
-													/* bitmask, 0xf means b'1111(4bits), bit24(start bit) to bit27 */
+								/* bitmask, 0xf means b'1111(4bits), bit24(start bit) to bit27 */
 		clk-divide-ref-reg-value-shift		  = <16>;
 		clk-divide-ref-reg-value-mask		   = <0x3F>;
 		clk-divide-fb-reg-value-shift		   = <0>;
@@ -93,7 +93,7 @@
 		clock-div							   = <2>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll0_div3: pll0_div3 {
@@ -103,7 +103,7 @@
 		clock-div							   = <3>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll0_div4: pll0_div4 {
@@ -113,16 +113,16 @@
 		clock-div							   = <4>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll1: pll1 {
-		#clock-cells							= <0>;						  /* only one output */
+		#clock-cells							= <0>;		/* only one output */
 		compatible							  = "canaan,k230-pll";
-								/* pll0/1/2/3 match same clk driver, so comptible is k230-pll(not k230-pll0,1,2,3)*/
-		clocks								  = <&osc24m>;					/* clk parent is osc24m */
+			/* pll0/1/2/3 match same clk driver, so comptible is k230-pll(not k230-pll0,1,2,3)*/
+		clocks								  = <&osc24m>;		/* clk parent is osc24m */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* PLL1_CFG0 */
 		clk-divide-reg-offset				  	= <0x10>;
@@ -154,7 +154,7 @@
 		clock-div							   = <2>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll1_div3: pll1_div3 {
@@ -164,7 +164,7 @@
 		clock-div							   = <3>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll1_div4: pll1_div4 {
@@ -174,16 +174,16 @@
 		clock-div							   = <4>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll2: pll2 {
-		#clock-cells							= <0>;						/* only one output */
+		#clock-cells							= <0>;				/* only one output */
 		compatible							  = "canaan,k230-pll";
-								/* pll0/1/2/3 match same clk driver, so comptible is k230-pll(not k230-pll0,1,2,3)*/
-		clocks								  = <&osc24m>;					/* clk parent is osc24m */
+			/* pll0/1/2/3 match same clk driver, so comptible is k230-pll(not k230-pll0,1,2,3)*/
+		clocks								  = <&osc24m>;		/* clk parent is osc24m */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* PLL2_CFG0 */
 		clk-divide-reg-offset				   = <0x20>;
@@ -215,7 +215,7 @@
 		clock-div							   = <2>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 	};
 
 	pll2_div3: pll2_div3 {
@@ -225,7 +225,7 @@
 		clock-div							   = <3>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>; /* 1 means read-only, 0 means read-write */
 	};
 
 	pll2_div4: pll2_div4 {
@@ -235,16 +235,16 @@
 		clock-div							   = <4>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll3: pll3 {
-		#clock-cells							= <0>;						  /* only one output */
+		#clock-cells							= <0>;		/* only one output */
 		compatible							  = "canaan,k230-pll";
 			/* pll0/1/2/3 match same clk driver, so comptible is k230-pll(not k230-pll0,1,2,3)*/
-		clocks								  = <&osc24m>;					/* clk parent is osc24m */
+		clocks								  = <&osc24m>;		/* clk parent is osc24m */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* PLL3_CFG0 */
 		clk-divide-reg-offset				   = <0x30>;
@@ -276,7 +276,7 @@
 		clock-div							   = <2>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll3_div3: pll3_div3 {
@@ -286,7 +286,7 @@
 		clock-div							   = <3>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 
 	pll3_div4: pll3_div4 {
@@ -296,20 +296,20 @@
 		clock-div							   = <4>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 };
 
-/**********************************************************************************************************************
+/**************************************************************************************************
 *
 * K230 sysctl_clock clk tree, include cpu0(aclk/pliclk/pclk), pmu(pclk), hs(hs/sdx/ssix/usbx),
-* ls(ls/uartx/i2cx/gpio/pwm/jamlinkx/audio/adc/codec), sysctl(sysctl/wdtx/timer/iomux/mailbox/hdi/stc/ts), timer(
-timerx),
+* ls(ls/uartx/i2cx/gpio/pwm/jamlinkx/audio/adc/codec),
+* sysctl(sysctl/wdtx/timer/iomux/mailbox/hdi/stc/ts), timer(timerx),
 * shrm(shrm/decompress/gsdma/nonai2d/pdma), ddrc(ddrc_core/ddrc_pclk),
-* display(hclk/aclk//clkext/gpu/refclk), sec(aclk/fixclk/pclk), usb_test_mode(clk480/clk100), dphy_dft_mode(
-dphy_test_clk), spi2axi(aclk).
+* display(hclk/aclk//clkext/gpu/refclk), sec(aclk/fixclk/pclk), usb_test_mode(clk480/clk100),
+* dphy_dft_mode(dphy_test_clk), spi2axi(aclk).
 *
-**********************************************************************************************************************/
+**************************************************************************************************/
 
 &sysctl_clock {
 	/* cpu0 clock tree
@@ -328,9 +328,9 @@ dphy_test_clk), spi2axi(aclk).
 		1. cpu0_pclk		  -->cpu0 apb pclk, DIV & GATE
 	*/
 	cpu0_src: cpu0_src {
-		#clock-cells							= <0>;								  /* only one output */
+		#clock-cells							= <0>;				/* only one output */
 		compatible							  = "canaan,k230-clk-composite";
-		clocks								  = <&pll0_div2>;						 /* only one parent */
+		clocks								  = <&pll0_div2>;			/* only one parent */
 		status								  = "okay";
 		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 														/* 1 means read-only, 0 means read-write */
@@ -341,7 +341,7 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <16>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <0>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
 		clk-rate-reg-offset					 = <0x0>;
 		clk-rate-reg-mul-value-shift			= <0>;
@@ -359,11 +359,11 @@ dphy_test_clk), spi2axi(aclk).
 	};
 
 	cpu0_plic: cpu0_plic {
-		#clock-cells							= <0>;								  /* only one output */
+		#clock-cells							= <0>;						/* only one output */
 		compatible							  = "canaan,k230-clk-composite";
-		clocks								  = <&cpu0_src>;						  /* only one parent */
+		clocks								  = <&cpu0_src>;			/* only one parent */
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -371,7 +371,7 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
 		clk-rate-reg-offset					 = <0x0>;
 		clk-rate-reg-mul-value-shift			= <0>;
@@ -387,11 +387,11 @@ dphy_test_clk), spi2axi(aclk).
 	};
 
 	cpu0_aclk: cpu0_aclk {
-		#clock-cells							= <0>;								  /* only one output */
+		#clock-cells							= <0>;				/* only one output */
 		compatible							  = "canaan,k230-clk-composite";
-		clocks								  = <&cpu0_src>;						  /* only one parent */
+		clocks								  = <&cpu0_src>;			/* only one parent */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -399,7 +399,7 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
 		clk-rate-reg-offset					 = <0x0>;
 		clk-rate-reg-mul-value-shift			= <0>;
@@ -410,11 +410,11 @@ dphy_test_clk), spi2axi(aclk).
 	};
 
 	cpu0_noc_ddrcp4: cpu0_noc_ddrcp4 {
-		#clock-cells							= <0>;								  /* only one output */
+		#clock-cells							= <0>;				/* only one output */
 		compatible							  = "canaan,k230-clk-composite";
-		clocks								  = <&cpu0_src>;						  /* only one parent */
+		clocks								  = <&cpu0_src>;		/* only one parent */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x60>;
@@ -423,11 +423,11 @@ dphy_test_clk), spi2axi(aclk).
 	};
 
 	cpu0_pclk: cpu0_pclk {
-		#clock-cells							= <0>;								  /* only one output */
+		#clock-cells							= <0>;		/* only one output */
 		compatible							  = "canaan,k230-clk-composite";
-		clocks								  = <&pll0_div4>;						 /* only one parent */
+		clocks								  = <&pll0_div4>;		 /* only one parent */
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -435,7 +435,7 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
 		clk-rate-reg-offset					 = <0x0>;
 		clk-rate-reg-mul-value-shift			= <0>;
@@ -462,7 +462,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x10>;
@@ -560,7 +560,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -568,15 +568,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x1C>;						/* divider register offset */
+		clk-rate-reg-offset					 = <0x1C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	hs_hclk_high: hs_hclk_high {
@@ -584,7 +584,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_high_src>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -596,7 +596,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_high_src>;
 		status								  = "okay";
-		read-only							   = <0>;		/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -604,15 +604,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-								/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x1C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x1C>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-										/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-										/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -625,7 +625,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -637,7 +637,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -649,7 +649,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -661,7 +661,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>; /* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -673,7 +673,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -685,7 +685,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&hs_hclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -698,7 +698,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -706,15 +706,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-								/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x20>;							/* divider register offset */
+		clk-rate-reg-offset					 = <0x20>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <9>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+								/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <9>;				/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;				/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -728,7 +728,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;		/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -736,15 +736,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x20>;					/* divider register offset */
+		clk-rate-reg-offset					 = <0x20>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-								/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-										/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;				/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;				/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -758,7 +758,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -766,15 +766,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x20>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x20>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -788,7 +788,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -796,15 +796,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x20>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x20>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <12>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <12>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -817,7 +817,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&qspi_aclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -829,7 +829,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&qspi_aclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -841,13 +841,13 @@ dphy_test_clk), spi2axi(aclk).
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parent */
 		clocks								  = <&pll0_div2>, <&pll2_div4>;		   /* mux parent */
-		clk-parent-reg-offset				   = <0x20>;							   /* mux register offset */
-		clk-parent-reg-value-shift			  = <18>;								 /* mux field shift */
-		clk-parent-reg-value-mask			   = <0x1>;								/* mux field mask */
+		clk-parent-reg-offset				   = <0x20>;			/* mux register offset */
+		clk-parent-reg-value-shift			  = <18>;				/* mux field shift */
+		clk-parent-reg-value-mask			   = <0x1>;			/* mux field mask */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -860,7 +860,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll2_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -868,15 +868,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x1C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x1C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;	/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -889,7 +889,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_aclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -901,7 +901,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_aclk>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -913,7 +913,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_aclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -925,7 +925,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_aclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -938,23 +938,23 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
 		clk-rate-conf-mul-max				   = <1>;
-		clk-rate-conf-div-min				   = <2>;						/* maxinum = 1/2, 1/2, 1/3 --- 1/8 */
+		clk-rate-conf-div-min				   = <2>;	/* maxinum = 1/2, 1/2, 1/3 --- 1/8 */
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x1C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x1C>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <12>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <12>;				/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;				/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -967,7 +967,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_cclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -979,7 +979,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_cclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -994,14 +994,14 @@ dphy_test_clk), spi2axi(aclk).
 		clock-div							   = <16>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 	usb_ref_50m: usb_ref_50m {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1009,28 +1009,28 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-								/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x20>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x20>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <15>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <15>;		 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	usb0_ref_clk: usb0_ref_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parent */
-		clocks								  = <&osc24m>, <&usb_ref_50m>;			 /* mux parent */
-		clk-parent-reg-offset				   = <0x18>;							   /* mux register offset */
-		clk-parent-reg-value-shift			  = <23>;								 /* mux field shift */
-		clk-parent-reg-value-mask			   = <0x1>;								/* mux field mask */
+		clocks								  = <&osc24m>, <&usb_ref_50m>;	/* mux parent */
+		clk-parent-reg-offset				   = <0x18>;			/* mux register offset */
+		clk-parent-reg-value-shift			  = <23>;				/* mux field shift */
+		clk-parent-reg-value-mask			   = <0x1>;				/* mux field mask */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -1041,13 +1041,13 @@ dphy_test_clk), spi2axi(aclk).
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parent */
-		clocks								  = <&osc24m>, <&usb_ref_50m>;			 /* mux parent */
-		clk-parent-reg-offset				   = <0x18>;							   /* mux register offset */
-		clk-parent-reg-value-shift			  = <23>;								 /* mux field shift */
-		clk-parent-reg-value-mask			   = <0x1>;								/* mux field mask */
+		clocks								  = <&osc24m>, <&usb_ref_50m>;	 /* mux parent */
+		clk-parent-reg-offset				   = <0x18>;		/* mux register offset */
+		clk-parent-reg-value-shift			  = <23>;					/* mux field shift */
+		clk-parent-reg-value-mask			   = <0x1>;				/* mux field mask */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -1060,23 +1060,23 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>; /* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
 		clk-rate-conf-mul-max				   = <1>;
-		clk-rate-conf-div-min				   = <24>;						/* maxinum = 1/24, 1/24 --- 1/32 */
+		clk-rate-conf-div-min				   = <24>;		/* maxinum = 1/24, 1/24 --- 1/32 */
 		clk-rate-conf-div-max				   = <32>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x1C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x1C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <15>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x1F>;							   /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <15>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x1F>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1089,7 +1089,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_tmclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -1101,7 +1101,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sd_tmclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>; /* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x18>;
@@ -1214,7 +1214,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>; /* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1222,15 +1222,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-								/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x30>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x30>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;							   /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1243,7 +1243,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1255,7 +1255,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1267,7 +1267,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1279,7 +1279,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1291,7 +1291,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1303,7 +1303,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1315,7 +1315,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1327,7 +1327,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1339,7 +1339,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1351,7 +1351,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1363,7 +1363,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1375,7 +1375,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1387,7 +1387,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1399,7 +1399,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1411,7 +1411,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1423,7 +1423,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1435,7 +1435,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1447,7 +1447,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1459,7 +1459,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&ls_pclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					 /* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x24>;
@@ -1472,7 +1472,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1480,15 +1480,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-							/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;			 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1502,7 +1502,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1510,15 +1510,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1532,7 +1532,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1540,15 +1540,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1562,7 +1562,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1570,15 +1570,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;		 /* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <9>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <9>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;	/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1592,7 +1592,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;		/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1600,15 +1600,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <12>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <12>;		 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1622,7 +1622,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1630,15 +1630,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <2>;
 		clk-rate-conf-div-max				   = <512>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x30>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x30>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <23>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xFF>;							   /* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <23>;		 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xFF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	jamlink0CO_gate: jamlink0CO_gate {
@@ -1646,7 +1646,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&jamlinkCO_div>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1658,7 +1658,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&jamlinkCO_div>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1670,7 +1670,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&jamlinkCO_div>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1682,7 +1682,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&jamlinkCO_div>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x28>;
@@ -1695,7 +1695,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1703,15 +1703,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <15>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <15>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1725,7 +1725,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1733,15 +1733,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <18>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <18>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1755,7 +1755,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1763,15 +1763,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-							/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+					/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <21>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <21>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1785,7 +1785,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1793,15 +1793,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <24>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <24>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1815,7 +1815,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1823,15 +1823,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x2C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x2C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+								/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <27>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <27>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1845,7 +1845,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <0x10>;
@@ -1853,16 +1853,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <0xC35>;
 		clk-rate-conf-div-max				   = <0x3D09>;
 		clk-rate-calc-method					= <2>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x38>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x38>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <14>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0x1FFF>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2
-*/
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3FFF>;							 /* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2*/
+		clk-rate-reg-div-value-shift			= <0>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3FFF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1876,7 +1875,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <0x10>;
@@ -1884,15 +1883,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <0xC35>;
 		clk-rate-conf-div-max				   = <0x3D09>;
 		clk-rate-calc-method					= <2>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x3C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x3C>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <14>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0x1FFF>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3FFF>;							 /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;					/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3FFF>;				/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1906,7 +1905,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <0x4>;
@@ -1914,15 +1913,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <0xC35>;
 		clk-rate-conf-div-max				   = <0xF424>;
 		clk-rate-calc-method					= <2>;
-								/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x34>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x34>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <16>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0x7FFF>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xFFFF>;							 /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xFFFF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -1936,27 +1935,27 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-div-min				   = <0xC35>;
 		clk-rate-conf-div-max				   = <0x1E848>;
 
-		clk-rate-reg-offset					 = <0x40>;							   /* divider register offset */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x1FFFF>;							/* divider field mask.  */
+		clk-rate-reg-offset					 = <0x40>;		/* divider register offset */
+		clk-rate-reg-div-value-shift			= <0>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x1FFFF>;	/* divider field mask.  */
 		clk-rate-calc-method					= <2>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
 		/* rate1 */
 		clk-rate-conf-mul-min_1				   = <0x2>;
 		clk-rate-conf-mul-max_1				   = <0x1B9>;
 
-		clk-rate-reg-offset_1					 = <0x44>;							   /* divider register offset */
+		clk-rate-reg-offset_1					 = <0x44>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift_1			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask_1			 = <0xFFFF>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-write-enable-bit_1		   = <31>;
 
 		/* gate */
@@ -1971,7 +1970,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -1979,15 +1978,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <1024>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x30>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x30>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3FF>;							  /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3FF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2001,7 +2000,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2009,15 +2008,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <1024>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x30>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x30>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <13>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3FF>;							  /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <13>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3FF>;		 /* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2061,14 +2060,14 @@ dphy_test_clk), spi2axi(aclk).
 		clock-frequency						 = <100000000>;
 		clock-accuracy						  = <0>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 	wdt0_pclk_gate: wdt0_pclk_gate {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sysctl_pclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x50>;
@@ -2080,7 +2079,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sysctl_pclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x50>;
@@ -2092,7 +2091,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sysctl_pclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x50>;
@@ -2104,7 +2103,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sysctl_pclk>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x50>;
@@ -2116,7 +2115,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&sysctl_pclk>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x50>;
@@ -2129,7 +2128,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2137,15 +2136,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x58>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x58>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <28>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <28>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2159,7 +2158,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1_div4>;
 		status								  = "okay";
-		read-only							   = <0>;		/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2167,15 +2166,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <32>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x58>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x58>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <15>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x1F>;							   /* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <15>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x1F>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2189,7 +2188,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2197,15 +2196,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <256>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x58>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x58>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <20>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xFF>;							   /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <20>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xFF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 
@@ -2214,7 +2213,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2222,15 +2221,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <64>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x58>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x58>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3F>;							   /* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3F>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2244,7 +2243,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2252,15 +2251,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <64>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x58>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x58>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <9>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3F>;							   /* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <9>;	 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3F>;		 /* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2334,14 +2333,14 @@ dphy_test_clk), spi2axi(aclk).
 		clock-frequency						 = <50000000>;
 		clock-accuracy						  = <0>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 	};
 	timer0_clk_src: timer0_clk_src {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2349,22 +2348,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer0_clk: timer0_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer0_clk_src>, <&timerx_pulse_in>;
@@ -2383,7 +2382,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2391,22 +2390,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;		 /* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer1_clk: timer1_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer1_clk_src>, <&timerx_pulse_in>;
@@ -2425,7 +2424,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2433,22 +2432,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;		  /* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer2_clk: timer2_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer2_clk_src>, <&timerx_pulse_in>;
@@ -2467,7 +2466,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2475,22 +2474,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+				/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <9>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <9>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer3_clk: timer3_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer3_clk_src>, <&timerx_pulse_in>;
@@ -2509,7 +2508,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2517,22 +2516,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <12>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <12>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer4_clk: timer4_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer4_clk_src>, <&timerx_pulse_in>;
@@ -2551,7 +2550,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div16>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2559,22 +2558,22 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x54>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x54>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <15>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <15>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 	timer5_clk: timer5_clk {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&timer5_clk_src>, <&timerx_pulse_in>;
@@ -2621,7 +2620,7 @@ dphy_test_clk), spi2axi(aclk).
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&pll0_div2>, <&pll3_div2>;
@@ -2641,14 +2640,14 @@ dphy_test_clk), spi2axi(aclk).
 		clock-div							   = <2>;
 		clock-mult							  = <1>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 	};
 	shrm_axis_clk_gate: shrm_axis_clk_gate {
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&shrm_div2>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2660,7 +2659,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&shrm_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2673,7 +2672,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2681,15 +2680,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-									/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x5C>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x5C>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <18>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <18>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2703,7 +2702,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2716,7 +2715,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&shrm_axim_clk_gate>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2729,7 +2728,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&shrm_axim_clk_gate>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2742,7 +2741,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&shrm_axim_clk_gate>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x5C>;
@@ -2775,7 +2774,7 @@ dphy_test_clk), spi2axi(aclk).
 		#clock-cells							= <0>;
 		compatible							  = "canaan,k230-clk-composite";
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* parents */
 		clocks								  = <&pll0_div2>, <&pll0_div3>, <&pll2_div4>;
@@ -2789,15 +2788,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x60>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x60>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <10>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <10>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2811,7 +2810,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll2_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x60>;
@@ -2824,7 +2823,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2832,15 +2831,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x60>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x60>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <14>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <14>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2879,7 +2878,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2887,15 +2886,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x78>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x78>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+								/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <0>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <0>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2909,7 +2908,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x74>;
@@ -2923,7 +2922,7 @@ dphy_test_clk), spi2axi(aclk).
 		clocks								  = <&pll0_div3>;
 		status								  = "okay";
 		read-only							   = <0>;
-																			/* 1 means read-only, 0 means read-write */
+										/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2931,15 +2930,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x78>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x78>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <16>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <16>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2953,7 +2952,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div3>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2961,15 +2960,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+						/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x78>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x78>;	/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+								/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <20>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <20>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -2983,7 +2982,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -2991,15 +2990,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <256>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x78>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x78>;			/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <3>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xFF>;							   /* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <3>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xFF>;	 /* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3013,7 +3012,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1_div4>;
 		status								  = "okay";
-		read-only							   = <0>;						/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3021,15 +3020,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <32>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x78>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x78>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <11>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x1F>;							   /* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <11>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x1F>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3043,7 +3042,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&osc24m>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x74>;
@@ -3068,7 +3067,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div2>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3076,15 +3075,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <16>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <0>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0xC>;								/* divider register offset */
+		clk-rate-reg-offset					 = <0xC>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-											/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <1>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <1>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;	/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3098,7 +3097,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&vpu_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3106,15 +3105,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0xC>;								/* divider register offset */
+		clk-rate-reg-offset					 = <0xC>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 	};
 
@@ -3123,7 +3122,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&vpu_aclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0xc>;
@@ -3136,7 +3135,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&vpu_aclk_src>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* gate */
 		clk-gate-reg-offset					 = <0x60>;
@@ -3149,7 +3148,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3157,15 +3156,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0xC>;								/* divider register offset */
+		clk-rate-reg-offset					 = <0xC>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+							/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <11>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+							/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <11>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3191,7 +3190,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3199,15 +3198,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x80>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x80>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <1>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <1>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3220,7 +3219,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3228,15 +3227,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <32>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x80>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x80>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <6>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x1F>;							   /* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <6>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x1F>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3250,7 +3249,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3258,15 +3257,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x80>;							   /* divider register offset */
+		clk-rate-reg-offset					 = <0x80>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-											/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <11>;								 /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x3>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <11>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x3>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3291,7 +3290,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll1>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3299,15 +3298,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x100>;							  /* divider register offset */
+		clk-rate-reg-offset					 = <0x100>;	 /* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <1>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+					/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <1>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;		/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3321,7 +3320,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;			/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3329,15 +3328,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x100>;							  /* divider register offset */
+		clk-rate-reg-offset					 = <0x100>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <4>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <4>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3358,7 +3357,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0>;
 		status								  = "okay";
-		read-only							   = <0>;				/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3366,15 +3365,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <16>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x104>;							  /* divider register offset */
+		clk-rate-reg-offset					 = <0x104>;		/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <1>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0xF>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <1>;			/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0xF>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
@@ -3395,7 +3394,7 @@ dphy_test_clk), spi2axi(aclk).
 		compatible							  = "canaan,k230-clk-composite";
 		clocks								  = <&pll0_div4>;
 		status								  = "okay";
-		read-only							   = <0>;					/* 1 means read-only, 0 means read-write */
+		read-only							   = <0>;	/* 1 means read-only, 0 means read-write */
 
 		/* rate */
 		clk-rate-conf-mul-min				   = <1>;
@@ -3403,15 +3402,15 @@ dphy_test_clk), spi2axi(aclk).
 		clk-rate-conf-div-min				   = <1>;
 		clk-rate-conf-div-max				   = <8>;
 		clk-rate-calc-method					= <1>;
-										/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
+					/* 0 for mul changeabled, 1 for div changeabled, 2 for div&mul changeable */
 
-		clk-rate-reg-offset					 = <0x108>;							  /* divider register offset */
+		clk-rate-reg-offset					 = <0x108>;				/* divider register offset */
 		clk-rate-reg-mul-value-shift			= <0>;
-												/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
+						/* multiple field shift. It's valid when clk-rate-calc-method = 2 */
 		clk-rate-reg-mul-value-mask			 = <0>;
-												/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
-		clk-rate-reg-div-value-shift			= <1>;								  /* divider field shift. */
-		clk-rate-reg-div-value-mask			 = <0x7>;								/* divider field mask.  */
+						/* multiple field mask.  It's valid when clk-rate-calc-method = 2 */
+		clk-rate-reg-div-value-shift			= <1>;		/* divider field shift. */
+		clk-rate-reg-div-value-mask			 = <0x7>;			/* divider field mask.  */
 		clk-rate-reg-write-enable-bit		   = <31>;
 
 		/* gate */
