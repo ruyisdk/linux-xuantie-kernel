@@ -271,6 +271,12 @@
 		mbox-names = "aon";
 		mboxes = <&mbox_910t 1 0>;
 		status = "okay";
+
+		pd: th1520-aon-pd {
+			compatible = "thead,th1520-aon-pd";
+			#power-domain-cells = <1>;
+		};
+
 	};
 
 	aon_iram: aon-iram@ffffef8000 {
@@ -574,7 +580,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <31>;
-				gpio-ranges = <&padctrl1_apsys 0 32 31>;
+				gpio-ranges = <&padctrl0_apsys 0 0 32>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
@@ -593,7 +599,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <32>;
-				gpio-ranges = <&padctrl0_apsys 0 0 32>;
+				gpio-ranges = <&padctrl0_apsys 0 32 23>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
@@ -628,7 +634,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <23>;
-				gpio-ranges = <&padctrl0_apsys 0 32 23>;
+				gpio-ranges = <&padctrl1_apsys 0 0 32>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
@@ -647,7 +653,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <32>;
-				gpio-ranges = <&padctrl1_apsys 0 0 32>;
+				gpio-ranges = <&padctrl1_apsys 0 32 31>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
@@ -919,7 +925,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <23>;
-				gpio-ranges = <&padctrl_aosys 0 25 22>, <&padctrl_aosys 22 7 1>;
+				gpio-ranges = <&padctrl_aosys 0 9 16>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
@@ -959,7 +965,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				ngpios = <16>;
-				gpio-ranges = <&padctrl_aosys 0 9 16>;
+				gpio-ranges = <&padctrl_aosys 0 25 22>, <&padctrl_aosys 22 7 1>;
 				reg = <0>;
 				interrupt-controller;
 				#interrupt-cells = <2>;
