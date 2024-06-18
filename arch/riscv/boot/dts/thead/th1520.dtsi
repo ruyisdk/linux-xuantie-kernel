@@ -1170,5 +1170,10 @@
 			resets = <&rst TH1520_RESET_WDT1>;
 			status = "okay";
 		};
+
+		regdump: th1520-regdump {
+			compatible = "thead,th1520-regdump";
+			status = "disabled";
+        };
 	};
 };

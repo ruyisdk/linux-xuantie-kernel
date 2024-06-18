@@ -572,7 +572,15 @@
 	aon_log_mem: memory@33600000 {
         reg = <0x0 0x33600000 0x0 0x200000>;
 	};
+	regdump_mem: memory@38400000 {
+		reg = <0x0 0x38400000 0x0 0x1400000>;
+		no-map;
+	};
+};
 
+&regdump {
+	memory-region = <&regdump_mem>;
+	status = "okay";
 };
 
 &light_i2s {
@@ -584,4 +592,3 @@
         pinctrl-names = "default";
         pinctrl-0 = <&i2s1_pa_pins>;
 };
-
