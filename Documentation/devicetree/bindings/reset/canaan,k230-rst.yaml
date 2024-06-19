@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/reset/canaan,k230-rst.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Canaan Kendryte K230 Reset Controller
+
+maintainers:
+  - Damien Le Moal <dlemoal@kernel.org>
+
+description: |
+  Canaan Kendryte K230 reset controller driver which supports the SoC
+  system controller supplied reset registers for the various peripherals
+  of the SoC. The K230 reset controller node must be defined as a child
+  node of the K230 system controller node.
+
+  See also:
+  - dt-bindings/reset/canaan-k230-reset.h
+
+properties:
+  compatible:
+    const:canaan,k230-sysctl-reset
+
+  '#reset-cells':
+    const: 1
+
+required:
+  - '#reset-cells'
+  - compatible
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/reset/canaan-k230-reset.h>
+    sysrst: reset-controller {
+      compatible = "canaan,k230-sysctl-reset";
+      #reset-cells = <1>;
+    };
