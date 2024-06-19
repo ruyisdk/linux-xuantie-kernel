@@ -4,6 +4,9 @@
  */
 
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/soc/canaan,k230_pm_domains.h>
+#include <dt-bindings/reset/canaan-k230-reset.h>
+#include <dt-bindings/gpio/gpio.h>
 
 /dts-v1/;
 / {
@@ -96,6 +99,42 @@
 			riscv,ndev = <208>;
 		};
 
+		sysctl: sysctl {
+			status					= "okay";
+			#address-cells			= <2>;
+			#size-cells			= <2>;
+			compatible				= "simple-bus";
+			ranges;
+
+			sysctl_clock: sysctl_clock@91100000 {
+				status              = "okay";
+				compatible			= "simple-bus";
+				reg                 = <0x0 0x91100000 0x0 0x1000>;
+			};
+			sysctl_reset: sysctl_reset@91101000 {
+				status              = "okay";
+				reg                 = <0x0 0x91101000 0x0 0x1000>;
+				compatible      = "canaan,k230-sysctl-reset";
+				#reset-cells    = <4>;
+				/* indicate consumer resets have 5 parameters.
+				 * phandle+offset+type+done+assert
+				 */
+			};
+			sysctl_boot: sysctl_boot@91102000 {
+				status              = "okay";
+				compatible			= "simple-bus";
+				reg                 = <0x0 0x91102000 0x0 0x1000>;
+			};
+			sysctl_power: sysctl_power@91103000 {
+				status              = "okay";
+				reg                 = <0x0 0x91103000 0x0 0x1000>;
+				compatible          = "canaan, k230-sysctl-power";
+				hardlock            = <3>, <4>, <5>;
+				#power-domain-cells = <1>;  /* more than 1 power provider */
+			};
+		};
+
+
 		clint: timer@f04000000 {
 			compatible = "canaan,k230-clint", "thead,c900-clint";
 			reg = <0xf 0x04000000 0x0 0x00010000>;
@@ -161,6 +200,7 @@
 			g-rx-fifo-size = <512>;
 			g-np-tx-fifo-size = <64>;
 			g-tx-fifo-size = <512 1024 64 64 64 64>;
+			status = "disabled";
 		};
 
 		usb1: usb@91540000 {
@@ -172,6 +212,7 @@
 			g-rx-fifo-size = <512>;
 			g-np-tx-fifo-size = <64>;
 			g-tx-fifo-size = <512 1024 64 64 64 64>;
+			status = "disabled";
 		};
 		mmc_sd1: sdhci1@91581000 {
 			compatible = "kendryte,k230-dw-mshc";
@@ -189,3 +230,5 @@
 		};
 	};
 };
+#include "k230_gpio_provider.dtsi"
+#include "k230_clock_provider.dtsi"
