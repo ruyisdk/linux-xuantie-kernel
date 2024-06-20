@@ -75,9 +75,16 @@ riscv-march-$(CONFIG_TOOLCHAIN_HAS_ZIHINTPAUSE) := $(riscv-march-y)_zihintpause
 # XUANTIE ISA
 riscv-march-$(CONFIG_XUANTIE_ISA) := $(riscv-march-y)_xtheadc
 
+# xuantie-toolchain:
+# Remove F,D from isa string for (e.g. gcc-10.4).
+# upstream-toolchain:
 # Remove F,D,V from isa string for all. Keep extensions between "fd" and "v" by
 # matching non-v and non-multi-letter extensions out with the filter ([^v_]*)
-KBUILD_CFLAGS += -march=$(shell echo $(riscv-march-y) | sed -E 's/(rv32ima|rv64ima)fd([^v_]*)v?/\1\2/')
+ifeq ($(CONFIG_TOOLCHAIN_HAS_XTHEADC)$(call gcc-max-version, 100400),yy)
+	KBUILD_CFLAGS += -march=$(subst fd,,$(riscv-march-y))
+else
+	KBUILD_CFLAGS += -march=$(shell echo $(riscv-march-y) | sed -E 's/(rv32ima|rv64ima)fd([^v_]*)v?/\1\2/')
+endif
 
 KBUILD_AFLAGS += -march=$(riscv-march-y)
 
