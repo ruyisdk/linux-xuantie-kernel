@@ -13,6 +13,7 @@
 #include <dt-bindings/clock/th1520-audiosys.h>
 #include <dt-bindings/clock/th1520-miscsys.h>
 #include <dt-bindings/reset/thead,th1520-reset.h>
+#include <dt-bindings/firmware/thead/rsrc.h>
 
 / {
 	compatible = "thead,th1520";
@@ -1168,6 +1169,91 @@
 			clocks = <&clk CLKGEN_WDT1_PCLK>;
 			clock-names = "tclk";
 			resets = <&rst TH1520_RESET_WDT1>;
+			status = "okay";
+		};
+
+		vdec_opp_table: opp_table_vdec {
+			compatible = "operating-points-v2";
+
+			opp00 {
+				opp-hz = /bits/ 64 <158400000>;
+				opp-microvolt = <875000>;
+			};
+			opp01 {
+				opp-hz = /bits/ 64 <198000000>;
+				opp-microvolt = <875000>;
+			};
+			opp02 {
+				opp-hz = /bits/ 64 <237600000>;
+				opp-microvolt = <875000>;
+			};
+			opp03 {
+				opp-hz = /bits/ 64 <264000000>;
+				opp-microvolt = <887500>;
+			};
+			opp04 {
+				opp-hz = /bits/ 64 <297000000>;
+				opp-microvolt = <937500>;
+			};
+			opp05 {
+				opp-hz = /bits/ 64 <396000000>;
+				opp-microvolt = <1012500>;
+			};
+			opp06 {
+				opp-hz = /bits/ 64 <475200000>;
+				opp-microvolt = <1037500>;
+			};
+			opp07 {
+				opp-hz = /bits/ 64 <594000000>;
+				opp-microvolt = <1050000>;
+			};
+		};
+
+		venc_opp_table: opp_table_venc {
+			compatible = "operating-points-v2";
+			opp00 {
+				opp-hz = /bits/ 64 <200000000>;
+			};
+			opp01 {
+				opp-hz = /bits/ 64 <250000000>;
+			};
+			opp02 {
+				opp-hz = /bits/ 64 <333300000>;
+			};
+			opp03 {
+				opp-hz = /bits/ 64 <500000000>;
+			};
+		};
+
+		vdec: vdec@ffecc00000 {
+			compatible = "thead,light-vc8000d";
+			reg = <0xff 0xecc00000 0x0 0x8000>;
+			interrupts = <131 IRQ_TYPE_LEVEL_HIGH>;
+			power-domains = <&pd TH1520_AON_VDEC_PD>;
+			clocks = <&vpsys_clk_gate TH1520_VPSYS_VDEC_ACLK>,
+				<&vpsys_clk_gate TH1520_VPSYS_VDEC_CCLK>,
+				<&vpsys_clk_gate TH1520_VPSYS_VDEC_PCLK>;
+			clock-names = "aclk", "cclk", "pclk";
+			operating-points-v2 = <&vdec_opp_table>;
+			status = "okay";
+		};
+
+		venc: venc@ffecc10000 {
+			compatible = "thead,light-vc8000e";
+			reg = <0xff 0xecc10000 0x0 0x8000>;
+			interrupts = <133 IRQ_TYPE_LEVEL_HIGH>;
+			power-domains = <&pd TH1520_AON_VENC_PD>;
+			clocks = <&vpsys_clk_gate TH1520_VPSYS_VENC_ACLK>,
+				<&vpsys_clk_gate TH1520_VPSYS_VENC_CCLK>,
+				<&vpsys_clk_gate TH1520_VPSYS_VENC_PCLK>;
+			clock-names = "aclk", "cclk", "pclk";
+			operating-points-v2 =<&venc_opp_table>;
+			status = "okay";
+		};
+
+		vidmem: vidmem@ffecc08000 {
+			compatible = "thead,light-vidmem";
+			reg = <0xff 0xecc08000 0x0 0x1000>;
 			status = "okay";
 		};
 	};
