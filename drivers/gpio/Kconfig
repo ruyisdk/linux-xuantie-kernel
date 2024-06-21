@@ -246,6 +246,17 @@ config GPIO_DWAPB
 	  Say Y or M here to build support for the Synopsys DesignWare APB
 	  GPIO block.
 
+config GPIO_K230
+	tristate "GPIO driver for k230"
+	default ARCH_CANAAN
+	select GPIO_GENERIC
+	select GPIOLIB_IRQCHIP
+	help
+	  Say Y or M here to build support for the k230 GPIO block.
+	  This driver provides basic support
+	  (configure as input or output, read
+	  and write pin state) for GPIO .
+
 config GPIO_EIC_SPRD
 	tristate "Spreadtrum EIC support"
 	depends on ARCH_SPRD || COMPILE_TEST
