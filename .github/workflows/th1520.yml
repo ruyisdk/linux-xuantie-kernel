@@ -241,6 +241,12 @@ jobs:
             xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test_generic_rtc_probe
             xtbsptest --run test_generic_rtc_alarm
+      - name: 'Run CPUFreq test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test_cpufreq_freq_1500000
       - name: 'Cleanup folder'
         if: always()
         run: |
