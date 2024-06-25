@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config GPU_VGLITE
+	tristate "VGLite device driver"
+	help
+	  Add support for Verisilicon VGLite GPU driver.
+	  This driver is for single-thread context
+	  use. Make sure to control the GPU in single
+	  thread.
