@@ -383,6 +383,24 @@
 			clock-frequency = <400000>;
 			status = "disabled";
 		};
+
+		gpu: gpu@90800000 {
+			compatible = "verisilicon,gc8000ul";
+			reg = <0x0 0x90800000 0x0 0x1000>;
+			interrupts = <135 IRQ_TYPE_LEVEL_HIGH>;
+			power-domains = <&sysctl_power K230_PM_DOMAIN_DISP>;
+			resets = <
+				&sysctl_reset
+				K230_RESET_V2P5D_REG_OFFSET
+				K230_RESET_V2P5D_TYPE
+				K230_RESET_V2P5D_DONE_BIT
+				K230_RESET_V2P5D_ASSERT_BIT
+			>;
+			reset-names = "vglite";
+			clocks = <&disp_gpu>;
+			clock-names = "vglite";
+			status = "okay";
+		};
 	};
 };
 #include "k230_clock_provider.dtsi"
