@@ -102,7 +102,7 @@
 		sysctl: sysctl {
 			status					= "okay";
 			#address-cells			= <2>;
-			#size-cells			= <2>;
+			#size-cells				= <2>;
 			compatible				= "simple-bus";
 			ranges;
 
@@ -133,7 +133,6 @@
 				#power-domain-cells = <1>;  /* more than 1 power provider */
 			};
 		};
-
 
 		clint: timer@f04000000 {
 			compatible = "canaan,k230-clint", "thead,c900-clint";
@@ -214,6 +213,7 @@
 			g-tx-fifo-size = <512 1024 64 64 64 64>;
 			status = "disabled";
 		};
+
 		mmc_sd1: sdhci1@91581000 {
 			compatible = "kendryte,k230-dw-mshc";
 			reg = <0x0 0x91581000 0x0 0x1000>;
@@ -228,7 +228,161 @@
 			//status = "disabled";/*disabled, okay*/
 			status = "disabled";
 		};
+
+		gpio0: gpio@9140b000 {
+			compatible = "canaan,k230-apb-gpio";
+			reg = <0x0 0x9140b000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			gpio0_ports: gpio-port@0 {
+				compatible = "canaan,k230-apb-gpio-port";
+				reg = <0>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				snps,nr-gpios = <32>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupts =
+					<32 IRQ_TYPE_EDGE_RISING>,
+					<33 IRQ_TYPE_EDGE_RISING>,
+					<34 IRQ_TYPE_EDGE_RISING>,
+					<35 IRQ_TYPE_EDGE_RISING>,
+					<36 IRQ_TYPE_EDGE_RISING>,
+					<37 IRQ_TYPE_EDGE_RISING>,
+					<38 IRQ_TYPE_EDGE_RISING>,
+					<39 IRQ_TYPE_EDGE_RISING>,
+					<40 IRQ_TYPE_EDGE_RISING>,
+					<41 IRQ_TYPE_EDGE_RISING>,
+					<42 IRQ_TYPE_EDGE_RISING>,
+					<43 IRQ_TYPE_EDGE_RISING>,
+					<44 IRQ_TYPE_EDGE_RISING>,
+					<45 IRQ_TYPE_EDGE_RISING>,
+					<46 IRQ_TYPE_EDGE_RISING>,
+					<47 IRQ_TYPE_EDGE_RISING>,
+					<48 IRQ_TYPE_EDGE_RISING>,
+					<49 IRQ_TYPE_EDGE_RISING>,
+					<50 IRQ_TYPE_EDGE_RISING>,
+					<51 IRQ_TYPE_EDGE_RISING>,
+					<52 IRQ_TYPE_EDGE_RISING>,
+					<53 IRQ_TYPE_EDGE_RISING>,
+					<54 IRQ_TYPE_EDGE_RISING>,
+					<55 IRQ_TYPE_EDGE_RISING>,
+					<56 IRQ_TYPE_EDGE_RISING>,
+					<57 IRQ_TYPE_EDGE_RISING>,
+					<58 IRQ_TYPE_EDGE_RISING>,
+					<59 IRQ_TYPE_EDGE_RISING>,
+					<60 IRQ_TYPE_EDGE_RISING>,
+					<61 IRQ_TYPE_EDGE_RISING>,
+					<62 IRQ_TYPE_EDGE_RISING>,
+					<63 IRQ_TYPE_EDGE_RISING>;
+			};
+		};
+
+		gpio1: gpio@9140c000 {
+			compatible = "canaan,k230-apb-gpio";
+			reg = <0x0 0x9140c000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			gpio1_ports: gpio-port@0 {
+				compatible = "canaan,k230-apb-gpio-port";
+				reg = <0>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				snps,nr-gpios = <32>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				interrupts =
+					<64 IRQ_TYPE_EDGE_RISING>,
+					<65 IRQ_TYPE_EDGE_RISING>,
+					<66 IRQ_TYPE_EDGE_RISING>,
+					<67 IRQ_TYPE_EDGE_RISING>,
+					<68 IRQ_TYPE_EDGE_RISING>,
+					<69 IRQ_TYPE_EDGE_RISING>,
+					<70 IRQ_TYPE_EDGE_RISING>,
+					<71 IRQ_TYPE_EDGE_RISING>,
+					<72 IRQ_TYPE_EDGE_RISING>,
+					<73 IRQ_TYPE_EDGE_RISING>,
+					<74 IRQ_TYPE_EDGE_RISING>,
+					<75 IRQ_TYPE_EDGE_RISING>,
+					<76 IRQ_TYPE_EDGE_RISING>,
+					<77 IRQ_TYPE_EDGE_RISING>,
+					<78 IRQ_TYPE_EDGE_RISING>,
+					<79 IRQ_TYPE_EDGE_RISING>,
+					<80 IRQ_TYPE_EDGE_RISING>,
+					<81 IRQ_TYPE_EDGE_RISING>,
+					<82 IRQ_TYPE_EDGE_RISING>,
+					<83 IRQ_TYPE_EDGE_RISING>,
+					<84 IRQ_TYPE_EDGE_RISING>,
+					<85 IRQ_TYPE_EDGE_RISING>,
+					<86 IRQ_TYPE_EDGE_RISING>,
+					<87 IRQ_TYPE_EDGE_RISING>,
+					<88 IRQ_TYPE_EDGE_RISING>,
+					<89 IRQ_TYPE_EDGE_RISING>,
+					<90 IRQ_TYPE_EDGE_RISING>,
+					<91 IRQ_TYPE_EDGE_RISING>,
+					<92 IRQ_TYPE_EDGE_RISING>,
+					<93 IRQ_TYPE_EDGE_RISING>,
+					<94 IRQ_TYPE_EDGE_RISING>,
+					<95 IRQ_TYPE_EDGE_RISING>;
+			};
+		};
+
+		i2c0: i2c@91405000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x0 0x91405000 0x0 0x1000>;
+			interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&i2c0_clk>;
+			clock-frequency = <100000>;
+			status = "disabled";
+		};
+
+		i2c1: i2c@91406000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x0 0x91406000 0x0 0x1000>;
+			interrupts = <22 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&i2c1_clk>;
+			clock-frequency = <400000>;
+			status = "disabled";
+		};
+
+		i2c2: i2c@91407000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x0 0x91407000 0x0 0x1000>;
+			interrupts = <23 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&i2c2_clk>;
+			clock-frequency = <400000>;
+			status = "disabled";
+		};
+
+		i2c3: i2c@91408000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x0 0x91408000 0x0 0x1000>;
+			interrupts = <24 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&i2c3_clk>;
+			clock-frequency = <400000>;
+			status = "disabled";
+		};
+
+		i2c4: i2c@91409000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x0 0x91409000 0x0 0x1000>;
+			interrupts = <25 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&i2c4_clk>;
+			clock-frequency = <400000>;
+			status = "disabled";
+		};
 	};
 };
-#include "k230_gpio_provider.dtsi"
 #include "k230_clock_provider.dtsi"
