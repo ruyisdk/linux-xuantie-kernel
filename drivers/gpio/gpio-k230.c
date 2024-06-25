@@ -14,61 +14,70 @@
 #include <linux/io.h>
 #include <linux/ioport.h>
 #include <linux/irq.h>
+#include <linux/mod_devicetable.h>
 #include <linux/module.h>
-#include <linux/of.h>
-#include <linux/of_address.h>
-#include <linux/of_device.h>
-#include <linux/of_irq.h>
 #include <linux/platform_device.h>
 #include <linux/property.h>
 #include <linux/reset.h>
-#include <linux/spinlock.h>
 #include <linux/slab.h>
-//#include <linux/canaan-hardlock.h>
-#include "gpio-k230.h"
+#include <linux/spinlock.h>
+
 #include "gpiolib.h"
 
-#define GPIO_SWPORTA_DR 0x00
-#define GPIO_SWPORTA_DDR 0x04
-#define GPIO_SWPORTB_DR 0x0c
-#define GPIO_SWPORTB_DDR 0x10
-#define GPIO_SWPORTC_DR 0x18
-#define GPIO_SWPORTC_DDR 0x1c
-#define GPIO_SWPORTD_DR 0x24
-#define GPIO_SWPORTD_DDR 0x28
-#define GPIO_INTEN 0x30
-#define GPIO_INTMASK 0x34
-#define GPIO_INTTYPE_LEVEL 0x38
-#define GPIO_INT_POLARITY 0x3c
-#define GPIO_INTSTATUS 0x40
-#define GPIO_PORTA_DEBOUNCE 0x48
-#define GPIO_PORTA_EOI 0x4c
-#define GPIO_EXT_PORTA 0x50
-#define GPIO_EXT_PORTB 0x54
-#define GPIO_EXT_PORTC 0x58
-#define GPIO_EXT_PORTD 0x5c
-#define GPIO_INTTYPE_BOTHEDGE 0x68
+#define GPIO_SWPORTA_DR		0x00
+#define GPIO_SWPORTA_DDR	0x04
+#define GPIO_SWPORTB_DR		0x0c
+#define GPIO_SWPORTB_DDR	0x10
+#define GPIO_SWPORTC_DR		0x18
+#define GPIO_SWPORTC_DDR	0x1c
+#define GPIO_SWPORTD_DR		0x24
+#define GPIO_SWPORTD_DDR	0x28
+#define GPIO_INTEN		0x30
+#define GPIO_INTMASK		0x34
+#define GPIO_INTTYPE_LEVEL	0x38
+#define GPIO_INT_POLARITY	0x3c
+#define GPIO_INTSTATUS		0x40
+#define GPIO_PORTA_DEBOUNCE	0x48
+#define GPIO_PORTA_EOI		0x4c
+#define GPIO_EXT_PORTA		0x50
+#define GPIO_EXT_PORTB		0x54
+#define GPIO_EXT_PORTC		0x58
+#define GPIO_EXT_PORTD		0x5c
 
-#define K230_DRIVER_NAME "k230-gpio"
-#define K230_MAX_PORTS 4
+#define K230_DRIVER_NAME	"gpio-k230"
+#define K230_MAX_PORTS		4
+#define K230_MAX_GPIOS		32
 
-#define GPIO_EXT_PORT_STRIDE 0x04 /* register stride 32 bits */
-#define GPIO_SWPORT_DR_STRIDE 0x0c /* register stride 3*32 bits */
-#define GPIO_SWPORT_DDR_STRIDE 0x0c /* register stride 3*32 bits */
+#define GPIO_EXT_PORT_STRIDE	0x04 /* register stride 32 bits */
+#define GPIO_SWPORT_DR_STRIDE	0x0c /* register stride 3*32 bits */
+#define GPIO_SWPORT_DDR_STRIDE	0x0c /* register stride 3*32 bits */
 
-#define GPIO_REG_OFFSET_V2 1
+#define GPIO_REG_OFFSET_V1	0
+#define GPIO_REG_OFFSET_V2	1
+#define GPIO_REG_OFFSET_MASK	BIT(0)
 
-#define GPIO_INTMASK_V2 0x44
-#define GPIO_INTTYPE_LEVEL_V2 0x34
-#define GPIO_INT_POLARITY_V2 0x38
-#define GPIO_INTSTATUS_V2 0x3c
-#define GPIO_PORTA_EOI_V2 0x40
+#define GPIO_INTMASK_V2		0x44
+#define GPIO_INTTYPE_LEVEL_V2	0x34
+#define GPIO_INT_POLARITY_V2	0x38
+#define GPIO_INTSTATUS_V2	0x3c
+#define GPIO_PORTA_EOI_V2	0x40
 
-#define K230_NR_CLOCKS 2
+#define K230_NR_CLOCKS		2
 
 struct k230_gpio;
-static int hardlock;
-static bool hardlock_requested;
+
+struct k230_port_property {
+	struct fwnode_handle *fwnode;
+	unsigned int idx;
+	unsigned int ngpio;
+	unsigned int gpio_base;
+	int irq[K230_MAX_GPIOS];
+};
+
+struct k230_platform_data {
+	struct k230_port_property *properties;
+	unsigned int nports;
+};
 
 #ifdef CONFIG_PM_SLEEP
 /* Store GPIO context across system-wide suspend/resume transitions */
@@ -86,39 +95,31 @@ struct k230_context {
 #endif
 
 struct k230_gpio_port_irqchip {
-	struct irq_chip irqchip;
-	unsigned int nr_irqs;
-	unsigned int irq[K230_MAX_GPIOS];
+	unsigned int		nr_irqs;
+	unsigned int		irq[K230_MAX_GPIOS];
 };
 
 struct k230_gpio_port {
-	struct gpio_chip gc;
+	struct gpio_chip	gc;
 	struct k230_gpio_port_irqchip *pirq;
-	struct k230_gpio *gpio;
+	struct k230_gpio	*gpio;
 #ifdef CONFIG_PM_SLEEP
-	struct k230_context *ctx;
+	struct k230_context	*ctx;
 #endif
-	unsigned int idx;
-	unsigned int id;
+	unsigned int		idx;
 };
-#define to_k230_gpio(_gc) (container_of(_gc, struct k230_gpio_port, gc)->gpio)
+#define to_k230_gpio(_gc) \
+	(container_of(_gc, struct k230_gpio_port, gc)->gpio)
 
 struct k230_gpio {
-	struct device *dev;
-	struct device_node *node;
-	struct device_node *irq_parent;
-	struct irq_domain *parent;
-	void __iomem *regs;
-	struct k230_gpio_port *ports;
-	unsigned int nr_ports;
-	unsigned int flags;
-	struct reset_control *rst;
-	struct clk_bulk_data clks[K230_NR_CLOCKS];
+	struct	device		*dev;
+	void __iomem		*regs;
+	struct k230_gpio_port	*ports;
+	unsigned int		nr_ports;
+	unsigned int		flags;
+	struct reset_control	*rst;
+	struct clk_bulk_data	clks[K230_NR_CLOCKS];
 };
-
-static void __iomem *iomem_gpio_a;
-static void __iomem *iomem_gpio_b;
-static bool k230_mapped;
 
 static inline u32 gpio_reg_v2_convert(unsigned int offset)
 {
@@ -137,21 +138,10 @@ static inline u32 gpio_reg_v2_convert(unsigned int offset)
 
 	return offset;
 }
-static int hardlock_lock(int num)
-{
-	return 0;
-}
-static int hardlock_unlock(int num)
-{
-	return 0;
-}
-static int request_lock(int num)
-{
-	return 0;
-}
+
 static inline u32 gpio_reg_convert(struct k230_gpio *gpio, unsigned int offset)
 {
-	if (gpio->flags & GPIO_REG_OFFSET_V2)
+	if ((gpio->flags & GPIO_REG_OFFSET_MASK) == GPIO_REG_OFFSET_V2)
 		return gpio_reg_v2_convert(offset);
 
 	return offset;
@@ -159,80 +149,129 @@ static inline u32 gpio_reg_convert(struct k230_gpio *gpio, unsigned int offset)
 
 static inline u32 k230_read(struct k230_gpio *gpio, unsigned int offset)
 {
-	struct gpio_chip *gc = &gpio->ports[0].gc;
-	void __iomem *reg_base = gpio->regs;
+	struct gpio_chip *gc	= &gpio->ports[0].gc;
+	void __iomem *reg_base	= gpio->regs;
 
 	return gc->read_reg(reg_base + gpio_reg_convert(gpio, offset));
 }
 
 static inline void k230_write(struct k230_gpio *gpio, unsigned int offset,
-			      u32 val)
+			       u32 val)
 {
-	struct gpio_chip *gc = &gpio->ports[0].gc;
-	void __iomem *reg_base = gpio->regs;
+	struct gpio_chip *gc	= &gpio->ports[0].gc;
+	void __iomem *reg_base	= gpio->regs;
 
 	gc->write_reg(reg_base + gpio_reg_convert(gpio, offset), val);
+}
+
+static struct k230_gpio_port *k230_offs_to_port(struct k230_gpio *gpio, unsigned int offs)
+{
+	struct k230_gpio_port *port;
+	int i;
+
+	for (i = 0; i < gpio->nr_ports; i++) {
+		port = &gpio->ports[i];
+		if (port->idx == offs / K230_MAX_GPIOS)
+			return port;
+	}
+
+	return NULL;
+}
+
+static void k230_toggle_trigger(struct k230_gpio *gpio, unsigned int offs)
+{
+	struct k230_gpio_port *port = k230_offs_to_port(gpio, offs);
+	struct gpio_chip *gc;
+	u32 pol;
+	int val;
+
+	if (!port)
+		return;
+	gc = &port->gc;
+
+	pol = k230_read(gpio, GPIO_INT_POLARITY);
+	/* Just read the current value right out of the data register */
+	val = gc->get(gc, offs % K230_MAX_GPIOS);
+	if (val)
+		pol &= ~BIT(offs);
+	else
+		pol |= BIT(offs);
+
+	k230_write(gpio, GPIO_INT_POLARITY, pol);
+}
+
+static u32 k230_do_irq(struct k230_gpio *gpio)
+{
+	struct gpio_chip *gc = &gpio->ports[0].gc;
+	unsigned long irq_status;
+	irq_hw_number_t hwirq;
+
+	irq_status = k230_read(gpio, GPIO_INTSTATUS);
+	for_each_set_bit(hwirq, &irq_status, K230_MAX_GPIOS) {
+		int gpio_irq = irq_find_mapping(gc->irq.domain, hwirq);
+		u32 irq_type = irq_get_trigger_type(gpio_irq);
+
+		generic_handle_irq(gpio_irq);
+
+		if ((irq_type & IRQ_TYPE_SENSE_MASK) == IRQ_TYPE_EDGE_BOTH)
+			k230_toggle_trigger(gpio, hwirq);
+	}
+
+	return irq_status;
+}
+
+static void k230_irq_handler(struct irq_desc *desc)
+{
+	struct k230_gpio *gpio = irq_desc_get_handler_data(desc);
+	struct irq_chip *chip = irq_desc_get_chip(desc);
+
+	chained_irq_enter(chip, desc);
+	k230_do_irq(gpio);
+	chained_irq_exit(chip, desc);
 }
 
 static void k230_irq_ack(struct irq_data *d)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct k230_gpio *gpio = to_k230_gpio(gc);
-	u32 val;
+	u32 val = BIT(irqd_to_hwirq(d));
 	unsigned long flags;
-	int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-
-	val = BIT(offset);
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
 	k230_write(gpio, GPIO_PORTA_EOI, val);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
-
-	if (irqd_is_activated(d))
-		irq_chip_eoi_parent(d);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 }
 
 static void k230_irq_mask(struct irq_data *d)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct k230_gpio *gpio = to_k230_gpio(gc);
+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
 	unsigned long flags;
 	u32 val;
-	unsigned int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
-	val = k230_read(gpio, GPIO_INTMASK) | BIT(offset);
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
+	val = k230_read(gpio, GPIO_INTMASK) | BIT(hwirq);
 	k230_write(gpio, GPIO_INTMASK, val);
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
+
+	gpiochip_disable_irq(gc, hwirq);
 }
 
 static void k230_irq_unmask(struct irq_data *d)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct k230_gpio *gpio = to_k230_gpio(gc);
+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
 	unsigned long flags;
 	u32 val;
-	unsigned int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-	irq_chip_unmask_parent(d);
+	gpiochip_enable_irq(gc, hwirq);
 
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
-	val = k230_read(gpio, GPIO_INTMASK) & ~BIT(offset);
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
+	val = k230_read(gpio, GPIO_INTMASK) & ~BIT(hwirq);
 	k230_write(gpio, GPIO_INTMASK, val);
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 }
 
 static void k230_irq_enable(struct irq_data *d)
@@ -241,20 +280,12 @@ static void k230_irq_enable(struct irq_data *d)
 	struct k230_gpio *gpio = to_k230_gpio(gc);
 	unsigned long flags;
 	u32 val;
-	unsigned int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-	irq_chip_enable_parent(d);
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
 	val = k230_read(gpio, GPIO_INTEN);
-	val |= BIT(offset);
+	val |= BIT(irqd_to_hwirq(d));
 	k230_write(gpio, GPIO_INTEN, val);
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 }
 
 static void k230_irq_disable(struct irq_data *d)
@@ -263,86 +294,57 @@ static void k230_irq_disable(struct irq_data *d)
 	struct k230_gpio *gpio = to_k230_gpio(gc);
 	unsigned long flags;
 	u32 val;
-	unsigned int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
 	val = k230_read(gpio, GPIO_INTEN);
-	val &= ~BIT(offset);
+	val &= ~BIT(irqd_to_hwirq(d));
 	k230_write(gpio, GPIO_INTEN, val);
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
-	irq_chip_disable_parent(d);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 }
 
-static void k230_irq_eoi(struct irq_data *d)
-{
-	irq_chip_eoi_parent(d);
-}
-
-static int k230_irq_set_type(struct irq_data *d, unsigned int type)
+static int k230_irq_set_type(struct irq_data *d, u32 type)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
 	struct k230_gpio *gpio = to_k230_gpio(gc);
+	irq_hw_number_t bit = irqd_to_hwirq(d);
 	unsigned long level, polarity, flags;
-	u32 bit;
-	unsigned int offset = gc->base;
 
-	if (offset >= 32)
-		offset -= 32;
-	bit = offset;
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
+	level = k230_read(gpio, GPIO_INTTYPE_LEVEL);
+	polarity = k230_read(gpio, GPIO_INT_POLARITY);
 
-	if (type & ~IRQ_TYPE_SENSE_MASK)
-		return -EINVAL;
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
-
-	if (type == IRQ_TYPE_EDGE_BOTH) {
-		level = k230_read(gpio, GPIO_INTTYPE_BOTHEDGE);
-		level &= ~BIT(bit);
+	switch (type) {
+	case IRQ_TYPE_EDGE_BOTH:
 		level |= BIT(bit);
-
-		k230_write(gpio, GPIO_INTTYPE_BOTHEDGE, level);
-	} else {
-		level = k230_read(gpio, GPIO_INTTYPE_LEVEL);
-		polarity = k230_read(gpio, GPIO_INT_POLARITY);
-
-		switch (type) {
-		case IRQ_TYPE_EDGE_RISING:
-			level |= BIT(bit);
-			polarity |= BIT(bit);
-			break;
-		case IRQ_TYPE_EDGE_FALLING:
-			level |= BIT(bit);
-			polarity &= ~BIT(bit);
-			break;
-		case IRQ_TYPE_LEVEL_HIGH:
-			level &= ~BIT(bit);
-			polarity |= BIT(bit);
-			break;
-		case IRQ_TYPE_LEVEL_LOW:
-			level &= ~BIT(bit);
-			polarity &= ~BIT(bit);
-			break;
-		}
-
-		k230_write(gpio, GPIO_INTTYPE_LEVEL, level);
-		k230_write(gpio, GPIO_INT_POLARITY, polarity);
+		k230_toggle_trigger(gpio, bit);
+		break;
+	case IRQ_TYPE_EDGE_RISING:
+		level |= BIT(bit);
+		polarity |= BIT(bit);
+		break;
+	case IRQ_TYPE_EDGE_FALLING:
+		level |= BIT(bit);
+		polarity &= ~BIT(bit);
+		break;
+	case IRQ_TYPE_LEVEL_HIGH:
+		level &= ~BIT(bit);
+		polarity |= BIT(bit);
+		break;
+	case IRQ_TYPE_LEVEL_LOW:
+		level &= ~BIT(bit);
+		polarity &= ~BIT(bit);
+		break;
 	}
-	hardlock_unlock(hardlock);
 
 	if (type & IRQ_TYPE_LEVEL_MASK)
 		irq_set_handler_locked(d, handle_level_irq);
 	else if (type & IRQ_TYPE_EDGE_BOTH)
 		irq_set_handler_locked(d, handle_edge_irq);
 
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	k230_write(gpio, GPIO_INTTYPE_LEVEL, level);
+	if (type != IRQ_TYPE_EDGE_BOTH)
+		k230_write(gpio, GPIO_INT_POLARITY, polarity);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 
 	return 0;
 }
@@ -362,63 +364,82 @@ static int k230_irq_set_wake(struct irq_data *d, unsigned int enable)
 
 	return 0;
 }
+#else
+#define k230_irq_set_wake	NULL
 #endif
 
-static int k230_gpio_set_debounce(struct gpio_chip *gc, unsigned int offset,
-				  unsigned int debounce)
+static const struct irq_chip k230_irq_chip = {
+	.name		= K230_DRIVER_NAME,
+	.irq_ack	= k230_irq_ack,
+	.irq_mask	= k230_irq_mask,
+	.irq_unmask	= k230_irq_unmask,
+	.irq_set_type	= k230_irq_set_type,
+	.irq_enable	= k230_irq_enable,
+	.irq_disable	= k230_irq_disable,
+	.irq_set_wake	= k230_irq_set_wake,
+	.flags		= IRQCHIP_IMMUTABLE,
+	GPIOCHIP_IRQ_RESOURCE_HELPERS,
+};
+
+static int k230_gpio_set_debounce(struct gpio_chip *gc,
+				   unsigned int offset, unsigned int debounce)
 {
 	struct k230_gpio_port *port = gpiochip_get_data(gc);
 	struct k230_gpio *gpio = port->gpio;
 	unsigned long flags, val_deb;
-	unsigned long mask;
+	unsigned long mask = BIT(offset);
 
-	offset = gc->base;
-	if (offset >= 32)
-		offset = offset % 32;
-	mask = BIT(offset);
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
+
 	val_deb = k230_read(gpio, GPIO_PORTA_DEBOUNCE);
-	val_deb |= mask;
+	if (debounce)
+		val_deb |= mask;
+	else
+		val_deb &= ~mask;
 	k230_write(gpio, GPIO_PORTA_DEBOUNCE, val_deb);
-	hardlock_unlock(hardlock);
 
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
+
+	return 0;
+}
+
+static int k230_gpio_set_config_default(struct gpio_chip *gc,
+				   unsigned int offset, unsigned long config)
+{
 	return 0;
 }
 
 static int k230_gpio_set_config(struct gpio_chip *gc, unsigned int offset,
-				unsigned long config)
+				 unsigned long config)
 {
-	u32 debounce;
+	if (pinconf_to_config_param(config) == PIN_CONFIG_INPUT_DEBOUNCE) {
+		u32 debounce = pinconf_to_config_argument(config);
 
-	debounce = pinconf_to_config_argument(config);
-	return k230_gpio_set_debounce(gc, offset, debounce);
+		return k230_gpio_set_debounce(gc, offset, debounce);
+	}
+
+	return k230_gpio_set_config_default(gc, offset, config);
 }
 
 static int k230_convert_irqs(struct k230_gpio_port_irqchip *pirq,
-			     struct k230_port_property *pp)
+			      struct k230_port_property *pp)
 {
-	pirq->irq[0] = pp->irq[0];
-	pirq->nr_irqs = 1;
+	int i;
+
+	/* Group all available IRQs into an array of parental IRQs. */
+	for (i = 0; i < pp->ngpio; ++i) {
+		if (!pp->irq[i])
+			continue;
+
+		pirq->irq[pirq->nr_irqs++] = pp->irq[i];
+	}
+
 	return pirq->nr_irqs ? 0 : -ENOENT;
 }
 
-static int k230_gpio_child_to_parent_hwirq(struct gpio_chip *gc,
-					   unsigned int child,
-					   unsigned int child_type,
-					   unsigned int *parent,
-					   unsigned int *parent_type)
-{
-	*parent_type = IRQ_TYPE_NONE;
-	*parent = gc->base + 32;
-	return 0;
-}
-
 static void k230_configure_irqs(struct k230_gpio *gpio,
-				struct k230_gpio_port *port,
-				struct k230_port_property *pp)
+				 struct k230_gpio_port *port,
+				 struct k230_port_property *pp)
 {
 	struct k230_gpio_port_irqchip *pirq;
 	struct gpio_chip *gc = &port->gc;
@@ -433,29 +454,18 @@ static void k230_configure_irqs(struct k230_gpio *gpio,
 		goto err_kfree_pirq;
 	}
 
-	gc->owner = THIS_MODULE;
-	gc->parent = gpio->dev;
 	girq = &gc->irq;
-	girq->fwnode = of_node_to_fwnode(gpio->node);
-	girq->parent_domain = gpio->parent;
-	girq->child_to_parent_hwirq = k230_gpio_child_to_parent_hwirq;
 	girq->handler = handle_bad_irq;
 	girq->default_type = IRQ_TYPE_NONE;
 
 	port->pirq = pirq;
-	pirq->irqchip.name = K230_DRIVER_NAME;
-	pirq->irqchip.irq_ack = k230_irq_ack;
-	pirq->irqchip.irq_mask = k230_irq_mask;
-	pirq->irqchip.irq_unmask = k230_irq_unmask;
-	pirq->irqchip.irq_set_type = k230_irq_set_type;
-	pirq->irqchip.irq_enable = k230_irq_enable;
-	pirq->irqchip.irq_disable = k230_irq_disable;
-	pirq->irqchip.irq_eoi = k230_irq_eoi;
-#ifdef CONFIG_PM_SLEEP
-	pirq->irqchip.irq_set_wake = k230_irq_set_wake;
-#endif
 
-	girq->chip = &pirq->irqchip;
+	girq->num_parents = pirq->nr_irqs;
+	girq->parents = pirq->irq;
+	girq->parent_handler_data = gpio;
+	girq->parent_handler = k230_irq_handler;
+
+	gpio_irq_chip_set_chip(girq, &k230_irq_chip);
 
 	return;
 
@@ -463,139 +473,18 @@ err_kfree_pirq:
 	devm_kfree(gpio->dev, pirq);
 }
 
-static int k230_gpio_get(struct gpio_chip *gc, unsigned int gpio)
+static int k230_gpio_request(struct gpio_chip *gc, unsigned int offset)
 {
-	gpio = gc->base;
-	if (gpio >= 32)
-		gpio = gpio % 32;
-
-	return !!(gc->read_reg(gc->reg_dat) & BIT(gpio));
-}
-
-static void k230_gpio_set_set(struct gpio_chip *gc, unsigned int gpio, int val)
-{
-	unsigned long mask;
-	unsigned long flags;
-
-	gpio = gc->base;
-	if (gpio >= 32)
-		gpio = gpio % 32;
-	mask = BIT(gpio);
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
-	if (val) {
-		gc->bgpio_data = gc->read_reg(gc->reg_dir_out);
-		gc->bgpio_data |= mask;
-		gc->write_reg(gc->reg_dir_out, gc->bgpio_data);
-		gc->bgpio_data = gc->read_reg(gc->reg_set);
-		gc->bgpio_data |= mask;
-		gc->write_reg(gc->reg_set, gc->bgpio_data);
-	} else {
-		gc->bgpio_data = gc->read_reg(gc->reg_set);
-		gc->bgpio_data &= ~mask;
-		gc->write_reg(gc->reg_set, gc->bgpio_data);
-	}
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
-}
-
-static int k230_gpio_dir_in(struct gpio_chip *gc, unsigned int gpio)
-{
-	unsigned long flags;
-	unsigned int dir;
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-
-	gpio = gc->base;
-	if (gpio >= 32)
-		gpio = gpio % 32;
-
-	dir = ~BIT(gpio);
-
-	while (hardlock_lock(hardlock))
-		;
-	if (gc->reg_dir_in)
-		gc->write_reg(gc->reg_dir_in, ~gc->bgpio_dir);
-	if (gc->reg_dir_out) {
-		gc->bgpio_dir = gc->read_reg(gc->reg_dir_out);
-		gc->bgpio_dir &= dir;
-		gc->write_reg(gc->reg_dir_out, gc->bgpio_dir);
-	}
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
-
 	return 0;
 }
 
-static int k230_gpio_get_dir(struct gpio_chip *gc, unsigned int gpio)
+static void k230_gpio_free(struct gpio_chip *gc, unsigned int offset)
 {
-	gpio = gc->base;
-	if (gpio >= 32)
-		gpio = gpio % 32;
-	/* Return 0 if output, 1 if input */
-	if (gc->bgpio_dir_unreadable) {
-		if (gc->bgpio_dir & BIT(gpio))
-			return GPIO_LINE_DIRECTION_OUT;
-		return GPIO_LINE_DIRECTION_IN;
-	}
-
-	if (gc->reg_dir_out) {
-		if (gc->read_reg(gc->reg_dir_out) & BIT(gpio))
-			return GPIO_LINE_DIRECTION_OUT;
-		return GPIO_LINE_DIRECTION_IN;
-	}
-
-	if (gc->reg_dir_in)
-		if (!(gc->read_reg(gc->reg_dir_in) & BIT(gpio)))
-			return GPIO_LINE_DIRECTION_OUT;
-
-	return GPIO_LINE_DIRECTION_IN;
 }
 
-static int k230_dir_out_val_first(struct gpio_chip *gc, unsigned int gpio,
-				  int val)
-{
-	unsigned long flags;
-	unsigned int dir;
-
-	gc->set(gc, gpio, val);
-	gpio = gc->base;
-	if (gpio >= 32)
-		gpio = gpio % 32;
-
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-
-	dir = BIT(gpio);
-	while (hardlock_lock(hardlock))
-		;
-	if (gc->reg_dir_in)
-		gc->write_reg(gc->reg_dir_in, ~gc->bgpio_dir);
-	if (gc->reg_dir_out) {
-		gc->bgpio_dir = gc->read_reg(gc->reg_dir_out);
-		gc->bgpio_dir |= dir;
-		gc->write_reg(gc->reg_dir_out, gc->bgpio_dir);
-	}
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
-
-	return 0;
-}
-
-static void k230_write_reg(void __iomem *reg, unsigned long data)
-{
-	writel(data, reg);
-}
-
-static unsigned long k230_read_reg(void __iomem *reg)
-{
-	return readl(reg);
-}
-
-static int k230_gpio_add_port(struct platform_device *pdev,
-			      struct k230_gpio *gpio,
-			      struct k230_port_property *pp, unsigned int offs)
+static int k230_gpio_add_port(struct k230_gpio *gpio,
+			       struct k230_port_property *pp,
+			       unsigned int offs)
 {
 	struct k230_gpio_port *port;
 	void __iomem *dat, *set, *dirout;
@@ -613,51 +502,34 @@ static int k230_gpio_add_port(struct platform_device *pdev,
 
 	dat = gpio->regs + GPIO_EXT_PORTA + pp->idx * GPIO_EXT_PORT_STRIDE;
 	set = gpio->regs + GPIO_SWPORTA_DR + pp->idx * GPIO_SWPORT_DR_STRIDE;
-	dirout = gpio->regs + GPIO_SWPORTA_DDR +
-		 pp->idx * GPIO_SWPORT_DDR_STRIDE;
+	dirout = gpio->regs + GPIO_SWPORTA_DDR + pp->idx * GPIO_SWPORT_DDR_STRIDE;
 
 	/* This registers 32 GPIO lines per port */
-	err = bgpio_init(&port->gc, gpio->dev, 4, dat, set, NULL, dirout, NULL,
-			 0);
+	err = bgpio_init(&port->gc, gpio->dev, 4, dat, set, NULL, dirout,
+			 NULL, 0);
 	if (err) {
 		dev_err(gpio->dev, "failed to init gpio chip for port%d\n",
 			port->idx);
 		return err;
 	}
 
-	/* set k230 gpiochip callback function, because it is special */
-	port->gc.get = k230_gpio_get;
-	port->gc.set = k230_gpio_set_set;
-	port->gc.direction_input = k230_gpio_dir_in;
-	port->gc.get_direction = k230_gpio_get_dir;
-	port->gc.direction_output = k230_dir_out_val_first;
-	port->gc.write_reg = k230_write_reg;
-	port->gc.read_reg = k230_read_reg;
-
+	port->gc.fwnode = pp->fwnode;
 	port->gc.ngpio = pp->ngpio;
 	port->gc.base = pp->gpio_base;
-	port->gc.set_config = k230_gpio_set_config;
+	// port->gc.request = gpiochip_generic_request;
+	// port->gc.free = gpiochip_generic_free;
+	port->gc.request = k230_gpio_request;
+	port->gc.free = k230_gpio_free;
 
-	if (!of_property_read_u32(pdev->dev.of_node, "interrupts",
-				  &pp->irq[0])) {
+	/* Only port A support debounce */
+	if (pp->idx == 0)
+		port->gc.set_config = k230_gpio_set_config;
+	else
+		port->gc.set_config = k230_gpio_set_config_default;
+
+	/* Only port A can provide interrupts in all configurations of the IP */
+	if (pp->idx == 0)
 		k230_configure_irqs(gpio, port, pp);
-	}
-
-	/* get gpio used hardlock num */
-	if (!hardlock_requested) {
-		if (of_property_read_u32(pdev->dev.of_node, "hardlock",
-					 &hardlock)) {
-			dev_err(gpio->dev, "get used hardlock num failed!\n");
-			return -EINVAL;
-		}
-		if (request_lock(hardlock)) {
-			dev_err(gpio->dev, "request hardlock %d failed!\n",
-				hardlock);
-			hardlock = -1;
-		}
-		hardlock_requested = true;
-		dev_err(gpio->dev, "request hardlock %d success!\n", hardlock);
-	}
 
 	err = devm_gpiochip_add_data(gpio->dev, &port->gc, port);
 	if (err) {
@@ -667,6 +539,18 @@ static int k230_gpio_add_port(struct platform_device *pdev,
 	}
 
 	return 0;
+}
+
+static void k230_get_irq(struct device *dev, struct fwnode_handle *fwnode,
+			  struct k230_port_property *pp)
+{
+	int irq, j;
+
+	for (j = 0; j < pp->ngpio; j++) {
+		irq = fwnode_irq_get(fwnode, j);
+		if (irq > 0)
+			pp->irq[j] = irq;
+	}
 }
 
 static struct k230_platform_data *k230_gpio_get_pdata(struct device *dev)
@@ -692,35 +576,38 @@ static struct k230_platform_data *k230_gpio_get_pdata(struct device *dev)
 	pdata->nports = nports;
 
 	i = 0;
-	device_for_each_child_node(dev, fwnode) {
+	device_for_each_child_node(dev, fwnode)  {
 		pp = &pdata->properties[i++];
 		pp->fwnode = fwnode;
 
-		if (fwnode_property_read_u32(fwnode, "reg-bank", &pp->idx) ||
+		if (fwnode_property_read_u32(fwnode, "reg", &pp->idx) ||
 		    pp->idx >= K230_MAX_PORTS) {
-			dev_err(dev, "missing/invalid port index for port%d\n",
-				i);
+			dev_err(dev,
+				"missing/invalid port index for port%d\n", i);
 			fwnode_handle_put(fwnode);
 			return ERR_PTR(-EINVAL);
 		}
 
 		if (fwnode_property_read_u32(fwnode, "ngpios", &pp->ngpio) &&
-		    fwnode_property_read_u32(fwnode, "nr-gpios", &pp->ngpio)) {
+		    fwnode_property_read_u32(fwnode, "snps,nr-gpios", &pp->ngpio)) {
 			dev_info(dev,
 				 "failed to get number of gpios for port%d\n",
 				 i);
 			pp->ngpio = K230_MAX_GPIOS;
 		}
 
-		if (fwnode_property_read_u32(fwnode, "id", &pp->id) ||
-		    pp->idx > 1 || pp->idx < 0) {
-			dev_err(dev, "invalid port num for port%d\n", i);
-			fwnode_handle_put(fwnode);
-			return ERR_PTR(-EINVAL);
-		}
+		pp->gpio_base	= -1;
 
-		pp->irq_shared = false;
-		pp->gpio_base = pp->id;
+		/* For internal use only, new platforms mustn't exercise this */
+		if (is_software_node(fwnode))
+			fwnode_property_read_u32(fwnode, "gpio-base", &pp->gpio_base);
+
+		/*
+		 * Only port A can provide interrupts in all configurations of
+		 * the IP.
+		 */
+		if (pp->idx == 0)
+			k230_get_irq(dev, fwnode, pp);
 	}
 
 	return pdata;
@@ -738,10 +625,9 @@ static int k230_get_reset(struct k230_gpio *gpio)
 	int err;
 
 	gpio->rst = devm_reset_control_get_optional_shared(gpio->dev, NULL);
-	if (IS_ERR(gpio->rst)) {
-		dev_err(gpio->dev, "Cannot get reset descriptor\n");
-		return PTR_ERR(gpio->rst);
-	}
+	if (IS_ERR(gpio->rst))
+		return dev_err_probe(gpio->dev, PTR_ERR(gpio->rst),
+				     "Cannot get reset descriptor\n");
 
 	err = reset_control_deassert(gpio->rst);
 	if (err) {
@@ -766,11 +652,11 @@ static int k230_get_clks(struct k230_gpio *gpio)
 	/* Optional bus and debounce clocks */
 	gpio->clks[0].id = "bus";
 	gpio->clks[1].id = "db";
-	err = devm_clk_bulk_get_optional(gpio->dev, K230_NR_CLOCKS, gpio->clks);
-	if (err) {
-		dev_err(gpio->dev, "Cannot get APB/Debounce clocks\n");
-		return err;
-	}
+	err = devm_clk_bulk_get_optional(gpio->dev, K230_NR_CLOCKS,
+					 gpio->clks);
+	if (err)
+		return dev_err_probe(gpio->dev, err,
+				     "Cannot get APB/Debounce clocks\n");
 
 	err = clk_bulk_prepare_enable(K230_NR_CLOCKS, gpio->clks);
 	if (err) {
@@ -789,44 +675,23 @@ MODULE_DEVICE_TABLE(of, k230_of_match);
 
 static int k230_gpio_probe(struct platform_device *pdev)
 {
+	unsigned int i;
 	struct k230_gpio *gpio;
 	int err;
+	struct k230_platform_data *pdata;
 	struct device *dev = &pdev->dev;
-	struct k230_platform_data *pdata = dev_get_platdata(dev);
-	struct resource *r;
 
-	if (!k230_mapped) {
-		iomem_gpio_a = ioremap(K230_GPIOA_BASE_ADDR, 0x1000);
-		iomem_gpio_b = ioremap(K230_GPIOB_BASE_ADDR, 0x1000);
-		k230_mapped = true;
-	}
-
-	if (!pdata) {
-		pdata = k230_gpio_get_pdata(dev);
-		if (IS_ERR(pdata))
-			return PTR_ERR(pdata);
-	}
-
-	if (!pdata->nports)
-		return -ENODEV;
+	pdata = k230_gpio_get_pdata(dev);
+	if (IS_ERR(pdata))
+		return PTR_ERR(pdata);
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio)
 		return -ENOMEM;
 
 	gpio->dev = &pdev->dev;
-	gpio->node = pdev->dev.of_node;
 	gpio->nr_ports = pdata->nports;
-	gpio->irq_parent = of_irq_find_parent(gpio->node);
-	if (!gpio->irq_parent) {
-		dev_err(dev, "no IRQ parent node\n");
-	} else {
-		gpio->parent = irq_find_host(gpio->irq_parent);
-		if (!gpio->parent) {
-			dev_err(dev, "no IRQ parent domain\n");
-			return -ENODEV;
-		}
-	}
+
 	err = k230_get_reset(gpio);
 	if (err)
 		return err;
@@ -836,19 +701,9 @@ static int k230_gpio_probe(struct platform_device *pdev)
 	if (!gpio->ports)
 		return -ENOMEM;
 
-	gpio->ports[0].id = pdata->properties[0].id;
-
-	/* for k230 special design */
-	if (k230_mapped) {
-		r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-		if (r->start == K230_GPIOA_BASE_ADDR)
-			gpio->regs = iomem_gpio_a;
-		else if (r->start == K230_GPIOB_BASE_ADDR)
-			gpio->regs = iomem_gpio_b;
-	} else {
-		dev_err(dev, "get device register address failed!\n");
-		return -ENOMEM;
-	}
+	gpio->regs = devm_platform_ioremap_resource(pdev, 0);
+	if (IS_ERR(gpio->regs))
+		return PTR_ERR(gpio->regs);
 
 	err = k230_get_clks(gpio);
 	if (err)
@@ -856,11 +711,14 @@ static int k230_gpio_probe(struct platform_device *pdev)
 
 	gpio->flags = (uintptr_t)device_get_match_data(dev);
 
-	err = k230_gpio_add_port(pdev, gpio, &pdata->properties[0], 0);
-	if (err)
-		return err;
+	for (i = 0; i < gpio->nr_ports; i++) {
+		err = k230_gpio_add_port(gpio, &pdata->properties[i], i);
+		if (err)
+			return err;
+	}
 
 	platform_set_drvdata(pdev, gpio);
+
 	return 0;
 }
 
@@ -868,11 +726,11 @@ static int k230_gpio_probe(struct platform_device *pdev)
 static int k230_gpio_suspend(struct device *dev)
 {
 	struct k230_gpio *gpio = dev_get_drvdata(dev);
-	struct gpio_chip *gc = &gpio->ports[0].gc;
+	struct gpio_chip *gc	= &gpio->ports[0].gc;
 	unsigned long flags;
 	int i;
 
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
 	for (i = 0; i < gpio->nr_ports; i++) {
 		unsigned int offset;
 		unsigned int idx = gpio->ports[i].idx;
@@ -889,20 +747,17 @@ static int k230_gpio_suspend(struct device *dev)
 
 		/* Only port A can provide interrupts */
 		if (idx == 0) {
-			ctx->int_mask = k230_read(gpio, GPIO_INTMASK);
-			ctx->int_en = k230_read(gpio, GPIO_INTEN);
-			ctx->int_pol = k230_read(gpio, GPIO_INT_POLARITY);
-			ctx->int_type = k230_read(gpio, GPIO_INTTYPE_LEVEL);
-			ctx->int_deb = k230_read(gpio, GPIO_PORTA_DEBOUNCE);
+			ctx->int_mask	= k230_read(gpio, GPIO_INTMASK);
+			ctx->int_en	= k230_read(gpio, GPIO_INTEN);
+			ctx->int_pol	= k230_read(gpio, GPIO_INT_POLARITY);
+			ctx->int_type	= k230_read(gpio, GPIO_INTTYPE_LEVEL);
+			ctx->int_deb	= k230_read(gpio, GPIO_PORTA_DEBOUNCE);
 
 			/* Mask out interrupts */
-			while (hardlock_lock(hardlock))
-				;
 			k230_write(gpio, GPIO_INTMASK, ~ctx->wake_en);
-			hardlock_unlock(hardlock);
 		}
 	}
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 
 	clk_bulk_disable_unprepare(K230_NR_CLOCKS, gpio->clks);
 
@@ -912,7 +767,7 @@ static int k230_gpio_suspend(struct device *dev)
 static int k230_gpio_resume(struct device *dev)
 {
 	struct k230_gpio *gpio = dev_get_drvdata(dev);
-	struct gpio_chip *gc = &gpio->ports[0].gc;
+	struct gpio_chip *gc	= &gpio->ports[0].gc;
 	unsigned long flags;
 	int i, err;
 
@@ -922,9 +777,7 @@ static int k230_gpio_resume(struct device *dev)
 		return err;
 	}
 
-	spin_lock_irqsave((spinlock_t *)&gc->bgpio_lock, flags);
-	while (hardlock_lock(hardlock))
-		;
+	raw_spin_lock_irqsave(&gc->bgpio_lock, flags);
 	for (i = 0; i < gpio->nr_ports; i++) {
 		unsigned int offset;
 		unsigned int idx = gpio->ports[i].idx;
@@ -951,14 +804,14 @@ static int k230_gpio_resume(struct device *dev)
 			k230_write(gpio, GPIO_PORTA_EOI, 0xffffffff);
 		}
 	}
-	hardlock_unlock(hardlock);
-	spin_unlock_irqrestore((spinlock_t *)&gc->bgpio_lock, flags);
+	raw_spin_unlock_irqrestore(&gc->bgpio_lock, flags);
 
 	return 0;
 }
 #endif
 
-static SIMPLE_DEV_PM_OPS(k230_gpio_pm_ops, k230_gpio_suspend, k230_gpio_resume);
+static SIMPLE_DEV_PM_OPS(k230_gpio_pm_ops, k230_gpio_suspend,
+			 k230_gpio_resume);
 
 static struct platform_driver k230_gpio_driver = {
 	.driver		= {
