@@ -36,3 +36,14 @@
 &usb1 {
 	status = "okay";
 };
+
+&i2c3 {
+	status = "okay";
+	touchscreen@38 {
+		compatible = "edt,edt-ft5306";
+		reg = <0x38>;
+		reset-gpios = <&gpio0_ports 23 GPIO_ACTIVE_LOW>;
+		interrupt-parent = <&gpio0_ports>;
+		interrupts = <22 IRQ_TYPE_EDGE_FALLING>;
+	};
+};
