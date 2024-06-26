@@ -1,0 +1,143 @@
+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/canaan,k230-apb-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: K230 GPIO controller
+
+description: |
+  K230 GPIO controllers is based on Synopsys DesignWare GPIO controllers
+  with out pinctrl required.
+
+maintainers:
+  - huangziyi <huangziyi@canaan-creative.com>
+
+properties:
+  $nodename:
+    pattern: "^gpio@[0-9a-f]+$"
+
+  compatible:
+    const: canaan,k230-apb-gpio
+
+  "#address-cells":
+    const: 1
+
+  "#size-cells":
+    const: 0
+
+  reg:
+    maxItems: 1
+
+patternProperties:
+  "^gpio-(port|controller)@[0-9a-f]+$":
+    type: object
+    properties:
+      compatible:
+        const: canaan,k230-apb-gpio-port
+
+      reg:
+        maxItems: 1
+
+      gpio-controller: true
+
+      '#gpio-cells':
+        const: 2
+
+      gpio-line-names:
+        const: 32
+
+      ngpios:
+        const: 32
+
+      snps,nr-gpios:
+        description: The number of GPIO pins exported by the port.
+        deprecated: true
+        $ref: /schemas/types.yaml#/definitions/uint32
+        const: 32
+
+      interrupts:
+        description: |
+          The interrupts to the parent controller raised when GPIOs generate
+          the interrupts. If the controller provides one combined interrupt
+          for all GPIOs, specify a single interrupt. If the controller provides
+          one interrupt for each GPIO, provide a list of interrupts that
+          correspond to each of the GPIO pins.
+        const: 32
+
+      interrupt-controller: true
+
+      '#interrupt-cells':
+        const: 2
+
+    required:
+      - compatible
+      - reg
+      - gpio-controller
+      - '#gpio-cells'
+
+    dependencies:
+      interrupt-controller: [ interrupts ]
+
+    additionalProperties: false
+
+additionalProperties: false
+
+required:
+  - compatible
+  - reg
+  - "#address-cells"
+  - "#size-cells"
+
+examples:
+  - |
+    gpio0: gpio@9140b000 {
+      compatible = "canaan,k230-apb-gpio";
+      reg = <0x0 0x9140b000 0x0 0x1000>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+
+      gpio0_ports: gpio-port@0 {
+        compatible = "canaan,k230-apb-gpio-port";
+        reg = <0>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        snps,nr-gpios = <32>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+        interrupts =
+          <32 IRQ_TYPE_EDGE_RISING>,
+          <33 IRQ_TYPE_EDGE_RISING>,
+          <34 IRQ_TYPE_EDGE_RISING>,
+          <35 IRQ_TYPE_EDGE_RISING>,
+          <36 IRQ_TYPE_EDGE_RISING>,
+          <37 IRQ_TYPE_EDGE_RISING>,
+          <38 IRQ_TYPE_EDGE_RISING>,
+          <39 IRQ_TYPE_EDGE_RISING>,
+          <40 IRQ_TYPE_EDGE_RISING>,
+          <41 IRQ_TYPE_EDGE_RISING>,
+          <42 IRQ_TYPE_EDGE_RISING>,
+          <43 IRQ_TYPE_EDGE_RISING>,
+          <44 IRQ_TYPE_EDGE_RISING>,
+          <45 IRQ_TYPE_EDGE_RISING>,
+          <46 IRQ_TYPE_EDGE_RISING>,
+          <47 IRQ_TYPE_EDGE_RISING>,
+          <48 IRQ_TYPE_EDGE_RISING>,
+          <49 IRQ_TYPE_EDGE_RISING>,
+          <50 IRQ_TYPE_EDGE_RISING>,
+          <51 IRQ_TYPE_EDGE_RISING>,
+          <52 IRQ_TYPE_EDGE_RISING>,
+          <53 IRQ_TYPE_EDGE_RISING>,
+          <54 IRQ_TYPE_EDGE_RISING>,
+          <55 IRQ_TYPE_EDGE_RISING>,
+          <56 IRQ_TYPE_EDGE_RISING>,
+          <57 IRQ_TYPE_EDGE_RISING>,
+          <58 IRQ_TYPE_EDGE_RISING>,
+          <59 IRQ_TYPE_EDGE_RISING>,
+          <60 IRQ_TYPE_EDGE_RISING>,
+          <61 IRQ_TYPE_EDGE_RISING>,
+          <62 IRQ_TYPE_EDGE_RISING>,
+          <63 IRQ_TYPE_EDGE_RISING>;
+      };
+    };
+...
