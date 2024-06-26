@@ -47,3 +47,78 @@
 		interrupts = <22 IRQ_TYPE_EDGE_FALLING>;
 	};
 };
+
+&vo {
+	vth_line = <10>;
+};
+
+&dsi {
+	panel@0 {
+		panel-width-mm = <480>;
+		panel-height-mm = <800>;
+		panel-dsi-lane = <2>;
+		dsi_reset-gpios = <&gpio0_ports 24 GPIO_ACTIVE_HIGH>;
+		backlight_gpio-gpios = <&gpio0_ports 25 GPIO_ACTIVE_HIGH>;
+
+		panel-init-sequence = [
+			39 00 06 ff 77 01 00 00 13
+			39 00 02 ef 08
+			39 00 06 ff 77 01 00 00 10
+			39 00 03 c0 63 00
+			39 00 03 c1 10 02
+			39 00 03 c2 31 02
+			39 00 02 cc 10
+			39 00 11 b0 c0 0c 92 0c 10 05 02 0d 07 21 04 53 11 6a 32 1f
+			39 00 11 b1 c0 87 cf 0c 10 06 00 03 08 1d 06 54 12 e6 ec 0f
+			39 00 06 ff 77 01 00 00 11
+			39 00 02 b0 5d
+			39 00 02 b1 62
+			39 00 02 b2 82
+			39 00 02 b3 80
+			39 00 02 b5 42
+			39 00 02 b7 85
+			39 00 02 b8 20
+			39 00 02 c0 09
+			39 00 02 c1 78
+			39 00 02 c2 78
+			39 00 02 d0 88
+			39 ff 02 ee 42
+			39 00 04 e0 00 00 02
+			39 00 0c e1 04 a0 06 a0 05 a0 07 a0 00 44 44
+			39 00 0d e2 00 00 33 33 01 a0 00 00 01 a0 00 00
+			39 00 05 e3 00 00 33 33
+			39 00 03 e4 44 44
+			39 00 11 e5 0c 30 a0 a0 0e 32 a0 a0 08 2c a0 a0 0a 2e a0 a0
+			39 00 05 e6 00 00 33 33
+			39 00 03 e7 44 44
+			39 00 11 e8 0d 31 a0 a0 0f 33 a0 a0 09 2d a0 a0 0b 2f a0 a0
+			39 00 08 eb 00 01 e4 e4 44 88 00
+			39 00 11 ed ff f5 47 6f 0b a1 a2 bf fb 2a 1a b0 f6 74 5f ff
+			39 00 07 ef 08 08 08 40 3f 64
+			39 00 06 ff 77 01 00 00 13
+			39 00 03 e8 00 0e
+			39 00 06 ff 77 01 00 00 00
+			39 ff 01 11
+			39 00 06 ff 77 01 00 00 13
+			39 ff 03 e8 00 0c
+			39 00 03 e8 00 00
+			39 00 06 ff 77 01 00 00 00
+			39 00 02 3a 50
+			39 ff 01 29
+		];
+
+		display-timings {
+			timing-0 {
+				clock-frequency = <39600000>;
+				hactive = <480>;
+				vactive = <800>;
+				hfront-porch = <80>;
+				hback-porch = <20>;
+				hsync-len = <20>;
+				vfront-porch = <220>;
+				vback-porch = <70>;
+				vsync-len = <10>;
+			};
+		};
+	};
+};
