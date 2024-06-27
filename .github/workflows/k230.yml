@@ -12,6 +12,8 @@ env:
   xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0-20240419.tar.gz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
+  rv64ilp32_toolchain: https://github.com/ruyisdk/riscv-gnu-toolchain-rv64ilp32/releases/download/2024.06.25
+  rv64ilp32_toolchain_file_name: riscv64ilp32-elf-ubuntu-22.04-gcc-nightly-2024.06.25-nightly.tar.gz
   ARCH: riscv
   KBUILD_BUILD_USER: builder
   KBUILD_BUILD_HOST: ci-riscv-builder
@@ -28,6 +30,8 @@ jobs:
             toolchain_tripe: riscv64-unknown-linux-gnu-
           - name: linux-64lp64
             toolchain_tripe: riscv64-unknown-linux-gnu-
+          - name: linux-64ilp32
+            toolchain_tripe: riscv64-unknown-elf-
 
     runs-on: ubuntu-22.04
     env:
@@ -59,6 +63,11 @@ jobs:
                 tar -xvf ${xt64_toolchain_file_name} -C /opt
                 rm -v ${xt64_toolchain_file_name}
               fi
+              if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
+                wget ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
+                tar -xvf ${rv64ilp32_toolchain_file_name} -C /opt
+                rm -v ${rv64ilp32_toolchain_file_name}
+              fi
 
       - name: Compile
         run: |
@@ -69,11 +78,22 @@ jobs:
               if [ x"${{ matrix.name }}" = x"linux-64lp64-xt" ]; then
                 export PATH="/opt/Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0/bin:$PATH"
               fi
+              if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
+                export PATH="/opt/riscv/bin:$PATH"
+              fi
               pushd kernel
                 make k230_defconfig
-                export KDEB_PKGVERSION="$(make kernelversion)-$(date "+%Y.%m.%d.%H.%M")+$(git rev-parse --short HEAD)"
-                make -j$(nproc) bindeb-pkg
-                dcmd cp -v ../*.changes ${GITHUB_WORKSPACE}/artifact
+                if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
+                  rm .config
+                  make k230_defconfig 64ilp32.config
+                fi
+                make -j$(nproc)
+                make INSTALL_MOD_PATH=./modules_install modules_install
+                make INSTALL_HDR_PATH=./headers_install headers_install
+                cp -vf arch/riscv/boot/Image ./
+                cp -vf Documentation/admin-guide/kdump/gdbmacros.txt ./
+                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
+                cp -vf ${{ matrix.name }}.tar.gz ${GITHUB_WORKSPACE}/artifact
                 cp -vf arch/riscv/boot/Image ${GITHUB_WORKSPACE}/artifact
               popd
 
