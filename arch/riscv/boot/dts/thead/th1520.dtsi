@@ -1454,5 +1454,11 @@
 				opp-microvolt = <800000>;
 			};
 		};
+
+		hwspinlock: hwspinlock@ffefc10000 {
+			compatible = "th1520,hwspinlock";
+			reg = <0xff 0xefc10000 0x0 0x10000>;
+			status = "disabled";
+		};
 	};
 };
