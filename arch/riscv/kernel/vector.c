@@ -116,7 +116,8 @@ static bool insn_is_matrix(u32 insn_buf)
 int riscv_v_thread_zalloc(struct task_struct *tsk)
 {
 	void *datap;
-
+	if (!riscv_v_vsize)
+		return -EINVAL;
 	datap = kzalloc(riscv_v_vsize, GFP_KERNEL);
 	if (!datap)
 		return -ENOMEM;
