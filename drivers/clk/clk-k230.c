@@ -9,17 +9,17 @@
 /***********************************************************************
  *  Canaan clock tree driver design description:
  *  1. osc24m are automatically registered by clk-fixed-rate.c
- *              -->compatile is "fixed-clock"               parent is sysctl_root
+ *			  -->compatile is "fixed-clock"			   parent is sysctl_root
  *  2. pll0/1/2/3 are registered by cannan_k230_pll_clk_setup
- *           -->compatile is "canaan,k230-pll"           parent is sysctl_root
+ *		   -->compatile is "canaan,k230-pll"		   parent is sysctl_root
  *  3. pll0/1/2/3 div2/3/4 are automatically registered by clk-fixed-factor.c
- *  -->compatile is "fixed-factor-clock"        parent is sysctl_root
+ *  -->compatile is "fixed-factor-clock"		parent is sysctl_root
  *
  *  5. composite clks are reigstered by cannan_k230_clk_composite_setup
- *     -->compatile is "canaan,k230-clk-composite" parent is sysctl_clk
- *     k230-clk-composite consider the follow ops:
- *     |OPS | mux | rate | gate | read-only |
- *          | Y/N | Y/N  | Y/N  | Y/N |
+ *	 -->compatile is "canaan,k230-clk-composite" parent is sysctl_clk
+ *	 k230-clk-composite consider the follow ops:
+ *	 |OPS | mux | rate | gate | read-only |
+ *		  | Y/N | Y/N  | Y/N  | Y/N |
  *******************************************************************/
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
@@ -45,15 +45,15 @@ static DEFINE_SPINLOCK(k230_clk_spinlock);
  * K230 composite clk register
  *
  * 1. rate_calc_method = 0: div(denominator) is fixed, mul(numerator) is changeble.
- *                          rate_div_mask = 0, divide = 1/rate_div_max;
- *                          rate_div_mask = 1, divide = 2/rate_div_max;
- *                          rate_div_mask = 2, divide = 3/rate_div_max;
+ *						  rate_div_mask = 0, divide = 1/rate_div_max;
+ *						  rate_div_mask = 1, divide = 2/rate_div_max;
+ *						  rate_div_mask = 2, divide = 3/rate_div_max;
  * 2. rate_calc_method = 1: div(denominator) is changeble, mul(numerator) is fixed.
- *                          rate_div_mask = 0, divide = 1/1;
- *                          rate_div_mask = 1, divide = 1/2;
- *                         rate_div_mask = 2, divide = 1/3;(denominator 3: less than rate_div_max)
+ *						  rate_div_mask = 0, divide = 1/1;
+ *						  rate_div_mask = 1, divide = 1/2;
+ *						 rate_div_mask = 2, divide = 1/3;(denominator 3: less than rate_div_max)
  * 3. rate_calc_method = 2: div(denominator) and mul(numerator) are changeable.
- *                          rate_mul_mask = mul, rate_div_mask = div
+ *						  rate_mul_mask = mul, rate_div_mask = div
  ******************************************************************************/
 struct k230_clk_composite {
 	struct clk_hw hw;
@@ -118,7 +118,7 @@ struct k230_clk_composite {
 // 1: 1/1, 1/2, 1/3, .......
 // 2: x/y, .......
 static unsigned long k230_clk_composite_recalc_rate(struct clk_hw *hw,
-						    unsigned long parent_rate)
+							unsigned long parent_rate)
 {
 	struct k230_clk_composite *k230_composite = to_k230_clk_composite(hw);
 	uint32_t reg_mul;
@@ -195,9 +195,10 @@ static unsigned long k230_clk_composite_recalc_rate(struct clk_hw *hw,
 		pr_info("[K230_CLK]:clk %s recalc rate %d", clk_hw_get_name(hw),
 			(uint32_t)(parent_rate * rate_mul / rate_div));
 	#endif
-		return parent_rate * rate_mul / rate_div;
-	}
+	return parent_rate * rate_mul / rate_div;
+}
 
+/* Find the approximate value based on the parent node and the current node */
 static int k230_clk_find_approximate(struct k230_clk_composite *k230_composite,
 						uint32_t mul_min, uint32_t mul_max,
 						uint32_t div_min, uint32_t div_max,
@@ -319,7 +320,7 @@ static int k230_clk_find_approximate(struct k230_clk_composite *k230_composite,
 
 /* calc round rate and set */
 static int k230_clk_composite_set_rate(struct clk_hw *hw, unsigned long rate,
-				       unsigned long parent_rate)
+					   unsigned long parent_rate)
 {
 	struct k230_clk_composite *k230_composite = to_k230_clk_composite(hw);
 	uint32_t mul = 0;
@@ -338,13 +339,13 @@ static int k230_clk_composite_set_rate(struct clk_hw *hw, unsigned long rate,
 		return -1;
 
 	if (k230_clk_find_approximate(
-		    k230_composite, k230_composite->rate_mul_min,
-		    k230_composite->rate_mul_max, k230_composite->rate_div_min,
-		    k230_composite->rate_div_max,
-		    k230_composite->rate_calc_method, rate, parent_rate, &div,
-		    &mul)) {
+			k230_composite, k230_composite->rate_mul_min,
+			k230_composite->rate_mul_max, k230_composite->rate_div_min,
+			k230_composite->rate_div_max,
+			k230_composite->rate_calc_method, rate, parent_rate, &div,
+			&mul)) {
 		pr_err("[canaan_clk_err]:clk %s set rate error!\n",
-		       clk_hw_get_name(hw));
+			   clk_hw_get_name(hw));
 		return -1;
 	}
 
@@ -361,20 +362,20 @@ static int k230_clk_composite_set_rate(struct clk_hw *hw, unsigned long rate,
 
 		if (k230_composite->rate_calc_method == 1) {
 			reg |= ((div - 1) & k230_composite->rate_div_mask)
-			       << (k230_composite->rate_div_shift);
+				   << (k230_composite->rate_div_shift);
 		} else if (k230_composite->rate_calc_method == 0) {
 			reg |= ((mul - 1) & k230_composite->rate_div_mask)
-			       << (k230_composite->rate_div_shift);
+				   << (k230_composite->rate_div_shift);
 		} else {
 			reg |= (mul & k230_composite->rate_mul_mask)
-			       << (k230_composite->rate_mul_shift);
+				   << (k230_composite->rate_mul_shift);
 			reg |= (div & k230_composite->rate_div_mask)
-			       << (k230_composite->rate_div_shift);
+				   << (k230_composite->rate_div_shift);
 		}
 
 		writel(reg, k230_composite->rate_reg);
 		spin_unlock_irqrestore(k230_composite->composite_spinlock,
-				       flags);
+					   flags);
 	} else {
 		spin_lock_irqsave(k230_composite->composite_spinlock, flags);
 		reg = readl(k230_composite->rate_reg);
@@ -388,12 +389,12 @@ static int k230_clk_composite_set_rate(struct clk_hw *hw, unsigned long rate,
 		reg_1 |= (mul & k230_composite->rate_mul_mask_1)
 			 << (k230_composite->rate_mul_shift_1);
 		reg |= (div & k230_composite->rate_div_mask)
-		       << (k230_composite->rate_div_shift);
+			   << (k230_composite->rate_div_shift);
 
 		writel(reg, k230_composite->rate_reg);
 		writel(reg_1, k230_composite->rate_reg_1);
 		spin_unlock_irqrestore(k230_composite->composite_spinlock,
-				       flags);
+					   flags);
 	}
 #ifdef K230_CLK_DEBUG
 	pr_info("[K230_CLK]:clk_set_rate %s rate %d, parent_rate %d",
@@ -419,7 +420,7 @@ static int k230_clk_composite_is_enable(struct clk_hw *hw)
 	spin_unlock_irqrestore(k230_composite->composite_spinlock, flags);
 
 	if (((composite_gate_value >> k230_composite->gate_bit) & 0x1) ^
-	    k230_composite->gate_bit_reverse)
+		k230_composite->gate_bit_reverse)
 		return 1;
 
 	return 0;
@@ -462,7 +463,7 @@ static void k230_clk_composite_disable(struct clk_hw *hw)
 
 	if (k230_composite->composite_read_only == 1) {
 		pr_err("[canaan_clk_err]:clk %s is read-only!\n",
-		       clk_hw_get_name(hw));
+			   clk_hw_get_name(hw));
 		return;
 	}
 
@@ -495,7 +496,7 @@ static int k230_clk_composite_set_parent(struct clk_hw *hw, u8 index)
 		return -1;
 
 	composite_mux_value = (k230_composite->mux_mask & index)
-			      << k230_composite->mux_shift;
+				  << k230_composite->mux_shift;
 
 	spin_lock_irqsave(k230_composite->composite_spinlock, flags);
 	writel(composite_mux_value, k230_composite->mux_reg);
@@ -531,7 +532,7 @@ static u8 k230_clk_composite_get_parent(struct clk_hw *hw)
 			k230_composite->mux_mask);
 #endif
 	return (composite_mux_value >> k230_composite->mux_shift) &
-	       k230_composite->mux_mask;
+		   k230_composite->mux_mask;
 }
 
 static int k230_clk_composite_init(struct clk_hw *hw)
@@ -548,19 +549,6 @@ static int k230_clk_composite_init(struct clk_hw *hw)
 
 static int k230_debugfs_clk_composite_init(struct clk_hw *hw);
 
-static const struct clk_ops k230_clk_ops = {
-	.set_parent = k230_clk_composite_set_parent,
-	.get_parent = k230_clk_composite_get_parent,
-	.recalc_rate = k230_clk_composite_recalc_rate,
-	.set_rate = k230_clk_composite_set_rate,
-	.round_rate = k230_clk_composite_round_rate,
-	.is_enabled = k230_clk_composite_is_enable,
-	.enable = k230_clk_composite_enable,
-	.disable = k230_clk_composite_disable,
-	.init = k230_clk_composite_init,
-};
-
-
 static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 {
 	struct device_node *parent_sys_clk = NULL;
@@ -572,12 +560,13 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 	bool mux, rate, gate, only_read;
 	uint32_t composite_reg_offset;
 	uint32_t composite_reg_offset_1;
+	struct clk_ops *p_clk_ops = NULL;
 
 	/* parent is sysctl_clk, get address from dts */
 	parent_sys_clk = of_get_parent(node);
 	if (parent_sys_clk == NULL) {
 		pr_err("[canaan_clk_err]:Could not get %s parent node.\n",
-		       node->name);
+			   node->name);
 		return NULL;
 	}
 
@@ -585,7 +574,7 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 	base_reg = of_iomap(parent_sys_clk, 0);
 	if (base_reg == NULL) {
 		pr_err("[canaan_clk_err]:Could not iomap %s node.\n",
-		       node->name);
+			   node->name);
 		return NULL;
 	}
 
@@ -609,10 +598,10 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 
 		if ((of_property_read_u32(node, "clk-parent-reg-value-shift",
 					  &k230_clk_composite->mux_shift)) ||
-		    (of_property_read_u32(node, "clk-parent-reg-value-mask",
+			(of_property_read_u32(node, "clk-parent-reg-value-mask",
 					  &k230_clk_composite->mux_mask))) {
 			pr_err("[canaan_clk_err]:Parse composite node %s mux error.\n",
-			       node->name);
+				   node->name);
 			goto free_k230_clk_composite;
 		}
 	}
@@ -627,82 +616,82 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 					 (uint64_t)composite_reg_offset);
 
 		if (true ==
-		    (of_property_read_bool(node, "clk-rate-reg-offset_1"))) {
+			(of_property_read_bool(node, "clk-rate-reg-offset_1"))) {
 			of_property_read_u32(node, "clk-rate-reg-offset_1",
-					     &composite_reg_offset_1);
+						 &composite_reg_offset_1);
 			k230_clk_composite->rate_reg_1 =
 				(void __iomem *)((uint64_t)base_reg +
 						 (uint64_t)
 							 composite_reg_offset_1);
 			if ((of_property_read_u32(
-				    node, "clk-rate-conf-div-min",
-				    &k230_clk_composite->rate_div_min)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-div-max",
-				    &k230_clk_composite->rate_div_max)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-calc-method",
-				    &k230_clk_composite->rate_calc_method)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-div-value-shift",
-				    &k230_clk_composite->rate_div_shift)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-div-value-mask",
-				    &k230_clk_composite->rate_div_mask)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-mul-min_1",
-				    &k230_clk_composite->rate_mul_min_1)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-mul-max_1",
-				    &k230_clk_composite->rate_mul_max_1)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-mul-value-shift_1",
-				    &k230_clk_composite->rate_mul_shift_1)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-mul-value-mask_1",
-				    &k230_clk_composite->rate_mul_mask_1)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-write-enable-bit_1",
-				    &k230_clk_composite
-					     ->rate_write_enable_bit_1))) {
+					node, "clk-rate-conf-div-min",
+					&k230_clk_composite->rate_div_min)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-div-max",
+					&k230_clk_composite->rate_div_max)) ||
+				(of_property_read_u32(
+					node, "clk-rate-calc-method",
+					&k230_clk_composite->rate_calc_method)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-div-value-shift",
+					&k230_clk_composite->rate_div_shift)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-div-value-mask",
+					&k230_clk_composite->rate_div_mask)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-mul-min_1",
+					&k230_clk_composite->rate_mul_min_1)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-mul-max_1",
+					&k230_clk_composite->rate_mul_max_1)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-mul-value-shift_1",
+					&k230_clk_composite->rate_mul_shift_1)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-mul-value-mask_1",
+					&k230_clk_composite->rate_mul_mask_1)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-write-enable-bit_1",
+					&k230_clk_composite
+						 ->rate_write_enable_bit_1))) {
 				pr_err("[canaan_clk_err]:Parse composite node %s rate error.\n",
-				       node->name);
+					   node->name);
 				goto free_k230_clk_composite;
 			}
 		} else {
 			if ((of_property_read_u32(
-				    node, "clk-rate-conf-mul-min",
-				    &k230_clk_composite->rate_mul_min)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-mul-max",
-				    &k230_clk_composite->rate_mul_max)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-div-min",
-				    &k230_clk_composite->rate_div_min)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-conf-div-max",
-				    &k230_clk_composite->rate_div_max)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-calc-method",
-				    &k230_clk_composite->rate_calc_method)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-mul-value-shift",
-				    &k230_clk_composite->rate_mul_shift)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-mul-value-mask",
-				    &k230_clk_composite->rate_mul_mask)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-div-value-shift",
-				    &k230_clk_composite->rate_div_shift)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-div-value-mask",
-				    &k230_clk_composite->rate_div_mask)) ||
-			    (of_property_read_u32(
-				    node, "clk-rate-reg-write-enable-bit",
-				    &k230_clk_composite
-					     ->rate_write_enable_bit))) {
+					node, "clk-rate-conf-mul-min",
+					&k230_clk_composite->rate_mul_min)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-mul-max",
+					&k230_clk_composite->rate_mul_max)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-div-min",
+					&k230_clk_composite->rate_div_min)) ||
+				(of_property_read_u32(
+					node, "clk-rate-conf-div-max",
+					&k230_clk_composite->rate_div_max)) ||
+				(of_property_read_u32(
+					node, "clk-rate-calc-method",
+					&k230_clk_composite->rate_calc_method)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-mul-value-shift",
+					&k230_clk_composite->rate_mul_shift)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-mul-value-mask",
+					&k230_clk_composite->rate_mul_mask)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-div-value-shift",
+					&k230_clk_composite->rate_div_shift)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-div-value-mask",
+					&k230_clk_composite->rate_div_mask)) ||
+				(of_property_read_u32(
+					node, "clk-rate-reg-write-enable-bit",
+					&k230_clk_composite
+						 ->rate_write_enable_bit))) {
 				pr_err("[canaan_clk_err]:Parse composite node %s rate error.\n",
-				       node->name);
+					   node->name);
 				goto free_k230_clk_composite;
 			}
 		}
@@ -719,11 +708,11 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 
 		if ((of_property_read_u32(node, "clk-gate-reg-bit-enable",
 					  &k230_clk_composite->gate_bit)) ||
-		    (of_property_read_u32(
-			    node, "clk-gate-reg-bit-reverse",
-			    &k230_clk_composite->gate_bit_reverse))) {
+			(of_property_read_u32(
+				node, "clk-gate-reg-bit-reverse",
+				&k230_clk_composite->gate_bit_reverse))) {
 			pr_err("[canaan_clk_err]:Parse composite node %s gate error.\n",
-			       node->name);
+				   node->name);
 			goto free_k230_clk_composite;
 		}
 	}
@@ -733,19 +722,35 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 				 &k230_clk_composite->composite_read_only)) {
 		only_read = false;
 		pr_err("[canaan_clk_err]:Parse composite node %s read-only error.\n",
-		       node->name);
+			   node->name);
 		goto free_k230_clk_composite;
 	} else
 		only_read = true;
 
 	if ((true != mux) && (true != rate) && (true != gate) &&
-	    (true != only_read)) {
+		(true != only_read)) {
 		pr_err("[canaan_clk_err]:Parse composite node %s error.\n",
-		       node->name);
+			   node->name);
 		goto free_k230_clk_composite;
 	}
 
+	p_clk_ops = kzalloc(sizeof(struct clk_ops), GFP_KERNEL);
 
+	if (true == mux) {
+		p_clk_ops->set_parent = k230_clk_composite_set_parent;
+		p_clk_ops->get_parent = k230_clk_composite_get_parent;
+	}
+	if (true == rate) {
+		p_clk_ops->recalc_rate = k230_clk_composite_recalc_rate;
+		p_clk_ops->set_rate = k230_clk_composite_set_rate;
+		p_clk_ops->round_rate = k230_clk_composite_round_rate;
+	}
+	if (true == gate) {
+		p_clk_ops->is_enabled = k230_clk_composite_is_enable;
+		p_clk_ops->enable = k230_clk_composite_enable;
+		p_clk_ops->disable = k230_clk_composite_disable;
+		p_clk_ops->init = k230_clk_composite_init;
+	}
 
 	k230_clk_composite->composite_spinlock = &k230_clk_spinlock;
 
@@ -758,7 +763,7 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 		of_clk_parent_fill(node, parent_name, init.num_parents);
 	init.parent_names = parent_name;
 	init.name = node->name;
-	init.ops = &k230_clk_ops;
+	init.ops = p_clk_ops;
 	init.flags = CLK_IS_BASIC /*|flags*/;
 	k230_clk_composite->hw.init = &init;
 
@@ -824,8 +829,8 @@ MODULE_DEVICE_TABLE(of, of_canaan_k230_clk_composite_ids);
 
 static struct platform_driver of_canaan_k230_clk_composite_driver = {
 	.driver = {
-	    .name = "k230-clk-composite",
-	    .of_match_table = of_canaan_k230_clk_composite_ids,
+		.name = "k230-clk-composite",
+		.of_match_table = of_canaan_k230_clk_composite_ids,
 	},
 	.probe = canaan_k230_clk_composite_probe,
 };
@@ -881,7 +886,7 @@ struct k230_clk_pll {
 #define to_k230_clk_pll(_hw) container_of(_hw, struct k230_clk_pll, hw)
 
 static unsigned long k230_clk_pll_recalc_rate(struct clk_hw *hw,
-					      unsigned long parent_rate)
+						  unsigned long parent_rate)
 {
 	struct k230_clk_pll *k230_pll = to_k230_clk_pll(hw);
 	unsigned long  rate;
@@ -894,7 +899,7 @@ static unsigned long k230_clk_pll_recalc_rate(struct clk_hw *hw,
 
 	/* If bypass, pll out freqency = parent freqency(osc24m) */
 	if ((readl(k230_pll->pll_reg_bypass) &
-	     (1 << k230_pll->pll_bypass_enable_bit))) {
+		 (1 << k230_pll->pll_bypass_enable_bit))) {
 		// spin_unlock(k230_pll->pll_spinlock);
 		spin_unlock_irqrestore(k230_pll->pll_spinlock, flags);
 		return parent_rate;
@@ -954,7 +959,7 @@ static int k230_clk_pll_enable(struct clk_hw *hw)
 
 	if (k230_pll->pll_read_only == 1) {
 		pr_err("[canaan_clk_err]:clk %s is read-only!\n",
-		       clk_hw_get_name(hw));
+			   clk_hw_get_name(hw));
 		return -1;
 	}
 
@@ -981,7 +986,7 @@ static void k230_clk_pll_disable(struct clk_hw *hw)
 
 	if (k230_pll->pll_read_only == 1) {
 		pr_err("[canaan_clk_err]:clk %s is read-only!\n",
-		       clk_hw_get_name(hw));
+			   clk_hw_get_name(hw));
 		return;
 	}
 
@@ -1038,7 +1043,7 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	parent_sys_boot = of_get_parent(node);
 	if (parent_sys_boot == NULL) {
 		pr_err("[canaan_clk_err]:Could not get %s parent node.\n",
-		       node->name);
+			   node->name);
 		return NULL;
 	}
 
@@ -1046,7 +1051,7 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	base_reg = of_iomap(parent_sys_boot, 0);
 	if (base_reg == NULL) {
 		pr_err("[canaan_clk_err]:Could not iomap %s node.\n",
-		       node->name);
+			   node->name);
 		return NULL;
 	}
 
@@ -1059,17 +1064,17 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	/* parse divide */
 	if ((of_property_read_u32(node, "clk-divide-reg-offset",
 				  &pll_reg_offset)) ||
-	    (of_property_read_u32(node, "clk-divide-out-reg-value-shift",
+		(of_property_read_u32(node, "clk-divide-out-reg-value-shift",
 				  &k230_clk_pll->pll_out_div_shift)) ||
-	    (of_property_read_u32(node, "clk-divide-out-reg-value-mask",
+		(of_property_read_u32(node, "clk-divide-out-reg-value-mask",
 				  &k230_clk_pll->pll_out_div_mask)) ||
-	    (of_property_read_u32(node, "clk-divide-ref-reg-value-shift",
+		(of_property_read_u32(node, "clk-divide-ref-reg-value-shift",
 				  &k230_clk_pll->pll_ref_div_shift)) ||
-	    (of_property_read_u32(node, "clk-divide-ref-reg-value-mask",
+		(of_property_read_u32(node, "clk-divide-ref-reg-value-mask",
 				  &k230_clk_pll->pll_ref_div_mask)) ||
-	    (of_property_read_u32(node, "clk-divide-fb-reg-value-shift",
+		(of_property_read_u32(node, "clk-divide-fb-reg-value-shift",
 				  &k230_clk_pll->pll_fb_div_shift)) ||
-	    (of_property_read_u32(node, "clk-divide-fb-reg-value-mask",
+		(of_property_read_u32(node, "clk-divide-fb-reg-value-mask",
 				  &k230_clk_pll->pll_fb_div_mask))) {
 		pr_err("[canaan_clk_err]:parse k230 pll divider error.\n");
 		goto free_k230_clk_pll;
@@ -1082,7 +1087,7 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	/* parse bypass, bypass belongs to divide */
 	if ((of_property_read_u32(node, "clk-divide-bypass-reg-offset",
 				  &pll_reg_offset)) ||
-	    (of_property_read_u32(node, "clk-divide-bypass-reg-enable-bit",
+		(of_property_read_u32(node, "clk-divide-bypass-reg-enable-bit",
 				  &k230_clk_pll->pll_bypass_enable_bit))) {
 		pr_err("[canaan_clk_err]:parse k230 pll bypass error.\n");
 		goto free_k230_clk_pll;
@@ -1095,9 +1100,9 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	/* parse gate */
 	if ((of_property_read_u32(node, "clk-gate-reg-offset",
 				  &pll_reg_offset)) ||
-	    (of_property_read_u32(node, "clk-gate-reg-enable-bit",
+		(of_property_read_u32(node, "clk-gate-reg-enable-bit",
 				  &k230_clk_pll->pll_gate_enable_bit)) ||
-	    (of_property_read_u32(node, "clk-gate-reg-write-enable-bit",
+		(of_property_read_u32(node, "clk-gate-reg-write-enable-bit",
 				  &k230_clk_pll->pll_gate_write_enable_bit))) {
 		pr_err("[canaan_clk_err]:parse k230 pll gate error.\n");
 		goto free_k230_clk_pll;
@@ -1110,7 +1115,7 @@ static struct clk *_of_canaan_k230_pll_clk_setup(struct device_node *node)
 	/* parse lock */
 	if ((of_property_read_u32(node, "clk-lock-reg-offset",
 				  &pll_reg_offset)) ||
-	    (of_property_read_u32(node, "clk-lock-reg-status_bit",
+		(of_property_read_u32(node, "clk-lock-reg-status_bit",
 				  &k230_clk_pll->pll_lock_status_bit))) {
 		pr_err("[canaan_clk_err]:parse k230 pll lock error.\n");
 		goto free_k230_clk_pll;
@@ -1198,8 +1203,8 @@ MODULE_DEVICE_TABLE(of, of_canaan_k230_pll_clk_ids);
 
 static struct platform_driver of_canaan_k230_pll_clk_driver = {
 	.driver = {
-	    .name = "k230-pll",
-	    .of_match_table = of_canaan_k230_pll_clk_ids,
+		.name = "k230-pll",
+		.of_match_table = of_canaan_k230_pll_clk_ids,
 	},
 	.probe = canaan_k230_pll_clk_probe,
 };
@@ -1319,7 +1324,7 @@ static int k230_debugfs_composite_mux_get(void *data, u64 *val)
 
 	for (i = 0; i < clk_hw_get_num_parents(hw); i++) {
 		if (0 ==
-		    strcmp(clk_hw_get_name(clk_hw_get_parent_by_index(hw, i)),
+			strcmp(clk_hw_get_name(clk_hw_get_parent_by_index(hw, i)),
 			   __clk_get_name(clk_parent))) {
 			*val = i;
 			goto end;
@@ -1377,16 +1382,16 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 	seq_puts(s, "--------------\n");
 	if (k230_composite->gate_reg != NULL) {
 		reg_value = readl(k230_composite->gate_reg);
-		seq_printf(s, "   reg_offset:      0x%08x\n",
+		seq_printf(s, "   reg_offset:	  0x%08x\n",
 			   ((int)(long)k230_composite->gate_reg) & 0xFFF);
-		seq_printf(s, "   reg_value :      0x%08x\n", reg_value);
-		seq_printf(s, "   gate_bit  :      %d\n",
+		seq_printf(s, "   reg_value :	  0x%08x\n", reg_value);
+		seq_printf(s, "   gate_bit  :	  %d\n",
 			   k230_composite->gate_bit);
-		seq_printf(s, "   invert_bit:      %s\n",
+		seq_printf(s, "   invert_bit:	  %s\n",
 			   k230_composite->gate_bit_reverse ? "TRUE" : "FALSE");
-		seq_printf(s, "   clk_enable:      %s\n",
+		seq_printf(s, "   clk_enable:	  %s\n",
 			   ((reg_value & (0x1 << k230_composite->gate_bit)) ^
-			    k230_composite->gate_bit_reverse) ?
+				k230_composite->gate_bit_reverse) ?
 				   "YES" :
 				   "NO");
 	} else
@@ -1397,27 +1402,27 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 	seq_puts(s, "--------------\n");
 	if (k230_composite->mux_reg != NULL) {
 		reg_value = readl(k230_composite->mux_reg);
-		seq_printf(s, "   reg_offset:      0x%08x\n",
+		seq_printf(s, "   reg_offset:	  0x%08x\n",
 			   ((int)(long)k230_composite->mux_reg) & 0xFFF);
-		seq_printf(s, "   reg_value :      0x%08x\n", reg_value);
-		seq_printf(s, "   mask      :      0x%08x\n",
+		seq_printf(s, "   reg_value :	  0x%08x\n", reg_value);
+		seq_printf(s, "   mask	  :	  0x%08x\n",
 			   k230_composite->mux_mask);
-		seq_printf(s, "   shift     :      %d\n",
+		seq_printf(s, "   shift	 :	  %d\n",
 			   k230_composite->mux_shift);
 		mux_field_value = (reg_value >> k230_composite->mux_shift) &
 				  k230_composite->mux_mask;
-		seq_printf(s, "   mux_value :      %d\n", mux_field_value);
-		seq_printf(s, "   parent    :      %s\n",
+		seq_printf(s, "   mux_value :	  %d\n", mux_field_value);
+		seq_printf(s, "   parent	:	  %s\n",
 			   clk_hw_get_name(clk_hw_get_parent_by_index(
 				   hw, mux_field_value)));
 		seq_puts(s, "   parents   :\n");
 		for (i = 0; i < clk_hw_get_num_parents(hw); i++) {
-			seq_printf(s, "                      %d:%s\n", i,
+			seq_printf(s, "					  %d:%s\n", i,
 				   clk_hw_get_name(
 					   clk_hw_get_parent_by_index(hw, i)));
 		}
 	} else {
-		seq_printf(s, "   parent    :      %s\n",
+		seq_printf(s, "   parent	:	  %s\n",
 			   clk_hw_get_name(clk_hw_get_parent_by_index(hw, 0)));
 		seq_puts(s, "   mux is fixed!\n");
 	}
@@ -1426,15 +1431,15 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 	seq_puts(s, "3. rate info:\n");
 	if (k230_composite->rate_reg != NULL) {
 		reg_value = readl(k230_composite->rate_reg);
-		seq_printf(s, "   reg_offset:      0x%08x\n",
+		seq_printf(s, "   reg_offset:	  0x%08x\n",
 			   ((int)(long)k230_composite->rate_reg) & 0xFFF);
-		seq_printf(s, "   reg_value :      0x%08x\n", reg_value);
+		seq_printf(s, "   reg_value :	  0x%08x\n", reg_value);
 		if (k230_composite->rate_calc_method == 0) {
 			div_field_value =
 				(reg_value >> k230_composite->rate_div_shift) &
 				k230_composite->rate_div_mask;
 			seq_puts(s, "   only multi changeable\n");
-			seq_printf(s, "   mul/div   :      0x%08x/0x%08x\n",
+			seq_printf(s, "   mul/div   :	  0x%08x/0x%08x\n",
 				   div_field_value + 1,
 				   k230_composite->rate_div_max);
 		} else if (k230_composite->rate_calc_method == 1) {
@@ -1442,7 +1447,7 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 				(reg_value >> k230_composite->rate_div_shift) &
 				k230_composite->rate_div_mask;
 			seq_puts(s, "   only div changeable\n");
-			seq_printf(s, "   mul/div   :      0x%08x/0x%08x\n",
+			seq_printf(s, "   mul/div   :	  0x%08x/0x%08x\n",
 				   k230_composite->rate_mul_max,
 				   div_field_value + 1);
 		} else {
@@ -1459,7 +1464,7 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 				seq_puts(s, "   div&mul changeable\n");
 				seq_printf(
 					s,
-					"   mul/div   :      0x%08x/0x%08x\n",
+					"   mul/div   :	  0x%08x/0x%08x\n",
 					mul_field_value, div_field_value);
 			} else {
 				div_field_value =
@@ -1473,7 +1478,7 @@ static int composite_show_register_show(struct seq_file *s, void *data)
 				seq_puts(s, "   div&mul changeable\n");
 				seq_printf(
 					s,
-					"   mul/div   :      0x%08x/0x%08x\n",
+					"   mul/div   :	  0x%08x/0x%08x\n",
 					mul_field_value, div_field_value);
 			}
 		}
@@ -1600,19 +1605,19 @@ static int pll_show_register_show(struct seq_file *s, void *data)
 
 	seq_puts(s, "1. rate info:\n");
 	seq_puts(s, "--------------\n");
-	seq_printf(s, "   reg_offset:      0x%08x\n",
+	seq_printf(s, "   reg_offset:	  0x%08x\n",
 		   ((int)(long)k230_pll->pll_reg_divide) & 0xFFF);
 	reg_value = readl(k230_pll->pll_reg_divide);
-	seq_printf(s, "   reg_value :      0x%08x\n", reg_value);
+	seq_printf(s, "   reg_value :	  0x%08x\n", reg_value);
 	out_div = (reg_value >> k230_pll->pll_out_div_shift) &
 		  k230_pll->pll_out_div_mask;
 	ref_div = (reg_value >> k230_pll->pll_ref_div_shift) &
 		  k230_pll->pll_ref_div_mask;
 	fb_div = (reg_value >> k230_pll->pll_fb_div_shift) &
 		 k230_pll->pll_fb_div_mask;
-	seq_printf(s, "   out_div   :      %d\n", out_div);
-	seq_printf(s, "   ref_div   :      %d\n", ref_div);
-	seq_printf(s, "   fb_div    :      %d\n", fb_div);
+	seq_printf(s, "   out_div   :	  %d\n", out_div);
+	seq_printf(s, "   ref_div   :	  %d\n", ref_div);
+	seq_printf(s, "   fb_div	:	  %d\n", fb_div);
 	seq_printf(
 		s,
 		"   freq = 24M * (fb_div+1) / (ref_div+1) / (out_div+1) = %d\n",
@@ -1622,19 +1627,19 @@ static int pll_show_register_show(struct seq_file *s, void *data)
 	seq_puts(s, "2. status info:\n");
 	seq_puts(s, "--------------\n");
 	reg_value = readl(k230_pll->pll_reg_bypass);
-	seq_printf(s, "   bypass_reg:      0x%08x\n",
+	seq_printf(s, "   bypass_reg:	  0x%08x\n",
 		   ((int)(long)k230_pll->pll_reg_bypass) & 0xFFF);
-	seq_printf(s, "   bypass_val:      0x%08x\n", reg_value);
-	seq_printf(s, "   bypass_sta:      %s\n",
+	seq_printf(s, "   bypass_val:	  0x%08x\n", reg_value);
+	seq_printf(s, "   bypass_sta:	  %s\n",
 		   (reg_value & (1 << k230_pll->pll_bypass_enable_bit)) ?
 			   "BYPASS ENABLE" :
 			   "BYPASS DISABLE");
 
 	reg_value = readl(k230_pll->pll_reg_gate);
-	seq_printf(s, "   gate_reg  :      0x%08x\n",
+	seq_printf(s, "   gate_reg  :	  0x%08x\n",
 		   ((int)(long)k230_pll->pll_reg_gate) & 0xFFF);
-	seq_printf(s, "   gate_val  :      0x%08x\n", reg_value);
-	seq_printf(s, "   gate_statu:      %s\n",
+	seq_printf(s, "   gate_val  :	  0x%08x\n", reg_value);
+	seq_printf(s, "   gate_statu:	  %s\n",
 		   (reg_value & (1 << k230_pll->pll_gate_enable_bit)) ?
 			   "CLK ENABLE" :
 			   "CLK DISABLE");
