@@ -1,0 +1,38 @@
+config VPU_CANAAN
+	tristate "Linlon VPU support."
+	depends on VIDEO_DEV
+	depends on COMMON_CLK && HAS_DMA
+	select VIDEO_V4L2_SUBDEV_API
+	select VIDEOBUF2_DMA_CONTIG
+	select V4L_MEM2MEM_DRIVERS
+	select V4L2_FWNODE
+	select VIDEOBUF2_DMA_SG
+	default y
+	help
+	  This is a v4l2 driver for Canaan video codec.
+	  Canaan video codec is video decoder and encoder hardware unit.
+	  It accelerates video decoder and encoder operations, such as h264, hevc,
+	  jpeg formats.
+	  To compile this driver as a module choose m here.
+
+config VPU_CANAAN_FTRACE
+	depends on VPU_CANAAN
+	bool "Send kernel space logs to ftrace."
+	default n
+	help
+	  This is a v4l2 driver for Canaan video codec.
+	  Canaan video codec is video decoder and encoder hardware unit.
+	  It accelerates video decoder and encoder operations, such as h264, hevc,
+	  jpeg formats. Send kernel space logs to ftrace.
+	  To compile this driver as a module choose m here.
+
+config VPU_CANAAN_PRINT_FILE
+	depends on VPU_CANAAN
+	bool "Append file and line number to kernel space log messages."
+	default y
+	help
+	  This is a v4l2 driver for Canaan video codec.
+	  Canaan video codec is video decoder and encoder hardware unit.
+	  It accelerates video decoder and encoder operations, such as h264, hevc,
+	  jpeg formats. Append file and line number to kernel space log messages.
+	  To compile this driver as a module choose m here.
