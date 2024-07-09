@@ -397,6 +397,16 @@
 			status = "disabled";
 		};
 
+		vpu: vpu@0x90400000 {
+			status              = "okay";
+			compatible          = "canaan,vpu";
+			reg                 = <0x0 0x90400000 0x0 0x10000>;
+			interrupts          = <132 IRQ_TYPE_LEVEL_HIGH>;
+			power-domains       = <&sysctl_power K230_PM_DOMAIN_VPU>;
+			clocks              = <&vpu_src>;
+			clock-names         = "vpu";
+		};
+
 		gpu: gpu@90800000 {
 			compatible = "verisilicon,gc8000ul";
 			reg = <0x0 0x90800000 0x0 0x1000>;
