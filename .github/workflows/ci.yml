@@ -160,7 +160,7 @@ jobs:
       fail-fast: false
       matrix:
         cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
-        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie ]
+        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie  , linux-64lp64-test]
         include:
           - core_count: 4
           - cpu: c906fdv
@@ -208,7 +208,7 @@ jobs:
       fail-fast: false
       matrix:
         cpu: [ c907fdvm-rv32 ]
-        kernel: [ linux-32ilp32-upstream , linux-32ilp32-xuantie ]
+        kernel: [ linux-32ilp32-upstream , linux-32ilp32-xuantie , linux-32ilp32-test ]
 
 
     steps:
@@ -252,9 +252,9 @@ jobs:
       fail-fast: false
       matrix:
         variant: [ Image ]
+        kernel: [ linux-64ilp32-sv39 , linux-64ilp32-test ]
         include:
           - cpu: rv64
-          - kernel: linux-64ilp32-sv39
 
     steps:
 
