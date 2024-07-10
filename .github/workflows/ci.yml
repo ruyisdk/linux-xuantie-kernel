@@ -23,26 +23,54 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux-32ilp32
-            toolchain_tripe: riscv32-unknown-linux-gnu-
-          - name: linux-64lp64
-            toolchain_tripe: riscv64-unknown-linux-gnu-
-          - name: linux-64ilp32
-            toolchain_tripe: riscv64-unknown-elf-
-          - name: linux-64lp64-dirty
-            toolchain_tripe: riscv64-unknown-linux-gnu-
-          - name: linux-32ilp32-dirty
-            toolchain_tripe: riscv32-unknown-linux-gnu-
-#          - name: linux-64ilp32_12hz
-#            toolchain_tripe: riscv64-unknown-elf-
-#          - name: linux-64lp64-dirty_12hz
-#            toolchain_tripe: riscv64-unknown-linux-gnu-
-#          - name: linux-32ilp32-dirty_12hz
-#            toolchain_tripe: riscv32-unknown-linux-gnu-
+          # RV64
+          - name: linux-64lp64-upstream
+            toolchain_variant: rv64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: defconfig
+          - name: linux-64lp64-xuantie
+            toolchain_variant: rv64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: defconfig
+          - name: linux-64lp64-test
+            toolchain_variant: rv64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: defconfig
+
+
+          # RV32
+          - name: linux-32ilp32-upstream
+            toolchain_variant: rv32_toolchain
+            toolchain_prefix: riscv32-unknown-linux-gnu-
+            config: rv32_defconfig
+          - name: linux-32ilp32-xuantie
+            toolchain_variant: rv32_toolchain
+            toolchain_prefix: riscv32-unknown-linux-gnu-
+            config: rv32_defconfig
+          - name: linux-32ilp32-test
+            toolchain_variant: rv32_toolchain
+            toolchain_prefix: riscv32-unknown-linux-gnu-
+            config: rv32_defconfig
+
+          # 64ilp32
+          - name: linux-64ilp32-sv39
+            toolchain_variant: rv64ilp32_toolchain
+            toolchain_prefix: riscv64-unknown-elf-
+            config: rv64ilp32_defconfig
+          - name: linux-64ilp32-sv32xt
+            toolchain_variant: rv64ilp32_toolchain
+            toolchain_prefix: riscv64-unknown-elf-
+            config: rv64ilp32_defconfig
+          - name: linux-64ilp32-test
+            toolchain_variant: rv64ilp32_toolchain
+            toolchain_prefix: riscv64-unknown-elf-
+            config: rv64ilp32_defconfig
+
+
 
     runs-on: ubuntu-22.04
     env:
-      CROSS_COMPILE: ${{ matrix.toolchain_tripe }}
+      CROSS_COMPILE: ${{ matrix.toolchain_prefix }}
 
     steps:
       - name: Install software
@@ -55,144 +83,66 @@ jobs:
 
       - name: Configure toolchains
         run: |
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32" ]; then
-                wget ${rv32_toolchain}/${rv32_toolchain_file_name}
+              if [ x"${{ matrix.toolchain_variant }}" = x"rv32_toolchain" ]; then
+                wget -qc ${rv32_toolchain}/${rv32_toolchain_file_name}
                 tar -xvf ${rv32_toolchain_file_name} -C /opt
                 rm -v ${rv32_toolchain_file_name}
               fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64" ]; then
-                wget ${rv64_toolchain}/${rv64_toolchain_file_name}
+              if [ x"${{ matrix.toolchain_variant }}" = x"rv64_toolchain" ]; then
+                wget -qc ${rv64_toolchain}/${rv64_toolchain_file_name}
                 tar -xvf ${rv64_toolchain_file_name} -C /opt
                 rm -v ${rv64_toolchain_file_name}
               fi
-              if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
-                wget ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
+              if [ x"${{ matrix.toolchain_variant }}" = x"rv64ilp32_toolchain" ]; then
+                wget -qc ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
                 tar -xvf ${rv64ilp32_toolchain_file_name} -C /opt
                 rm -v ${rv64ilp32_toolchain_file_name}
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty" ]; then
-                wget ${rv64_toolchain}/${rv64_toolchain_file_name}
-                tar -xvf ${rv64_toolchain_file_name} -C /opt
-                rm -v ${rv64_toolchain_file_name}
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty" ]; then
-                wget ${rv32_toolchain}/${rv32_toolchain_file_name}
-                tar -xvf ${rv32_toolchain_file_name} -C /opt
-                rm -v ${rv32_toolchain_file_name}
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-64ilp32_12hz" ]; then
-                wget ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
-                tar -xvf ${rv64ilp32_toolchain_file_name} -C /opt
-                rm -v ${rv64ilp32_toolchain_file_name}
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty_12hz" ]; then
-                wget ${rv64_toolchain}/${rv64_toolchain_file_name}
-                tar -xvf ${rv64_toolchain_file_name} -C /opt
-                rm -v ${rv64_toolchain_file_name}
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty_12hz" ]; then
-                wget ${rv32_toolchain}/${rv32_toolchain_file_name}
-                tar -xvf ${rv32_toolchain_file_name} -C /opt
-                rm -v ${rv32_toolchain_file_name}
               fi
 
-      - name: Compile
+      # while building upstream version, remove local source, use upstream version
+      - name: Set Upstream Source
         run: |
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                wget https://github.com/torvalds/linux/archive/ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
-                tar zxf ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
-                mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-6.6
-                cp arch/riscv/configs/defconfig linux-6.6/arch/riscv/configs/defconfig
-                cd linux-6.6
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
-                mv ${{ matrix.name }}.tar.gz ../
+              if [ x"${{ matrix.name }}" = x"linux-32ilp32-upstream" ] || [ x"${{ matrix.name }}" = x"linux-64lp64-upstream" ] ; then
                 cd ..
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                wget https://github.com/torvalds/linux/archive/ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
+                wget -qc https://github.com/torvalds/linux/archive/ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
                 tar zxf ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
-                mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-6.6
-                cp arch/riscv/configs/defconfig linux-6.6/arch/riscv/configs/defconfig
-                cd linux-6.6
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
-                mv ${{ matrix.name }}.tar.gz ../
-                cd ..
+                cp linux-xuantie-kernel/arch/riscv/configs/defconfig linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa/arch/riscv/configs/defconfig
+                rm -rf linux-xuantie-kernel
+                mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-xuantie-kernel
+                cd linux-xuantie-kernel
               fi
 
-              if [ x"${{ matrix.name }}" = x"linux-64ilp32" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                echo CONFIG_MMU_SV32=y >> arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./Image_sv32xt
-                mv vmlinux vmlinux_sv32xt
-                mv headers_install headers_install_sv32xt
-                mv modules_install modules_install_sv32xt
-                git checkout arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install Image_sv32xt vmlinux_sv32xt modules_install_sv32xt headers_install_sv32xt git.log gdbmacros.txt
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux git.log modules_install headers_install gdbmacros.txt
-              fi
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux git.log modules_install headers_install gdbmacros.txt
+      # patch defconfig and compile kernel source
+      - name: Compile Kernel
+        run: |
+              export PATH="/opt/riscv/bin:$PATH"
+
+              if [ x"${{ matrix.name }}" = x"linux-64lp64-test" ] || [ x"${{ matrix.name }}" = x"linux-32ilp32-test" ] ; then
+                scripts/kconfig/merge_config.sh -m arch/riscv/configs/${{ matrix.config }} .github/kernel_fragments/ftrace.fragment
+                mv .config arch/riscv/configs/${{ matrix.config }}
               fi
 
-              if [ x"${{ matrix.name }}" = x"linux-64ilp32_12hz" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
+              if [ x"${{ matrix.name }}" = x"linux-64ilp32-sv32xt" ]; then
                 echo CONFIG_MMU_SV32=y >> arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./Image_sv32xt
-                mv vmlinux vmlinux_sv32xt
-                mv headers_install headers_install_sv32xt
-                mv modules_install modules_install_sv32xt
-                git checkout arch/riscv/configs/64ilp32.config
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv64ilp32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install Image_sv32xt vmlinux_sv32xt modules_install_sv32xt headers_install_sv32xt git.log gdbmacros.txt
               fi
-              if [ x"${{ matrix.name }}" = x"linux-64lp64-dirty_12hz" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-                git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux git.log modules_install headers_install gdbmacros.txt
+              if [ x"${{ matrix.name }}" = x"linux-64ilp32-test" ] ; then
+                scripts/kconfig/merge_config.sh -m arch/riscv/configs/64ilp32.config .github/kernel_fragments/ftrace.fragment
+                mv .config arch/riscv/configs/64ilp32.config
               fi
-              if [ x"${{ matrix.name }}" = x"linux-32ilp32-dirty_12hz" ]; then
-                export PATH="/opt/riscv/bin:$PATH"
-                echo CONFIG_HZ_12=y >> arch/riscv/configs/defconfig
-                make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g rv32_defconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
-                mv arch/riscv/boot/Image ./
-                cp Documentation/admin-guide/kdump/gdbmacros.txt ./
+
+              make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+
+
+      - name: Packaging Tarball
+        run: |
+              if [ -d .git ] ; then
                 git log --oneline -500 > git.log
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux git.log modules_install headers_install gdbmacros.txt
+              else
+                touch git.log
               fi
+              mv arch/riscv/boot/Image ./
+              cp Documentation/admin-guide/kdump/gdbmacros.txt ./
+              tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -210,7 +160,7 @@ jobs:
       fail-fast: false
       matrix:
         cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
-        kernel: [ linux-64lp64 , linux-64lp64-dirty ]
+        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie ]
         include:
           - core_count: 4
           - cpu: c906fdv
@@ -258,7 +208,7 @@ jobs:
       fail-fast: false
       matrix:
         cpu: [ c907fdvm-rv32 ]
-        kernel: [ linux-32ilp32 , linux-32ilp32-dirty ]
+        kernel: [ linux-32ilp32-upstream , linux-32ilp32-xuantie ]
 
 
     steps:
@@ -304,7 +254,7 @@ jobs:
         variant: [ Image ]
         include:
           - cpu: rv64
-          - kernel: linux-64ilp32
+          - kernel: linux-64ilp32-sv39
 
     steps:
 
