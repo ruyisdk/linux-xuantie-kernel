@@ -682,10 +682,12 @@ static void hdmi_set_clk_regenerator(struct dw_hdmi *hdmi,
 		cts = 0;
 	}
 
+	hdmi->audio_enable = true;
 	spin_lock_irq(&hdmi->audio_lock);
 	hdmi->audio_n = n;
 	hdmi->audio_cts = cts;
 	hdmi_set_cts_n(hdmi, cts, hdmi->audio_enable ? n : 0);
+	hdmi_writeb(hdmi, 0x4, HDMI_AUD_INPUTCLKFS);
 	spin_unlock_irq(&hdmi->audio_lock);
 }
 
@@ -1073,18 +1075,6 @@ static void hdmi_video_sample(struct dw_hdmi *hdmi)
 	hdmi_writeb(hdmi, 0x0, HDMI_TX_BCBDATA1);
 }
 
-static int is_color_space_conversion(struct dw_hdmi *hdmi)
-{
-	struct hdmi_data_info *hdmi_data = &hdmi->hdmi_data;
-	bool is_input_rgb, is_output_rgb;
-
-	is_input_rgb = hdmi_bus_fmt_is_rgb(hdmi_data->enc_in_bus_format);
-	is_output_rgb = hdmi_bus_fmt_is_rgb(hdmi_data->enc_out_bus_format);
-
-	return (is_input_rgb != is_output_rgb) ||
-	       (is_input_rgb && is_output_rgb && hdmi_data->rgb_limited_range);
-}
-
 static int is_color_space_decimation(struct dw_hdmi *hdmi)
 {
 	if (!hdmi_bus_fmt_is_yuv422(hdmi->hdmi_data.enc_out_bus_format))
@@ -1107,13 +1097,6 @@ static int is_color_space_interpolation(struct dw_hdmi *hdmi)
 		return 1;
 
 	return 0;
-}
-
-static bool is_csc_needed(struct dw_hdmi *hdmi)
-{
-	return is_color_space_conversion(hdmi) ||
-	       is_color_space_decimation(hdmi) ||
-	       is_color_space_interpolation(hdmi);
 }
 
 static void dw_hdmi_update_csc_coeffs(struct dw_hdmi *hdmi)
@@ -2175,33 +2158,6 @@ static void dw_hdmi_enable_video_path(struct dw_hdmi *hdmi)
 	hdmi_writeb(hdmi, 0x0B, HDMI_FC_CH0PREAM);
 	hdmi_writeb(hdmi, 0x16, HDMI_FC_CH1PREAM);
 	hdmi_writeb(hdmi, 0x21, HDMI_FC_CH2PREAM);
-
-	/* Enable pixel clock and tmds data path */
-	hdmi->mc_clkdis |= HDMI_MC_CLKDIS_HDCPCLK_DISABLE |
-			   HDMI_MC_CLKDIS_CSCCLK_DISABLE |
-			   HDMI_MC_CLKDIS_AUDCLK_DISABLE |
-			   HDMI_MC_CLKDIS_PREPCLK_DISABLE |
-			   HDMI_MC_CLKDIS_TMDSCLK_DISABLE;
-	hdmi->mc_clkdis &= ~HDMI_MC_CLKDIS_PIXELCLK_DISABLE;
-	hdmi_writeb(hdmi, hdmi->mc_clkdis, HDMI_MC_CLKDIS);
-
-	hdmi->mc_clkdis &= ~HDMI_MC_CLKDIS_TMDSCLK_DISABLE;
-	hdmi_writeb(hdmi, hdmi->mc_clkdis, HDMI_MC_CLKDIS);
-
-	/* Enable csc path */
-	if (is_csc_needed(hdmi)) {
-		hdmi->mc_clkdis &= ~HDMI_MC_CLKDIS_CSCCLK_DISABLE;
-		hdmi_writeb(hdmi, hdmi->mc_clkdis, HDMI_MC_CLKDIS);
-
-		hdmi_writeb(hdmi, HDMI_MC_FLOWCTRL_FEED_THROUGH_OFF_CSC_IN_PATH,
-			    HDMI_MC_FLOWCTRL);
-	} else {
-		hdmi->mc_clkdis |= HDMI_MC_CLKDIS_CSCCLK_DISABLE;
-		hdmi_writeb(hdmi, hdmi->mc_clkdis, HDMI_MC_CLKDIS);
-
-		hdmi_writeb(hdmi, HDMI_MC_FLOWCTRL_FEED_THROUGH_OFF_CSC_BYPASS,
-			    HDMI_MC_FLOWCTRL);
-	}
 }
 
 /* Workaround to clear the overflow condition */
@@ -3396,7 +3352,7 @@ struct dw_hdmi *dw_hdmi_probe(struct platform_device *pdev,
 	hdmi->disabled = true;
 	hdmi->rxsense = true;
 	hdmi->phy_mask = (u8)~(HDMI_PHY_HPD | HDMI_PHY_RX_SENSE);
-	hdmi->mc_clkdis = 0x7f;
+	hdmi->mc_clkdis = 0x0;
 	hdmi->last_connector_result = connector_status_disconnected;
 
 	mutex_init(&hdmi->mutex);
