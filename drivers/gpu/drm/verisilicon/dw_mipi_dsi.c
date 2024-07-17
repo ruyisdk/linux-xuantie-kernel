@@ -439,9 +439,9 @@ static int dw_mipi_dsi_read(struct dw_mipi_dsi *dsi,
 			return ret;
 		}
 
-	ret = dsi_read(dsi, DSI_GEN_PLD_DATA, &val);
-	if (unlikely(ret))
-		return ret;
+		ret = dsi_read(dsi, DSI_GEN_PLD_DATA, &val);
+		if (unlikely(ret))
+			return ret;
 
 		for (j = 0; j < 4 && j + i < len; j++)
 			buf[i + j] = val >> (8 * j);
@@ -833,7 +833,8 @@ static void bridge_post_disable(struct drm_bridge *bridge)
 	 * This needs to be fixed in the drm_bridge framework and the API
 	 * needs to be updated to manage our own call chains...
 	 */
-	primary->panel_bridge->funcs->post_disable(primary->panel_bridge);
+	if (primary->panel_bridge->funcs->post_disable)
+		primary->panel_bridge->funcs->post_disable(primary->panel_bridge);
 
 	if (primary->secondary_dsi)
 		dw_mipi_dsi_disable(primary->secondary_dsi);
