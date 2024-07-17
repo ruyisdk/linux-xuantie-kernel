@@ -750,6 +750,7 @@ static int dw_dphy_runtime_resume(struct device *dev)
 	return 0;
 }
 
+#ifdef CONFIG_PM_SLEEP
 static int dw_dphy_resume(struct device *dev)
 {
 	int ret;
@@ -793,6 +794,7 @@ static int dw_dphy_suspend(struct device *dev)
 
 	return 0;
 }
+#endif
 
 static const struct dev_pm_ops dw_dphy_pm_ops = {
 	SET_LATE_SYSTEM_SLEEP_PM_OPS(dw_dphy_suspend,

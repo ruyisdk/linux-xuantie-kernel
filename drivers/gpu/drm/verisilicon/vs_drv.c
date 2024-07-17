@@ -165,7 +165,7 @@ static ssize_t log_show(struct kobject *kobj, struct kobj_attribute *attr, char 
 			is_current_master ? 'y' : 'n',
 			priv->authenticated ? 'y' : 'n',
 			// from_kuid_munged(seq_user_ns(m), uid)
-			uid,
+			__kuid_val(uid),
 			priv->magic);
 		rcu_read_unlock();
 	}
@@ -195,7 +195,6 @@ static ssize_t log_show(struct kobject *kobj, struct kobj_attribute *attr, char 
 	list_for_each_entry(drm_crtc, &drm_dev->mode_config.crtc_list, head) {
 		// struct vs_crtc *crtc = to_vs_crtc(drm_crtc);
 		struct drm_crtc *crtc = drm_crtc->state->crtc;
-		struct vs_crtc_state *crtc_state = to_vs_crtc_state(drm_crtc->state);
 
 		len += scnprintf(buf + len, PAGE_SIZE - len,
 			"crtc[%u]: %s\n"
@@ -215,7 +214,6 @@ static ssize_t log_show(struct kobject *kobj, struct kobj_attribute *attr, char 
 
 	list_for_each_entry(plane, &drm_dev->mode_config.plane_list, head) {
 		struct drm_plane_state *state = plane->state;
-		struct vs_plane_state *plane_state = to_vs_plane_state(state);
 		struct drm_rect src  = drm_plane_state_src(state);
 		struct drm_rect dest = drm_plane_state_dest(state);
 
