@@ -23,7 +23,6 @@
 #define EMMC_CTRL_R (DWC_MSHC_PTR_VENDOR1 + 0x2c) //16bit
 #define CARD_IS_EMMC 0x0 //1bit
 
-
 #define DWC_MSHC_PTR_PHY_REGS 0x300
 #define DWC_MSHC_PHY_CNFG (DWC_MSHC_PTR_PHY_REGS + 0x0)
 #define PAD_SN_LSB 20
@@ -55,97 +54,99 @@
 #define DWC_MSHC_SMPLDL_CNFG (DWC_MSHC_PTR_PHY_REGS + 0x20)
 #define DWC_MSHC_ATDL_CNFG (DWC_MSHC_PTR_PHY_REGS + 0x21)
 
-#define DWC_MSHC_PHY_PAD_SD_CLK                                                \
-	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (0 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_SD_CLK                                               \
+	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (0 << WEAKPULL_EN_LSB) | \
 	 (2 << RXSEL_LSB))
-#define DWC_MSHC_PHY_PAD_SD_DAT                                                \
-	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (1 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_SD_DAT                                               \
+	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (1 << WEAKPULL_EN_LSB) | \
 	 (2 << RXSEL_LSB))
-#define DWC_MSHC_PHY_PAD_SD_STB                                                \
-	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (2 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_SD_STB                                               \
+	((1 << TXSLEW_N_LSB) | (3 << TXSLEW_P_LSB) | (2 << WEAKPULL_EN_LSB) | \
 	 (2 << RXSEL_LSB))
 
-#define DWC_MSHC_PHY_PAD_EMMC_CLK                                              \
-	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (0 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_EMMC_CLK                                             \
+	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (0 << WEAKPULL_EN_LSB) | \
 	 (1 << RXSEL_LSB))
-	//  (0 << RXSEL_LSB))
+//  (0 << RXSEL_LSB))
 
-#define DWC_MSHC_PHY_PAD_EMMC_DAT                                              \
-	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (1 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_EMMC_DAT                                             \
+	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (1 << WEAKPULL_EN_LSB) | \
 	 (1 << RXSEL_LSB))
-#define DWC_MSHC_PHY_PAD_EMMC_STB                                              \
-	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (2 << WEAKPULL_EN_LSB) |  \
+#define DWC_MSHC_PHY_PAD_EMMC_STB                                             \
+	((2 << TXSLEW_N_LSB) | (2 << TXSLEW_P_LSB) | (2 << WEAKPULL_EN_LSB) | \
 	 (1 << RXSEL_LSB))
 
 /* DWCMSHC specific Mode Select value */
-#define DWCMSHC_CTRL_HS400		0x7
+#define DWCMSHC_CTRL_HS400 0x7
 
 #define BOUNDARY_OK(addr, len) \
 	((addr | (SZ_128M - 1)) == ((addr + len - 1) | (SZ_128M - 1)))
 
 struct dwcmshc_priv {
-	struct clk	*bus_clk;
+	struct clk *bus_clk;
 	bool is_emmc_card;
-    u32 tx_delay_line;
-    u32 rx_delay_line;
-    u8 mshc_ctrl_r;
-    bool io_fixed_1v8;
-    void __iomem *hs_regs;
-    bool have_phy;
+	u32 tx_delay_line;
+	u32 rx_delay_line;
+	u8 mshc_ctrl_r;
+	bool io_fixed_1v8;
+	void __iomem *hs_regs;
+	bool have_phy;
 };
 
 static void dwcmshc_phy_1_8v_init(struct sdhci_host *host)
 {
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_CMDPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_DATPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_CLK, DWC_MSHC_CLKPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_STB, DWC_MSHC_STBPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_RSTNPAD_CNFG);
-
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_CMDPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_DATPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_CLK, DWC_MSHC_CLKPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_STB, DWC_MSHC_STBPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_EMMC_DAT, DWC_MSHC_RSTNPAD_CNFG);
 }
 
 static void dwcmshc_phy_3_3v_init(struct sdhci_host *host)
 {
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_CMDPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_DATPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_CLK, DWC_MSHC_CLKPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_STB, DWC_MSHC_STBPAD_CNFG);
-    sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_RSTNPAD_CNFG);
-
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_CMDPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_DATPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_CLK, DWC_MSHC_CLKPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_STB, DWC_MSHC_STBPAD_CNFG);
+	sdhci_writew(host, DWC_MSHC_PHY_PAD_SD_DAT, DWC_MSHC_RSTNPAD_CNFG);
 }
 
 static void dwcmshc_phy_delay_config(struct sdhci_host *host)
 {
-    struct sdhci_pltfm_host *pltfm_host;
+	struct sdhci_pltfm_host *pltfm_host;
 	struct dwcmshc_priv *priv;
-    pltfm_host = sdhci_priv(host);
+
+	pltfm_host = sdhci_priv(host);
 	priv = sdhci_pltfm_priv(pltfm_host);
 
 	sdhci_writeb(host, 1, DWC_MSHC_COMMDL_CNFG);
-    if (priv->tx_delay_line > 256) {
-        pr_info("%s: tx_delay_line err\n", mmc_hostname(host->mmc));
-    } else if (priv->tx_delay_line > 128) {
-        sdhci_writeb(host, 0x1, DWC_MSHC_SDCLKDL_CNFG);
-        sdhci_writeb(host, priv->tx_delay_line - 128, DWC_MSHC_SDCLKDL_DC);
-    } else {
-        sdhci_writeb(host, 0x0, DWC_MSHC_SDCLKDL_CNFG);
-        sdhci_writeb(host, priv->tx_delay_line, DWC_MSHC_SDCLKDL_DC);
-    }
-
+	if (priv->tx_delay_line > 256) {
+		pr_info("%s: tx_delay_line err\n", mmc_hostname(host->mmc));
+	} else if (priv->tx_delay_line > 128) {
+		sdhci_writeb(host, 0x1, DWC_MSHC_SDCLKDL_CNFG);
+		sdhci_writeb(host, priv->tx_delay_line - 128,
+			     DWC_MSHC_SDCLKDL_DC);
+	} else {
+		sdhci_writeb(host, 0x0, DWC_MSHC_SDCLKDL_CNFG);
+		sdhci_writeb(host, priv->tx_delay_line, DWC_MSHC_SDCLKDL_DC);
+	}
+	sdhci_writeb(host, priv->rx_delay_line, DWC_MSHC_SMPLDL_CNFG);
 	sdhci_writeb(host, 0xc, DWC_MSHC_ATDL_CNFG);
-	sdhci_writel(host, (sdhci_readl(host, SDHCI_VENDER_AT_CTRL_REG) | \
-	  BIT(16) | BIT(17) | BIT(19) | BIT(20)), SDHCI_VENDER_AT_CTRL_REG);
-	sdhci_writel(host,0x0,SDHCI_VENDER_AT_STAT_REG);
-	return;
+	sdhci_writel(host,
+		     (sdhci_readl(host, SDHCI_VENDER_AT_CTRL_REG) | BIT(16) |
+		      BIT(17) | BIT(19) | BIT(20)),
+		     SDHCI_VENDER_AT_CTRL_REG);
+	sdhci_writel(host, 0x0, SDHCI_VENDER_AT_STAT_REG);
 }
 
 static int dwcmshc_phy_init(struct sdhci_host *host)
 {
 	u32 reg;
 	unsigned int timeout = 15000;
-    struct sdhci_pltfm_host *pltfm_host;
+	struct sdhci_pltfm_host *pltfm_host;
 	struct dwcmshc_priv *priv;
-    pltfm_host = sdhci_priv(host);
+
+	pltfm_host = sdhci_priv(host);
 	priv = sdhci_pltfm_priv(pltfm_host);
 	/* reset phy */
 	sdhci_writew(host, 0, DWC_MSHC_PHY_CNFG);
@@ -153,14 +154,15 @@ static int dwcmshc_phy_init(struct sdhci_host *host)
 	/* Disable the clock */
 	sdhci_writew(host, 0, SDHCI_CLOCK_CONTROL);
 
-    if (priv->io_fixed_1v8) {
-        u32 data = sdhci_readw(host, SDHCI_HOST_CONTROL2);
-        data |= SDHCI_CTRL_VDD_180;
-        sdhci_writew(host, data, SDHCI_HOST_CONTROL2);
-        dwcmshc_phy_1_8v_init(host);
-    } else {
-        dwcmshc_phy_3_3v_init(host);
-    }
+	if (priv->io_fixed_1v8) {
+		u32 data = sdhci_readw(host, SDHCI_HOST_CONTROL2);
+
+		data |= SDHCI_CTRL_VDD_180;
+		sdhci_writew(host, data, SDHCI_HOST_CONTROL2);
+		dwcmshc_phy_1_8v_init(host);
+	} else {
+		dwcmshc_phy_3_3v_init(host);
+	}
 
 	dwcmshc_phy_delay_config(host);
 
@@ -169,9 +171,9 @@ static int dwcmshc_phy_init(struct sdhci_host *host)
 		reg = sdhci_readl(host, DWC_MSHC_PHY_CNFG);
 		if (reg & PHY_PWRGOOD)
 			break;
-		if (!timeout) {
+		if (!timeout)
 			return -1;
-		}
+
 		timeout--;
 
 		usleep_range(10, 15);
@@ -198,21 +200,20 @@ static void dwcmshc_sdhci_reset(struct sdhci_host *host, u8 mask)
 
 	/*host reset*/
 	sdhci_reset(host, mask);
-    if(mask == SDHCI_RESET_ALL) {
-        emmc_ctl = sdhci_readw(host, EMMC_CTRL_R);
+	if (mask == SDHCI_RESET_ALL) {
+		emmc_ctl = sdhci_readw(host, EMMC_CTRL_R);
 
-        if (priv->is_emmc_card) {
-            emmc_ctl |= (1 << CARD_IS_EMMC);
-        } else {
-            emmc_ctl &=~(1 << CARD_IS_EMMC);
-        }
-        sdhci_writeb(host, emmc_ctl, EMMC_CTRL_R);
-        if(priv->have_phy) {
-            dwcmshc_phy_init(host);
-        } else {
-            sdhci_writeb(host, priv->mshc_ctrl_r, MSHC_CTRL_R);
-        }
-    }
+		if (priv->is_emmc_card)
+			emmc_ctl |= (1 << CARD_IS_EMMC);
+		else
+			emmc_ctl &= ~(1 << CARD_IS_EMMC);
+
+		sdhci_writeb(host, emmc_ctl, EMMC_CTRL_R);
+		if (priv->have_phy)
+			dwcmshc_phy_init(host);
+		else
+			sdhci_writeb(host, priv->mshc_ctrl_r, MSHC_CTRL_R);
+	}
 }
 
 /*
@@ -238,7 +239,8 @@ static void dwcmshc_adma_write_desc(struct sdhci_host *host, void **desc,
 	sdhci_adma_write_desc(host, desc, addr, len, cmd);
 }
 
-static void dwcmshc_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned timing)
+static void dwcmshc_sdhci_set_uhs_signaling(struct sdhci_host *host,
+					    unsigned int timing)
 {
 	u16 ctrl_2;
 
@@ -246,10 +248,9 @@ static void dwcmshc_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned ti
 	/* Select Bus Speed Mode for host */
 	ctrl_2 &= ~SDHCI_CTRL_UHS_MASK;
 	if ((timing == MMC_TIMING_MMC_HS200) ||
-		(timing == MMC_TIMING_UHS_SDR104)) {
+	    (timing == MMC_TIMING_UHS_SDR104)) {
 		ctrl_2 |= SDHCI_CTRL_UHS_SDR104;
-	}
-	else if (timing == MMC_TIMING_UHS_SDR12)
+	} else if (timing == MMC_TIMING_UHS_SDR12)
 		ctrl_2 |= SDHCI_CTRL_UHS_SDR12;
 	else if ((timing == MMC_TIMING_UHS_SDR25) ||
 		 (timing == MMC_TIMING_MMC_HS))
@@ -257,7 +258,7 @@ static void dwcmshc_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned ti
 	else if (timing == MMC_TIMING_UHS_SDR50)
 		ctrl_2 |= SDHCI_CTRL_UHS_SDR50;
 	else if ((timing == MMC_TIMING_UHS_DDR50) ||
-		(timing == MMC_TIMING_MMC_DDR52))
+		 (timing == MMC_TIMING_MMC_DDR52))
 		ctrl_2 |= SDHCI_CTRL_UHS_DDR50;
 	else if (timing == MMC_TIMING_MMC_HS400) {
 		ctrl_2 |= DWCMSHC_CTRL_HS400; /* Non-standard */
@@ -283,13 +284,13 @@ static void k230_sdhci_set_clock(struct sdhci_host *host, unsigned int clock)
 }
 
 static const struct sdhci_ops sdhci_dwcmshc_kendryte_ops = {
-	.set_clock		= k230_sdhci_set_clock,
-	.set_bus_width		= sdhci_set_bus_width,
-	.set_uhs_signaling	= dwcmshc_sdhci_set_uhs_signaling,
-	.get_max_clock		= sdhci_pltfm_clk_get_max_clock,
-	.reset			= dwcmshc_sdhci_reset,
-	.adma_write_desc	= dwcmshc_adma_write_desc,
-	.voltage_switch     = dwcmshc_phy_1_8v_init,
+	.set_clock = k230_sdhci_set_clock,
+	.set_bus_width = sdhci_set_bus_width,
+	.set_uhs_signaling = dwcmshc_sdhci_set_uhs_signaling,
+	.get_max_clock = sdhci_pltfm_clk_get_max_clock,
+	.reset = dwcmshc_sdhci_reset,
+	.adma_write_desc = dwcmshc_adma_write_desc,
+	.voltage_switch = dwcmshc_phy_1_8v_init,
 };
 
 static const struct sdhci_pltfm_data sdhci_dwcmshc_kendryte_pdata = {
@@ -297,18 +298,16 @@ static const struct sdhci_pltfm_data sdhci_dwcmshc_kendryte_pdata = {
 	.quirks = SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN,
 };
 
-/* This api is for wifi driver rescan the sdio device,
- * ugly but it is needed */
-static unsigned int slot_index = 0;
-static struct mmc_host *__mmc__host[3] = {NULL};
+static unsigned int slot_index;
+static struct mmc_host *__mmc__host[3] = { NULL };
 
 int plat_sdio_rescan(int slot)
 {
 	struct mmc_host *mmc = __mmc__host[slot];
 
 	if (mmc == NULL) {
-			pr_err("invalid mmc, please check the argument\n");
-			return -EINVAL;
+		pr_err("invalid mmc, please check the argument\n");
+		return -EINVAL;
 	}
 
 	mmc_detect_change(mmc, 0);
@@ -341,50 +340,51 @@ static int dwcmshc_probe(struct platform_device *pdev)
 
 	pltfm_host = sdhci_priv(host);
 	priv = sdhci_pltfm_priv(pltfm_host);
-    priv->hs_regs = ioremap(hi_sys_config_addr,0x400);
+	priv->hs_regs = ioremap(hi_sys_config_addr, 0x400);
 
-    if(memcmp(host->hw_name,"91581000",8) == 0) {
-        priv->have_phy = 0;
-        data = readl(priv->hs_regs + 8);
-        data |= 1<<2 | 1<<0;
-        writel(data, priv->hs_regs + 8);
-    } else {
-        priv->have_phy = 1;
-        data = readl(priv->hs_regs + 0);
-        data |= 1<<6 | 1<<4;
-        writel(data, priv->hs_regs + 0);
-    }
-
-    if (device_property_present(&pdev->dev, "is_emmc")) {
-        priv->is_emmc_card = 1;
-    } else {
-        priv->is_emmc_card = 0;
-    }
-
-    if(priv->have_phy) {
-        if (device_property_present(&pdev->dev, "io_fixed_1v8")) {
-            priv->io_fixed_1v8 = 1;
-        } else {
-            priv->io_fixed_1v8 = 0;
-        }
-        err = device_property_read_u32(&pdev->dev, "tx_delay_line", &priv->tx_delay_line);
-        if(err)
-            priv->tx_delay_line = 0;
-
-        err = device_property_read_u32(&pdev->dev, "rx_delay_line", &priv->rx_delay_line);
-        if(err)
-            priv->rx_delay_line = 0;
-
-    } else {
-        /*sdio:(fpga board) Launches CMD/DATA with respect to positive edge of cclk_tx */
-        err = device_property_read_u8(&pdev->dev, "mshc_ctrl_r", &priv->mshc_ctrl_r);
-        if(err)
-            priv->mshc_ctrl_r = 0;
-    }
-
-    if (priv->io_fixed_1v8) {
-		host->flags &= ~SDHCI_SIGNALING_330;
+	if (memcmp(host->hw_name, "91581000", 8) == 0) {
+		priv->have_phy = 0;
+		data = readl(priv->hs_regs + 8);
+		data |= 1 << 2 | 1 << 0;
+		writel(data, priv->hs_regs + 8);
+	} else {
+		priv->have_phy = 1;
+		data = readl(priv->hs_regs + 0);
+		data |= 1 << 6 | 1 << 4;
+		writel(data, priv->hs_regs + 0);
 	}
+
+	if (device_property_present(&pdev->dev, "is_emmc"))
+		priv->is_emmc_card = 1;
+	else
+		priv->is_emmc_card = 0;
+
+	if (priv->have_phy) {
+		if (device_property_present(&pdev->dev, "io_fixed_1v8"))
+			priv->io_fixed_1v8 = 1;
+		else
+			priv->io_fixed_1v8 = 0;
+
+		err = device_property_read_u32(&pdev->dev, "tx_delay_line",
+					       &priv->tx_delay_line);
+		if (err)
+			priv->tx_delay_line = 0x40;
+
+		err = device_property_read_u32(&pdev->dev, "rx_delay_line",
+					       &priv->rx_delay_line);
+		if (err)
+			priv->rx_delay_line = 0xd;
+
+	} else {
+		/*sdio:(fpga board) Launches CMD/DATA with respect to positive edge of cclk_tx */
+		err = device_property_read_u8(&pdev->dev, "mshc_ctrl_r",
+					      &priv->mshc_ctrl_r);
+		if (err)
+			priv->mshc_ctrl_r = 0;
+	}
+
+	if (priv->io_fixed_1v8)
+		host->flags &= ~SDHCI_SIGNALING_330;
 
 	pltfm_host->clk = devm_clk_get(&pdev->dev, "core");
 	if (IS_ERR(pltfm_host->clk)) {
@@ -400,7 +400,7 @@ static int dwcmshc_probe(struct platform_device *pdev)
 	if (!IS_ERR(priv->bus_clk))
 		clk_prepare_enable(priv->bus_clk);
 
-    /* new fix: storage mmc host to array */
+	/* new fix: storage mmc host to array */
 	__mmc__host[slot_index++] = host->mmc;
 
 	err = mmc_of_parse(host->mmc);
@@ -434,7 +434,7 @@ static int dwcmshc_remove(struct platform_device *pdev)
 	clk_disable_unprepare(pltfm_host->clk);
 	clk_disable_unprepare(priv->bus_clk);
 
-    iounmap(priv->hs_regs);
+	iounmap(priv->hs_regs);
 
 	sdhci_pltfm_free(pdev);
 
@@ -484,7 +484,7 @@ static int dwcmshc_resume(struct device *dev)
 static SIMPLE_DEV_PM_OPS(dwcmshc_pmops, dwcmshc_suspend, dwcmshc_resume);
 
 static const struct of_device_id sdhci_dwcmshc_kendryte_dt_ids[] = {
-	{ .compatible = "kendryte,k230-dw-mshc" },
+	{ .compatible = "canaan,k230-dw-mshc" },
 	{}
 };
 MODULE_DEVICE_TABLE(of, sdhci_dwcmshc_kendryte_dt_ids);
