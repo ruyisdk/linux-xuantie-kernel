@@ -28,6 +28,8 @@
 	cap-sd-highspeed;
 	rx_delay_line = <0x0d>;
 	tx_delay_line = <0xb0>;
+	clocks = <&sd0_cclk_gate>,<&sd0_cclk_gate>;
+	clock-names = "core", "bus";
 };
 &mmc_sd1{
 	status = "okay";
