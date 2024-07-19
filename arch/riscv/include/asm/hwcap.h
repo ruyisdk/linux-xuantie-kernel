@@ -58,6 +58,49 @@
 #define RISCV_ISA_EXT_ZICSR		40
 #define RISCV_ISA_EXT_ZIFENCEI		41
 #define RISCV_ISA_EXT_ZIHPM		42
+#define RISCV_ISA_EXT_SMSTATEEN		43
+#define RISCV_ISA_EXT_ZICOND		44
+#define RISCV_ISA_EXT_ZBC		45
+#define RISCV_ISA_EXT_ZBKB		46
+#define RISCV_ISA_EXT_ZBKC		47
+#define RISCV_ISA_EXT_ZBKX		48
+#define RISCV_ISA_EXT_ZKND		49
+#define RISCV_ISA_EXT_ZKNE		50
+#define RISCV_ISA_EXT_ZKNH		51
+#define RISCV_ISA_EXT_ZKR		52
+#define RISCV_ISA_EXT_ZKSED		53
+#define RISCV_ISA_EXT_ZKSH		54
+#define RISCV_ISA_EXT_ZKT		55
+#define RISCV_ISA_EXT_ZVBB		56
+#define RISCV_ISA_EXT_ZVBC		57
+#define RISCV_ISA_EXT_ZVKB		58
+#define RISCV_ISA_EXT_ZVKG		59
+#define RISCV_ISA_EXT_ZVKNED		60
+#define RISCV_ISA_EXT_ZVKNHA		61
+#define RISCV_ISA_EXT_ZVKNHB		62
+#define RISCV_ISA_EXT_ZVKSED		63
+#define RISCV_ISA_EXT_ZVKSH		64
+#define RISCV_ISA_EXT_ZVKT		65
+#define RISCV_ISA_EXT_ZFH		66
+#define RISCV_ISA_EXT_ZFHMIN		67
+#define RISCV_ISA_EXT_ZIHINTNTL		68
+#define RISCV_ISA_EXT_ZVFH		69
+#define RISCV_ISA_EXT_ZVFHMIN		70
+#define RISCV_ISA_EXT_ZFA		71
+#define RISCV_ISA_EXT_ZTSO		72
+#define RISCV_ISA_EXT_ZACAS		73
+#define RISCV_ISA_EXT_ZVE32X		74
+#define RISCV_ISA_EXT_ZVE32F		75
+#define RISCV_ISA_EXT_ZVE64X		76
+#define RISCV_ISA_EXT_ZVE64F		77
+#define RISCV_ISA_EXT_ZVE64D		78
+#define RISCV_ISA_EXT_ZIMOP		79
+#define RISCV_ISA_EXT_ZCA		80
+#define RISCV_ISA_EXT_ZCB		81
+#define RISCV_ISA_EXT_ZCD		82
+#define RISCV_ISA_EXT_ZCF		83
+#define RISCV_ISA_EXT_ZCMOP		84
+#define RISCV_ISA_EXT_ZAWRS		85
 #define RISCV_ISA_EXT_ZICCRSE		88
 
 #define RISCV_ISA_EXT_MAX		128
@@ -74,6 +117,8 @@
 #include <asm/cpufeature.h>
 
 unsigned long riscv_get_elf_hwcap(void);
+
+#if 0
 
 struct riscv_isa_ext_data {
 	const unsigned int id;
@@ -139,6 +184,7 @@ l_yes:
 	return true;
 }
 
+
 static __always_inline bool riscv_cpu_has_extension_likely(int cpu, const unsigned long ext)
 {
 	if (IS_ENABLED(CONFIG_RISCV_ALTERNATIVE) && riscv_has_extension_likely(ext))
@@ -154,6 +200,7 @@ static __always_inline bool riscv_cpu_has_extension_unlikely(int cpu, const unsi
 
 	return __riscv_isa_extension_available(hart_isa[cpu].isa, ext);
 }
+#endif
 #endif
 
 #endif /* _ASM_RISCV_HWCAP_H */
