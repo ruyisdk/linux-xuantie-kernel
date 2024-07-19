@@ -16,6 +16,7 @@
 #include <asm/sbi.h>
 #include <asm/smp.h>
 #include <asm/pgtable.h>
+#include <asm/vendor_extensions.h>
 
 bool arch_match_cpu_phys_id(int cpu, u64 phys_id)
 {
@@ -203,6 +204,27 @@ arch_initcall(riscv_cpuinfo_init);
 
 #ifdef CONFIG_PROC_FS
 
+static void print_vendor_isa(struct seq_file *f)
+{
+	struct riscv_isavendorinfo *vendor_bitmap;
+	struct riscv_isa_vendor_ext_data_list *ext_list;
+	const struct riscv_isa_ext_data *ext_data;
+
+	for (int i = 0; i < riscv_isa_vendor_ext_list_size; i++) {
+		ext_list = riscv_isa_vendor_ext_list[i];
+		ext_data = riscv_isa_vendor_ext_list[i]->ext_data;
+
+		vendor_bitmap = &ext_list->all_harts_isa_bitmap;
+
+		for (int j = 0; j < ext_list->ext_data_count; j++) {
+			if (!__riscv_isa_extension_available(vendor_bitmap->isa, ext_data[j].id))
+				continue;
+
+			seq_printf(f, "_%s", ext_data[j].name);
+		}
+	}
+}
+
 static void print_isa(struct seq_file *f)
 {
 	seq_puts(f, "isa\t\t: ");
@@ -222,6 +244,8 @@ static void print_isa(struct seq_file *f)
 
 		seq_printf(f, "%s", riscv_isa_ext[i].name);
 	}
+
+	print_vendor_isa(f);
 
 	seq_puts(f, "\n");
 }
