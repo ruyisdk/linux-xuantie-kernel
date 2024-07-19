@@ -1,0 +1,3 @@
+    config K230_MMZ
+        tristate "K230 mem zone driver"
+        default	y
