@@ -1,0 +1,8 @@
+config K230_MMZ
+	tristate "K230 mem zone driver"
+	default	m
+	help
+		This option enables support for K230
+		Say Y for enabling the k230 mmz driver
+		To compile this support as a module, choose M here
+		If unsure, say N.
