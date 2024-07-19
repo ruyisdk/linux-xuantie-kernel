@@ -880,6 +880,8 @@ config RISCV_EFFICIENT_UNALIGNED_ACCESS
 
 	  If unsure what to do here, say N.
 
+source "arch/riscv/Kconfig.vendor"
+
 endmenu # "Platform type"
 
 config XUANTIE_ISA
