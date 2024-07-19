@@ -1,0 +1,8 @@
+config K230_AI2D_DRIVER
+		tristate "K230 AI2D driver"
+		default	m
+		help
+		This option enables support for K230
+		Say Y for enabling the k230 ai2d driver
+		To compile this support as a module, choose M here
+		If unsure, say N.
