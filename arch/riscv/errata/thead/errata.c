@@ -76,10 +76,15 @@ static bool errata_probe_pmu(unsigned int stage,
 	if (!IS_ENABLED(CONFIG_ERRATA_THEAD_PMU))
 		return false;
 
+	/* For Canaan k230 */
+	if (arch_id == 0x8000000009140d00 && impid == 0x50000)
+		goto out;
+
 	/* target-c9xx cores report arch_id and impid as 0 */
 	if (arch_id != 0 || impid != 0)
 		return false;
 
+out:
 	if (stage == RISCV_ALTERNATIVES_EARLY_BOOT)
 		return false;
 
