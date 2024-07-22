@@ -2413,4 +2413,7 @@ config SND_SOC_LPASS_TX_MACRO
 	select SND_SOC_LPASS_MACRO_COMMON
 	tristate "Qualcomm TX Macro in LPASS(Low Power Audio SubSystem)"
 
+config SND_SOC_K230_INNO
+	tristate "K230 INNO Codec"
+
 endmenu
