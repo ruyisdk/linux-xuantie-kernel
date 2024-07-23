@@ -38,6 +38,139 @@
 static int canaan_drm_open(struct inode *inode, struct file *filp);
 static int canaan_drm_release(struct inode *inode, struct file *filp);
 
+int canaan_drm_gem_dma_mmap(struct drm_gem_dma_object *dma_obj, struct vm_area_struct *vma)
+{
+	struct drm_gem_object *obj = &dma_obj->base;
+	int ret;
+
+	/*
+	 * Clear the VM_PFNMAP flag that was set by drm_gem_mmap(), and set the
+	 * vm_pgoff (used as a fake buffer offset by DRM) to 0 as we want to map
+	 * the whole buffer.
+	 */
+	vma->vm_pgoff -= drm_vma_node_start(&obj->vma_node);
+	vm_flags_mod(vma, VM_DONTEXPAND, VM_PFNMAP);
+
+	ret = remap_pfn_range(
+		vma,
+		vma->vm_start,
+		dma_obj->dma_addr >> PAGE_SHIFT,
+		vma->vm_end - vma->vm_start,
+		vma->vm_page_prot
+	);
+
+	if (ret)
+		drm_gem_vm_close(vma);
+
+	return ret;
+}
+
+static int canaan_drm_gem_dma_object_mmap(struct drm_gem_object *obj,
+				struct vm_area_struct *vma)
+{
+	struct drm_gem_dma_object *dma_obj = to_drm_gem_dma_obj(obj);
+
+	return canaan_drm_gem_dma_mmap(dma_obj, vma);
+}
+
+static const struct drm_gem_object_funcs drm_gem_dma_default_funcs = {
+	.free = drm_gem_dma_object_free,
+	.print_info = drm_gem_dma_object_print_info,
+	.get_sg_table = drm_gem_dma_object_get_sg_table,
+	.vmap = drm_gem_dma_object_vmap,
+	.mmap = canaan_drm_gem_dma_object_mmap,
+	.vm_ops = &drm_gem_dma_vm_ops,
+};
+
+static struct drm_gem_dma_object *
+__drm_gem_dma_create(struct drm_device *drm, size_t size, bool private)
+{
+	struct drm_gem_dma_object *dma_obj;
+	struct drm_gem_object *gem_obj;
+	int ret = 0;
+
+	if (drm->driver->gem_create_object) {
+		gem_obj = drm->driver->gem_create_object(drm, size);
+		if (IS_ERR(gem_obj))
+			return ERR_CAST(gem_obj);
+		dma_obj = to_drm_gem_dma_obj(gem_obj);
+	} else {
+		dma_obj = kzalloc(sizeof(*dma_obj), GFP_KERNEL);
+		if (!dma_obj)
+			return ERR_PTR(-ENOMEM);
+		gem_obj = &dma_obj->base;
+	}
+
+	if (!gem_obj->funcs)
+		gem_obj->funcs = &drm_gem_dma_default_funcs;
+
+	if (drm_gem_object_init(drm, gem_obj, size))
+		goto error;
+
+	ret = drm_gem_create_mmap_offset(gem_obj);
+	if (ret) {
+		drm_gem_object_release(gem_obj);
+		goto error;
+	}
+
+	return dma_obj;
+
+error:
+	kfree(dma_obj);
+	return ERR_PTR(ret);
+}
+
+static struct drm_gem_dma_object *canaan_drm_gem_dma_create(struct drm_device *drm,
+					      size_t size)
+{
+	struct drm_gem_dma_object *dma_obj;
+	int ret;
+
+	size = round_up(size, PAGE_SIZE);
+
+	dma_obj = __drm_gem_dma_create(drm, size, false);
+	if (IS_ERR(dma_obj))
+		return dma_obj;
+
+	dma_obj->vaddr = dma_alloc_coherent(drm->dev, size,
+						&dma_obj->dma_addr,
+						GFP_KERNEL | __GFP_NOWARN);
+	if (!dma_obj->vaddr) {
+		drm_dbg(drm, "failed to allocate buffer with size %zu\n",
+			 size);
+		ret = -ENOMEM;
+		goto error;
+	}
+
+	return dma_obj;
+
+error:
+	drm_gem_object_put(&dma_obj->base);
+	return ERR_PTR(ret);
+}
+
+static int canaan_drm_dumb_create(struct drm_file *file_priv,
+				struct drm_device *drm,
+				struct drm_mode_create_dumb *args)
+{
+	struct drm_gem_dma_object *dma_obj;
+	struct drm_gem_object *gem_obj;
+	int ret;
+
+	args->pitch = DIV_ROUND_UP(args->width * args->bpp, 8);
+	args->size = args->pitch * args->height;
+
+	dma_obj = canaan_drm_gem_dma_create(drm, args->size);
+	if (IS_ERR(dma_obj))
+		return PTR_ERR(dma_obj);
+
+	gem_obj = &dma_obj->base;
+	ret = drm_gem_handle_create(file_priv, gem_obj, &args->handle);
+	drm_gem_object_put(gem_obj);
+
+	return ret;
+}
+
 static const struct file_operations canaan_drm_fops = {
 	.owner = THIS_MODULE,
 	.open = canaan_drm_open,
@@ -53,7 +186,8 @@ static const struct file_operations canaan_drm_fops = {
 
 static struct drm_driver canaan_drm_driver = {
 	.driver_features = DRIVER_GEM | DRIVER_MODESET | DRIVER_ATOMIC,
-	DRM_GEM_DMA_DRIVER_OPS_VMAP,
+	.dumb_create = canaan_drm_dumb_create,
+	.gem_prime_import_sg_table = drm_gem_dma_prime_import_sg_table_vmap,
 	.fops = &canaan_drm_fops,
 	.name = "canaan-drm",
 	.desc = "Canaan K230 DRM driver",
