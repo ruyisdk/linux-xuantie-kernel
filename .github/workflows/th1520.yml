@@ -254,6 +254,13 @@ jobs:
             xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
             xtbsptest --run test__audio__hw__audio8k16b1c_sle__10
             xtbsptest --run test__audio__hw__rx__ac8k16b1c_sle
+      - name: 'Run Video Out test'
+        run: |
+            source ~/.venv/bin/activate
+            source /opt/linux-xuantie-kernel-CI/env_setup.source
+            xtbsptest --update_config --dut_ser /dev/ttyUSB0 --dut_ip $DUT_IP --dut_login root --dut_password root
+            xtbsptest --run test____dsi0__800x1280_66d03__pri_800x1280_XR12____tiles_smpte
+            xtbsptest --run test____hdmi__1920x1080_60__pri_1920x1080_XR12____tiles
       - name: 'Cleanup folder'
         if: always()
         run: |
