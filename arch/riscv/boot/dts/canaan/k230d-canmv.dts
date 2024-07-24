@@ -8,6 +8,9 @@
 / {
 	model = "Canaan CanMV-K230";
 	compatible = "canaan,canmv-k230", "canaan,kendryte-k230";
+	aliases {
+		serial2 = &uart2;
+	};
 
 	chosen {
 		stdout-path = "serial0:115200n8";
@@ -22,6 +25,9 @@
 };
 
 &uart0 {
+	status = "okay";
+};
+&uart2 {
 	status = "okay";
 };
 &mmc_sd1{
