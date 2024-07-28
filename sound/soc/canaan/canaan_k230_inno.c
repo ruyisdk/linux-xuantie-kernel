@@ -88,6 +88,8 @@ static int canaan_k230_inno_probe(struct platform_device *pdev)
 	struct k230_inno_info *priv;
 	int ret;
 
+	printk("====canaan_k230_inno_probe\n");
+
 	if (!np) {
 		dev_err(&pdev->dev, "only device tree supported\n");
 		return -EINVAL;

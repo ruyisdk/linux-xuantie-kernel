@@ -64,6 +64,8 @@ static int canaan_audio_probe(struct platform_device *pdev)
 	struct resource *res;
 	int ret = 0;
 
+	printk("========canaan_audio_probe\n");
+
  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
 	sai.base = devm_ioremap_resource(&pdev->dev, res);
@@ -71,6 +73,8 @@ static int canaan_audio_probe(struct platform_device *pdev)
 		return PTR_ERR(sai.base);
 
     platform_set_drvdata(pdev, &sai);
+
+	printk("========canaan_audio_probe end\n");
 
 	return ret;
 }
@@ -83,14 +87,14 @@ static int canaan_audio_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id canaan_audio_ids[] = {
-	{ .compatible = "canaan,k230-audio" },
+	{ .compatible = "canaan,k230-audio",},
 	{ /* sentinel */ },
 };
 
 static struct platform_driver canaan_audio_driver = {
 	.driver = {
 		.name = "k230-audio",
-		.of_match_table = canaan_audio_ids,
+		.of_match_table = of_match_ptr(canaan_audio_ids),
 	},
 	.probe = canaan_audio_probe,
 	.remove = canaan_audio_remove,
@@ -98,5 +102,5 @@ static struct platform_driver canaan_audio_driver = {
 
 module_platform_driver(canaan_audio_driver);
 
-MODULE_DESCRIPTION("CANAAN AUDIO Interface");
-MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("k230 audio interface");
+MODULE_LICENSE("GPL v2");

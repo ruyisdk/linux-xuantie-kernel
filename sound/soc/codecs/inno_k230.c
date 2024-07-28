@@ -401,6 +401,8 @@ static int inno_k230_codec_platform_probe(struct platform_device *pdev)
 	void __iomem *base;
 	int ret;
 
+	printk("========inno_k230_codec_platform_probe\n");
+
 	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
@@ -447,6 +449,7 @@ static int inno_k230_codec_platform_probe(struct platform_device *pdev)
 	audio_codec_reg_init(priv->base);
 	audio_codec_powerup_init();
 
+	printk("========inno_k230_codec_platform_probe end\n");
 	return 0;
 }
 
