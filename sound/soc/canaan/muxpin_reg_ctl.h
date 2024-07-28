@@ -29,14 +29,14 @@
 
 #define IO_MAX_NUM 64
 
-typedef enum muxpin_pull_e {
+enum muxpin_pull_t {
 	MUXPIN_PULL_NONE, /*!< No Pull */
 	MUXPIN_PULL_DOWN, /*!< Pull Down */
 	MUXPIN_PULL_UP, /*!< Pull Up */
 	MUXPIN_PULL_MAX /*!< Count of pull settings */
-} muxpin_pull_t;
+};
 
-typedef enum muxpin_driving_e {
+enum muxpin_driving_t {
 	MUXPIN_DRIVING_0, /*!<  000 */
 	MUXPIN_DRIVING_1, /*!<  001 */
 	MUXPIN_DRIVING_2, /*!<  010 */
@@ -52,14 +52,14 @@ typedef enum muxpin_driving_e {
 	MUXPIN_DRIVING_12, /*!< 1101 */
 	MUXPIN_DRIVING_13, /*!< 1110 */
 	MUXPIN_DRIVING_14, /*!< 1111 */
-} muxpin_driving_t;
+};
 
-typedef enum muxpin_io_voltage_e {
+enum muxpin_io_voltage_t {
 	MUXPIN_IO_VOLTAGE_1V8 = 1,
 	MUXPIN_IO_VOLTAGE_3V3 = 0,
-} muxpin_io_voltage_t;
+};
 
-typedef struct mux_config {
+struct muxpin_config_t {
 	uint32_t st : 1;
 	/*!< Schmitt trigger. */
 	uint32_t ds : 4;
@@ -83,28 +83,28 @@ typedef struct mux_config {
 	/*!< Reserved bits. */
 	uint32_t pad_di : 1;
 	/*!< Read current IO's data input. */
-} __attribute__((aligned(4))) muxpin_config_t;
+} __attribute__((aligned(4)));
 
-typedef enum muxpin_io_function {
+enum muxpin_io_function_t {
 	MUXPIN_FUNCTION1 = 0x0,
 	MUXPIN_FUNCTION2 = 0x1,
 	MUXPIN_FUNCTION3 = 0x2,
 	MUXPIN_FUNCTION4 = 0x3,
 	MUXPIN_FUNCTION5 = 0x4,
-} muxpin_io_function_t;
+};
 
 #define MUXPIN_NUM_IO (64)
-typedef struct _muxpin_t {
-	muxpin_config_t io[MUXPIN_NUM_IO];
+struct muxpin_t {
+	struct muxpin_config_t io[MUXPIN_NUM_IO];
 	/*!< FPIOA GPIO multiplexer io array */
-} __attribute__((aligned(4))) muxpin_t;
+} __attribute__((aligned(4)));
 
 int muxpin_reg_init(void);
-int muxpin_set_config(int io_num, muxpin_config_t config);
-void muxpin_get_config(int io_num, muxpin_config_t *config);
-int muxpin_set_io_pull(int io_num, muxpin_pull_t pull);
-int muxpin_set_io_driving(int io_num, muxpin_driving_t driving);
+int muxpin_set_config(int io_num, struct muxpin_config_t config);
+void muxpin_get_config(int io_num, struct muxpin_config_t *config);
+int muxpin_set_io_pull(int io_num, enum muxpin_pull_t pull);
+int muxpin_set_io_driving(int io_num, enum muxpin_driving_t driving);
 int muxpin_set_function(int io_num, int function);
-int muxpin_set_io_voltage(int io_num, muxpin_io_voltage_t voltage);
+int muxpin_set_io_voltage(int io_num, enum muxpin_io_voltage_t voltage);
 
 #endif

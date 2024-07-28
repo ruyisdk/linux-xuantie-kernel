@@ -122,7 +122,7 @@ enum pdma_burst_len_e {
 #define CH_STAT_BUSY BIT(0)
 #define CH_STAT_PAUSE BIT(1)
 
-typedef enum ch_peri_dev_sel {
+enum ch_peri_dev_sel_t {
 	UART0_TX = 0,
 	UART0_RX = 1,
 	UART1_TX = 2,
@@ -158,16 +158,16 @@ typedef enum ch_peri_dev_sel {
 	ADC2 = 32,
 	PDM_IN = 33,
 	PERI_DEV_SEL_MAX,
-} ch_peri_dev_sel_t;
+};
 
 /* usr pdma structure */
 typedef struct usr_pdma_cfg {
-	pdma_ch_e ch;
-	ch_peri_dev_sel_t device;
+	enum pdma_ch_e ch;
+	enum ch_peri_dev_sel_t device;
 	dma_addr_t src_addr;
 	dma_addr_t dst_addr;
 	u32 line_size;
-	pdma_ch_cfg_t pdma_ch_cfg;
+	struct pdma_ch_cfg_t pdma_ch_cfg;
 } usr_pdma_cfg_t;
 
 typedef enum peridma_mode { LINE_MODE, RECT_MODE, DMA_MODE_MAX } peridma_mode_t;
@@ -226,7 +226,7 @@ struct k230_peridma_vchan {
 	u32 priority;
 	u32 dev_tout;
 	ch_dat_endian_t dat_endian;
-	ch_peri_dev_sel_t dev_sel;
+	enum ch_peri_dev_sel_t dev_sel;
 	enum dma_status status;
 	bool is_paused;
 };
@@ -256,7 +256,7 @@ struct k230_peridma_dev {
 
 typedef struct pdma_chn_llt {
 	dma_addr_t llt_list_p;
-	pdma_llt_t *llt_list_v;
+	struct pdma_llt_t *llt_list_v;
 	bool use;
 } pdma_chn_llt_t;
 static pdma_chn_llt_t g_pdma_llt_list[CH_NUM];
@@ -794,7 +794,7 @@ static u32 *pdma_llt_cal(struct device *dev, struct k230_peridma_hwdesc *hwdesc,
 {
 	int i;
 	u32 list_num;
-	pdma_llt_t *llt_list;
+	struct pdma_llt_t *llt_list;
 
 	list_num =
 		(hwdesc->usr_pdma_chn_cfg.line_size - 1) / PDMA_MAX_LINE_SIZE +
@@ -839,7 +839,7 @@ static void configure_pchan(struct k230_peridma_pchan *pchan,
 		return;
 	}
 
-	hwdesc->usr_pdma_chn_cfg.ch = (pdma_ch_e)pchan->id;
+	hwdesc->usr_pdma_chn_cfg.ch = (enum pdma_ch_e)pchan->id;
 
 	u32 ch_cfg = *(u32 *)&hwdesc->usr_pdma_chn_cfg.pdma_ch_cfg;
 	iowrite32(ch_cfg, pchan->ch_regs + CH_CFG);
@@ -956,7 +956,7 @@ static void k230_peridma_issue_pending(struct dma_chan *dchan)
 	spin_unlock_irqrestore(&vchan->vchan.lock, flags);
 }
 
-static void _pdma_chn_state_clear(pdma_ch_e pdma_chn, u32 *int_state)
+static void _pdma_chn_state_clear(enum pdma_ch_e pdma_chn, u32 *int_state)
 {
 	if (*int_state & (1 << pdma_chn)) {
 		*int_state |= (PDONE_INT << pdma_chn);
@@ -1353,7 +1353,7 @@ static int k230_peridma_probe(struct platform_device *pdev)
 
 	for (i = 0; i < CH_NUM; i++) {
 		g_pdma_llt_list[i].llt_list_v = dma_alloc_coherent(
-			&pdev->dev, sizeof(pdma_llt_t),
+			&pdev->dev, sizeof(struct pdma_llt_t),
 			&g_pdma_llt_list[i].llt_list_p, GFP_KERNEL);
 		g_pdma_llt_list[i].use = false;
 		printk("===========g_pdma_llt_list[%d].llt_list_p:0x%llx\n", i,
@@ -1378,7 +1378,7 @@ static int k230_peridma_remove(struct platform_device *pdev)
 	struct k230_peridma_dev *priv = platform_get_drvdata(pdev);
 
 	for (i = 0; i < CH_NUM; i++) {
-		dma_free_coherent(&pdev->dev, sizeof(pdma_llt_t),
+		dma_free_coherent(&pdev->dev, sizeof(struct pdma_llt_t),
 				  g_pdma_llt_list[i].llt_list_v,
 				  g_pdma_llt_list[i].llt_list_p);
 		g_pdma_llt_list[i].llt_list_v = NULL;

@@ -38,7 +38,7 @@ void ai_i2s_muxpin_config(void)
 
 #define AUDIO_I2S_I2SIN0 34
 
-	muxpin_config_t config1 = {
+	struct muxpin_config_t config1 = {
 		0x0, //st
 		0x4, //ds
 		0x0, //pd
@@ -50,7 +50,7 @@ void ai_i2s_muxpin_config(void)
 		0x2 //io_sel
 	};
 
-	muxpin_config_t config2 = {
+	struct muxpin_config_t config2 = {
 		0x0, //st
 		0x4, //ds
 		0x0, //pd
@@ -85,7 +85,7 @@ void ao_i2s_muxpin_config(void)
 #define AUDIO_I2S_I2SOUT0 35
 #define AUDIO_I2S_I2SOUT1 37
 
-	muxpin_config_t config1 = {
+	struct muxpin_config_t config1 = {
 		0x0, //st
 		0x4, //ds
 		0x0, //pd

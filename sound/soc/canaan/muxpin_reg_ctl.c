@@ -30,13 +30,13 @@
 /* IOMUX */
 #define IOMUX_BASE_ADDR (0x91105000U)
 
-static volatile muxpin_t *muxpin = NULL;
+static volatile struct muxpin_t *muxpin = NULL;
 
 int muxpin_reg_init(void)
 {
 	if (muxpin == NULL) {
 		void __iomem *base;
-		base = ioremap(IOMUX_BASE_ADDR, sizeof(muxpin_t));
+		base = ioremap(IOMUX_BASE_ADDR, sizeof(struct muxpin_t));
 		if (IS_ERR(base))
 			return -1;
 
@@ -53,7 +53,7 @@ int muxpin_reg_init(void)
  * @param config  be careful
  * @return int
  */
-int muxpin_set_config(int io_num, muxpin_config_t config)
+int muxpin_set_config(int io_num, struct muxpin_config_t config)
 {
 	if (io_num > IO_MAX_NUM || io_num < 0) {
 		//  kendryte_logi("io num error.\n");
@@ -83,7 +83,7 @@ int muxpin_set_config(int io_num, muxpin_config_t config)
  * @param io_num  0 ~ 63
  * @param config  return value
  */
-void muxpin_get_config(int io_num, muxpin_config_t *config)
+void muxpin_get_config(int io_num, struct muxpin_config_t *config)
 {
 	if (io_num > IO_MAX_NUM || io_num < 0) {
 		//        kendryte_logi("io num error.\n");
@@ -100,9 +100,9 @@ void muxpin_get_config(int io_num, muxpin_config_t *config)
  * @param pull  enum value
  * @return int
  */
-int muxpin_set_io_pull(int io_num, muxpin_pull_t pull)
+int muxpin_set_io_pull(int io_num, enum muxpin_pull_t pull)
 {
-	muxpin_config_t cfg;
+	struct muxpin_config_t cfg;
 	if (io_num < 0 || io_num >= MUXPIN_NUM_IO || pull >= MUXPIN_PULL_MAX)
 		return -1;
 
@@ -135,9 +135,9 @@ int muxpin_set_io_pull(int io_num, muxpin_pull_t pull)
  * @param driving enum value
  * @return int
  */
-int muxpin_set_io_driving(int io_num, muxpin_driving_t driving)
+int muxpin_set_io_driving(int io_num, enum muxpin_driving_t driving)
 {
-	muxpin_config_t cfg;
+	struct muxpin_config_t cfg;
 	if (io_num > 1 && driving >= MUXPIN_DRIVING_7) {
 		//     kendryte_logi("io %d can't configured driving 0x%x.\n",io_num,driving);
 		return -1;
@@ -159,7 +159,7 @@ int muxpin_set_io_driving(int io_num, muxpin_driving_t driving)
  */
 int muxpin_set_function(int io_num, int function)
 {
-	muxpin_config_t cfg;
+	struct muxpin_config_t cfg;
 	if (io_num > IO_MAX_NUM) {
 		//      kendryte_logi("io num error.\n");
 		return -1;
@@ -184,7 +184,7 @@ int muxpin_set_function(int io_num, int function)
  * @param voltage 1:1.8v  0:3.3v
  * @return int
  */
-int muxpin_set_io_voltage(int io_num, muxpin_io_voltage_t voltage)
+int muxpin_set_io_voltage(int io_num, enum muxpin_io_voltage_t voltage)
 {
 	if (io_num > IO_MAX_NUM) {
 		//      kendryte_logi("error: please check your io num and voltage.\n");

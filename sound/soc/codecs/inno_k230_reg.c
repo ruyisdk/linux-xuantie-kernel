@@ -37,7 +37,7 @@ static acodec_sound_values g_snd_current_values;
 #define AUDIO_REG_CONFIG_LONG2_DELAY 10 // 10ms
 //powerup 配置中sel_vref每次配置都要延迟20ms,adc的step1/step2，dac的step1延迟10ms，其他延迟1ms
 
-static volatile audio_codec_reg_s *audio_codec_reg = NULL;
+static volatile struct audio_codec_reg_s *audio_codec_reg = NULL;
 //tatic rt_thread_t                g_check_hp_thread = 0;
 static bool g_adc_left_mute = false;
 static bool g_adc_right_mute = false;
@@ -69,10 +69,10 @@ static int _reset_snd_values(acodec_sound_values *snd_values)
 
 static int _reset_adc_sound(void)
 {
-	reg_24_t reg24;
-	reg_27_t reg27;
-	reg_8_t reg8;
-	reg_9_t reg9;
+	union reg_24_t reg24;
+	union reg_27_t reg27;
+	union reg_8_t reg8;
+	union reg_9_t reg9;
 
 	reg24.reg_data = readl(&audio_codec_reg->reg_24);
 	reg24.reg_24.gain_micl = g_snd_default_values.gain_micl;
@@ -109,9 +109,9 @@ static int _reset_adc_sound(void)
 
 static int _reset_dac_sound(void)
 {
-	reg_2b_t reg2b;
-	reg_2e_t reg2e;
-	reg_6_t reg6;
+	union reg_2b_t reg2b;
+	union reg_2e_t reg2e;
+	union reg_6_t reg6;
 
 	reg2b.reg_data = readl(&audio_codec_reg->reg_2b);
 	reg2b.reg_2b.gain_hpoutl = g_snd_default_values.gain_hpoutl;
@@ -145,11 +145,11 @@ int audio_codec_reg_init(void *reg_base)
 static volatile bool g_powerup_init = false;
 void audio_codec_powerup_init(void)
 {
-	reg_29_t reg29;
-	reg_2c_t reg2c;
-	reg_21_t reg21;
-	reg_20_t reg20;
-	reg_0_t reg0;
+	union reg_29_t reg29;
+	union reg_2c_t reg2c;
+	union reg_21_t reg21;
+	union reg_20_t reg20;
+	union reg_0_t reg0;
 	int i = 0;
 
 	if (g_powerup_init) {
@@ -251,7 +251,7 @@ static int audio_reset_micbias(void)
 {
 	int delay_milli_sec = 100;
 	//acodec_err_trace("=========audio_reset_micbias:%d ms\n",delay_milli_sec);
-	reg_20_t reg20;
+	union reg_20_t reg20;
 	reg20.reg_data = readl(&audio_codec_reg->reg_20);
 	reg20.reg_20.en_micbias = 0;
 	writel(reg20.reg_data, &audio_codec_reg->reg_20);
@@ -327,20 +327,20 @@ static int audio_reset_micbias(void)
 // }
 
 static volatile bool g_adc_sound_init = false;
-void audio_codec_adc_init(k_i2s_work_mode mode, unsigned int i2s_ws)
+void audio_codec_adc_init(enum k_i2s_work_mode mode, unsigned int i2s_ws)
 {
-	reg_24_t reg24;
-	reg_27_t reg27;
-	reg_20_t reg20;
-	reg_23_t reg23;
-	reg_26_t reg26;
-	reg_25_t reg25;
-	reg_28_t reg28;
-	reg_4_t reg4;
+	union reg_24_t reg24;
+	union reg_27_t reg27;
+	union reg_20_t reg20;
+	union reg_23_t reg23;
+	union reg_26_t reg26;
+	union reg_25_t reg25;
+	union reg_28_t reg28;
+	union reg_4_t reg4;
 	//reg_8_t reg8;
 	//reg_9_t reg9;
 	//reg_2_t reg2;
-	reg_0_t reg0;
+	union reg_0_t reg0;
 
 	// 1.Configure the register MUTE_MICL 0x24[7] to 1, to end the mute station of the left ADC channel.
 	reg24.reg_data = readl(&audio_codec_reg->reg_24);
@@ -542,21 +542,21 @@ void audio_codec_adc_init(k_i2s_work_mode mode, unsigned int i2s_ws)
 }
 
 static volatile bool g_dac_sound_init = false;
-void audio_codec_dac_init(k_i2s_work_mode mode, unsigned int i2s_ws)
+void audio_codec_dac_init(enum k_i2s_work_mode mode, unsigned int i2s_ws)
 {
-	reg_20_t reg20;
-	reg_29_t reg29;
-	reg_2c_t reg2c;
-	reg_2a_t reg2a;
-	reg_2d_t reg2d;
+	union reg_20_t reg20;
+	union reg_29_t reg29;
+	union reg_2c_t reg2c;
+	union reg_2a_t reg2a;
+	union reg_2d_t reg2d;
 	//reg_2b_t reg2b;
 	//reg_2e_t reg2e;
-	reg_2_t reg2;
-	reg_3_t reg3;
+	union reg_2_t reg2;
+	union reg_3_t reg3;
 	//reg_1_t reg1;
 	//reg_6_t reg6;
 	//reg_7_t reg7;
-	reg_0_t reg0;
+	union reg_0_t reg0;
 
 	// 1.Configure the register EN_IBIAS_DAC 0x20[4] to 1, to enable the current source of DAC.
 	reg20.reg_data = readl(&audio_codec_reg->reg_20);
@@ -775,7 +775,7 @@ static int convert_adc_gain_2(unsigned int reg_val, unsigned int *gain)
 
 int audio_codec_adc_set_micl_gain(int gain)
 {
-	reg_24_t reg24;
+	union reg_24_t reg24;
 	unsigned int reg_val = 0;
 
 	printk("audio_codec_adc_set_micl_gain gain:%d\n", gain);
@@ -794,7 +794,7 @@ int audio_codec_adc_set_micl_gain(int gain)
 int audio_codec_adc_set_micr_gain(int gain)
 {
 	unsigned int reg_val = 0;
-	reg_27_t reg27;
+	union reg_27_t reg27;
 
 	printk("audio_codec_adc_set_micr_gain gain:%d\n", gain);
 	if (0 != convert_adc_gain(gain, &reg_val)) {
@@ -934,7 +934,7 @@ int audio_codec_adc_get_micr_gain(int *gain)
 
 int audio_codec_adc_micl_mute(bool mute)
 {
-	reg_24_t reg24;
+	union reg_24_t reg24;
 
 	printk("audio_codec_adc_micl_mute mute:%d\n", mute);
 	reg24.reg_data = readl(&audio_codec_reg->reg_24);
@@ -948,7 +948,7 @@ int audio_codec_adc_micl_mute(bool mute)
 
 int audio_codec_adc_micr_mute(bool mute)
 {
-	reg_27_t reg27;
+	union reg_27_t reg27;
 	printk("audio_codec_adc_micr_mute mute:%d\n", mute);
 	reg27.reg_data = readl(&audio_codec_reg->reg_27);
 	reg27.reg_27.mute_micr = mute ? 0 : 1;
@@ -1150,7 +1150,7 @@ static int convert_dac_gain2(unsigned int reg_val, int *gain)
 int audio_codec_dac_set_hpoutl_gain(int gain)
 {
 	unsigned int reg_val = 0;
-	reg_2b_t reg2b;
+	union reg_2b_t reg2b;
 
 	if (0 != convert_dac_gain(gain, &reg_val)) {
 		return -1;
@@ -1168,7 +1168,7 @@ int audio_codec_dac_set_hpoutl_gain(int gain)
 int audio_codec_dac_set_hpoutr_gain(int gain)
 {
 	unsigned int reg_val = 0;
-	reg_2e_t reg2e;
+	union reg_2e_t reg2e;
 
 	if (0 != convert_dac_gain(gain, &reg_val)) {
 		return -1;
@@ -1194,8 +1194,8 @@ int audio_codec_dac_get_hpoutr_gain(int *gain)
 
 int audio_codec_dac_hpoutl_mute(bool mute)
 {
-	reg_29_t reg29;
-	reg_2a_t reg2a;
+	union reg_29_t reg29;
+	union reg_2a_t reg2a;
 
 	reg29.reg_data = readl(&audio_codec_reg->reg_29);
 	reg29.reg_29.mute_hpoutl = mute ? 0 : 1;
@@ -1213,8 +1213,8 @@ int audio_codec_dac_hpoutl_mute(bool mute)
 }
 int audio_codec_dac_hpoutr_mute(bool mute)
 {
-	reg_2c_t reg2c;
-	reg_2d_t reg2d;
+	union reg_2c_t reg2c;
+	union reg_2d_t reg2d;
 
 	reg2c.reg_data = readl(&audio_codec_reg->reg_2c);
 	reg2c.reg_2c.mute_hpoutr = mute ? 0 : 1;
@@ -1369,7 +1369,7 @@ int audio_codec_reset(void)
 
 int audio_codec_adc_hp_work(bool work)
 {
-	reg_23_t reg23;
+	union reg_23_t reg23;
 
 	printk("audio_codec_adc_hp_work work:%d\n", work);
 	reg23.reg_data = readl(&audio_codec_reg->reg_23);
