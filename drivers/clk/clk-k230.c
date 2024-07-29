@@ -121,10 +121,10 @@ static unsigned long k230_clk_composite_recalc_rate(struct clk_hw *hw,
 							unsigned long parent_rate)
 {
 	struct k230_clk_composite *k230_composite = to_k230_clk_composite(hw);
-	uint32_t reg_mul;
-	uint32_t reg_div;
-	uint32_t rate_mul;
-	uint32_t rate_div;
+	uint64_t reg_mul;
+	uint64_t reg_div;
+	uint64_t rate_mul;
+	uint64_t rate_div;
 	unsigned long flags;
 
 	/* no divider */
@@ -890,8 +890,8 @@ static unsigned long k230_clk_pll_recalc_rate(struct clk_hw *hw,
 {
 	struct k230_clk_pll *k230_pll = to_k230_clk_pll(hw);
 	unsigned long  rate;
-	uint32_t pll_divide_value;
-	uint32_t fb_div, ref_div, out_div;
+	uint64_t pll_divide_value;
+	uint64_t fb_div, ref_div, out_div;
 	unsigned long flags;
 
 	/* lock dual cores */
@@ -1598,10 +1598,10 @@ static int pll_show_register_show(struct seq_file *s, void *data)
 {
 	struct clk_hw *hw = s->private;
 	struct k230_clk_pll *k230_pll = to_k230_clk_pll(hw);
-	int reg_value;
-	int fb_div = 0;
-	int ref_div = 0;
-	int out_div = 0;
+	uint32_t reg_value;
+	uint64_t fb_div = 0;
+	uint64_t ref_div = 0;
+	uint64_t out_div = 0;
 
 	seq_puts(s, "1. rate info:\n");
 	seq_puts(s, "--------------\n");
@@ -1615,12 +1615,12 @@ static int pll_show_register_show(struct seq_file *s, void *data)
 		  k230_pll->pll_ref_div_mask;
 	fb_div = (reg_value >> k230_pll->pll_fb_div_shift) &
 		 k230_pll->pll_fb_div_mask;
-	seq_printf(s, "   out_div   :	  %d\n", out_div);
-	seq_printf(s, "   ref_div   :	  %d\n", ref_div);
-	seq_printf(s, "   fb_div	:	  %d\n", fb_div);
+	seq_printf(s, "   out_div   :	  %llu\n", out_div);
+	seq_printf(s, "   ref_div   :	  %llu\n", ref_div);
+	seq_printf(s, "   fb_div	:	  %llu\n", fb_div);
 	seq_printf(
 		s,
-		"   freq = 24M * (fb_div+1) / (ref_div+1) / (out_div+1) = %d\n",
+		"   freq = 24M * (fb_div+1) / (ref_div+1) / (out_div+1) = %llu\n",
 		24000000 * (fb_div + 1) / (ref_div + 1) / (out_div + 1));
 	seq_puts(s, "--------------\n\n");
 
