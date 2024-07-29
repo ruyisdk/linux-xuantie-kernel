@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2023, Canaan Bright Sight Co., Ltd
  *
  * Redistribution and use in source and binary forms, with or without

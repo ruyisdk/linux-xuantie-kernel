@@ -15,55 +15,45 @@ static struct canaan_audio_data sai = { 0 };
 void audio_i2s_in_init(void)
 {
 	if (sai.base) {
-		volatile audio_in_reg_s *audio_in_reg = sai.base;
-		audio_in_reg->audio_in_pdm_conf_0.audio_in_mode =
-			AUDIO_IO_OUT_MODE_I2S; //默认使用i2s
+		audio_in_reg_s *audio_in_reg = sai.base;
+		audio_in_reg->audio_in_pdm_conf_0.audio_in_mode = AUDIO_IO_OUT_MODE_I2S; //默认使用i2s
 		audio_in_reg->audio_in_agc_para_4.agc_bypass = AUDIO_ENABLE;
 	}
 }
-
 EXPORT_SYMBOL_GPL(audio_i2s_in_init);
 
 void audio_i2s_out_init(bool enable, uint32_t word_len)
 {
-	audio_out_data_width_e out_word_len = AUDIO_OUT_TYPE_32BIT;
-	if (32 == word_len) {
+	enum audio_out_data_width_e out_word_len = AUDIO_OUT_TYPE_32BIT;
+	if (32 == word_len)
 		out_word_len = AUDIO_OUT_TYPE_32BIT;
-	} else if (24 == word_len) {
+	else if (24 == word_len)
 		out_word_len = AUDIO_OUT_TYPE_24BIT;
-	} else if (16 == word_len) {
+	else if (16 == word_len)
 		out_word_len = AUDIO_OUT_TYPE_16BIT;
-	}
+
 	if (sai.base) {
-		volatile audio_out_reg_s *audio_out_reg = sai.base + 0x800;
+		audio_out_reg_s *audio_out_reg = sai.base + 0x800;
 		audio_out_reg->audio_out_ctl.data_type = out_word_len;
-		audio_out_reg->audio_out_ctl.mode =
-			AUDIO_OUT_MODE_I2S; /* i2s/pdm/tdm mode */
-		audio_out_reg->audio_out_ctl.enable =
-			enable ? AUDIO_ENABLE :
-				 AUDIO_DISABLE; /* enable audio out */
+		audio_out_reg->audio_out_ctl.mode = AUDIO_OUT_MODE_I2S; /* i2s/pdm/tdm mode */
+		audio_out_reg->audio_out_ctl.enable = enable ? AUDIO_ENABLE : AUDIO_DISABLE; /* enable audio out */
 	}
 }
-
 EXPORT_SYMBOL_GPL(audio_i2s_out_init);
 
 void audio_i2s_enable_audio_codec(bool use_audio_codec)
 {
 	if (sai.base) {
-		volatile audio_in_reg_s *audio_in_reg = sai.base;
-		audio_in_reg->audio_in_pdm_conf_0.audio_codec_bypass =
-			!use_audio_codec; //是否启用内置codec
+		audio_in_reg_s *audio_in_reg = sai.base;
+		audio_in_reg->audio_in_pdm_conf_0.audio_codec_bypass = !use_audio_codec; //是否启用内置codec
 	}
 }
-
 EXPORT_SYMBOL_GPL(audio_i2s_enable_audio_codec);
 
 static int canaan_audio_probe(struct platform_device *pdev)
 {
 	struct resource *res;
 	int ret = 0;
-
-	printk("========canaan_audio_probe\n");
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
@@ -72,8 +62,6 @@ static int canaan_audio_probe(struct platform_device *pdev)
 		return PTR_ERR(sai.base);
 
 	platform_set_drvdata(pdev, &sai);
-
-	printk("========canaan_audio_probe end\n");
 
 	return ret;
 }
@@ -104,4 +92,4 @@ static struct platform_driver canaan_audio_driver = {
 module_platform_driver(canaan_audio_driver);
 
 MODULE_DESCRIPTION("k230 audio interface");
-MODULE_LICENSE("GPL v2");
+MODULE_LICENSE("GPL");

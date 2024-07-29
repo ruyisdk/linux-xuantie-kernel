@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2023, Canaan Bright Sight Co., Ltd
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,44 +27,44 @@
 #define _CANAAN_AUDIO_H
 #include <linux/types.h>
 
-typedef enum {
+enum audio_enable_e{
 	AUDIO_DISABLE = 0,
 	AUDIO_ENABLE = 1,
-} audio_enable_e;
+};
 
-typedef enum {
+enum audio_out_data_width_e{
 	AUDIO_OUT_TYPE_32BIT = 0,
 	AUDIO_OUT_TYPE_24BIT = 1,
 	AUDIO_OUT_TYPE_16BIT = 2,
-} audio_out_data_width_e;
+};
 
-typedef enum {
+enum audio_out_align_e{
 	AUDIO_OUT_24BIT_ALIGN_RIGTH = 0,
 	AUDIO_OUT_24BIT_ALIGN_LEFT = 1,
-} audio_out_align_e;
+};
 
-typedef enum {
+enum audio_out_mode_e{
 	AUDIO_OUT_MODE_TDM = 0,
 	AUDIO_OUT_MODE_PDM = 1,
 	AUDIO_OUT_MODE_I2S = 2,
-} audio_out_mode_e;
+};
 
-typedef enum {
+enum audio_out_pdm_edge_e{
 	AUDIO_OUT_PDM_RISING = 0,
 	AUDIO_OUT_PDM_BOTH = 1,
-} audio_out_pdm_edge_e;
+};
 
-typedef enum {
+enum audio_out_pdm_cic_e{
 	AUDIO_PDM_OUT_CIC16 = 0,
 	AUDIO_PDM_OUT_CIC32 = 1,
-} audio_out_pdm_cic_e;
+};
 
-typedef enum {
+enum audio_pdm_oversample_e{
 	AUDIO_PDM_OVERSAMPLE_32 = 0,
 	AUDIO_PDM_OVERSAMPLE_64,
 	AUDIO_PDM_OVERSAMPLE_128,
-} audio_pdm_oversample_e;
-typedef struct _audio_out_ctl {
+};
+struct audio_out_ctl_s {
 	uint32_t enable : 1; /* bit0:     0: disable 1:enable */
 	uint32_t data_type : 2; /* bit1-2:   0: channel 32bit; 1:channel 24bit 2:channel 16bit */
 	uint32_t align : 1; /* bit3:     0: 24bit right align;  1: 24bit left align */
@@ -74,7 +75,7 @@ typedef struct _audio_out_ctl {
 	uint32_t channel_num : 4; /* bit9-12:  channel number */
 	uint32_t dma_threshold : 5; /* bit13-17: dma threshold 16bit should be >= 2; 24/32bit should be >= 1 */
 	uint32_t reserved : 14; /* bit18-31 */
-} __attribute__((packed, aligned(4))) audio_out_ctl_s;
+} __attribute__((packed, aligned(4)));
 
 typedef struct _audio_out_rcv_fifo {
 	uint32_t audio_fifo_clear : 1;
@@ -124,7 +125,7 @@ typedef struct _audio_iir_fir_conf {
 } __attribute__((packed, aligned(4))) audio_iir_fir_conf_s;
 
 typedef struct _audio_out_reg {
-	audio_out_ctl_s audio_out_ctl; /* address:0x00 */
+	struct audio_out_ctl_s audio_out_ctl; /* address:0x00 */
 	audio_out_rcv_fifo_s audio_out_fifo; /* address:0x04 */
 	uint32_t audio_out_reserved0[1]; /* address:0x08 */
 	audio_out_tdm_conf_s audio_out_tdm_conf; /* address:0x0c */
@@ -455,7 +456,7 @@ void audio_i2s_enable_audio_codec(
 	bool use_audio_codec); //i2s选择使用内置audio codec
 
 //pdm in操作寄存器
-//void audio_pdm_in_init(audio_pdm_oversample_e pdm_oversample, uint32_t pdm_rx_num, audio_in_pdm_edge_e pdm_rx_edge, audio_in_align_e    pdm_rx_align);
+//void audio_pdm_in_init(enum audio_pdm_oversample_e pdm_oversample, uint32_t pdm_rx_num, audio_in_pdm_edge_e pdm_rx_edge, audio_in_align_e    pdm_rx_align);
 //volatile uint32_t *audio_pdm_rx_dma_fifo();
 //void  audio_pdm_fifo_overrun_clear();
 
