@@ -88,8 +88,6 @@ static int canaan_k230_inno_probe(struct platform_device *pdev)
 	struct k230_inno_info *priv;
 	int ret;
 
-	printk("====canaan_k230_inno_probe\n");
-
 	if (!np) {
 		dev_err(&pdev->dev, "only device tree supported\n");
 		return -EINVAL;
@@ -136,10 +134,6 @@ static int canaan_k230_inno_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	// printk("====audio muxpin \n");
-	// ai_i2s_muxpin_config();
-	// ao_i2s_muxpin_config();
-
 	audio_i2s_in_init();
 	audio_i2s_enable_audio_codec(true);
 	audio_i2s_out_init(true, 32);
@@ -167,5 +161,5 @@ static struct platform_driver canaan_k230_inno_driver = {
 module_platform_driver(canaan_k230_inno_driver);
 
 MODULE_DESCRIPTION("CANAAN k230 inno machine ASoC driver");
-MODULE_LICENSE("GPL v2");
+MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:" DRV_NAME);

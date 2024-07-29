@@ -30,7 +30,7 @@
 /* IOMUX */
 #define IOMUX_BASE_ADDR (0x91105000U)
 
-static volatile struct muxpin_t *muxpin = NULL;
+static volatile struct muxpin_t *muxpin;
 
 int muxpin_reg_init(void)
 {
