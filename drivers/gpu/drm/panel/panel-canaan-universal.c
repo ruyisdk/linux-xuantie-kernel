@@ -126,12 +126,12 @@ static int canaan_panel_prepare(struct drm_panel *panel)
 	struct canaan_panel *p = panel_to_canaan_panel(panel);
 
 	// set power on
-	if (!IS_ERR(p->power_on)) {
+	if (p->power_on) {
 		// gpiod_direction_output(p->power_on, 1);
 		// gpiod_set_value_cansleep(p->power_on, 1);
 	}
 	// set rst
-	if (!IS_ERR(p->reset)) {
+	if (p->reset) {
 		// gpiod_direction_output(p->reset, 1);
 
 		// gpiod_set_value_cansleep(p->reset, 1);
@@ -319,7 +319,7 @@ static int canaan_panel_dsi_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx->reset)) {
 		dev_err(&dsi->dev, "Couldn't get our reset GPIO, error: %ld\n",
 			PTR_ERR(ctx->reset));
-		// return PTR_ERR(ctx->reset);
+		ctx->reset = NULL;
 	} else {
 		gpiod_direction_output(ctx->reset, 1);
 		panel_simple_sleep(200);
@@ -334,7 +334,7 @@ static int canaan_panel_dsi_probe(struct mipi_dsi_device *dsi)
 		dev_err(&dsi->dev,
 			"Couldn't get our backlight_gpio GPIO, error: %ld\n",
 			PTR_ERR(ctx->power_on));
-		// return PTR_ERR(ctx->power_on);
+		ctx->power_on = NULL;
 	} else {
 		gpiod_direction_output(ctx->power_on, 1);
 	}
