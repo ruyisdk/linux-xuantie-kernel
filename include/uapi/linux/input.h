@@ -31,12 +31,17 @@ struct input_event {
 #define input_event_sec time.tv_sec
 #define input_event_usec time.tv_usec
 #else
+#if defined(__riscv)
+	__kernel_time64_t __sec;
+	__kernel_time64_t __usec;
+#else
 	__kernel_ulong_t __sec;
 #if defined(__sparc__) && defined(__arch64__)
 	unsigned int __usec;
 	unsigned int __pad;
 #else
 	__kernel_ulong_t __usec;
+#endif
 #endif
 #define input_event_sec  __sec
 #define input_event_usec __usec
