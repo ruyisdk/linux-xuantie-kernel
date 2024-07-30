@@ -4,6 +4,7 @@
  */
 
 #include "k230.dtsi"
+#include "display-hx8399-1080x1920.dtsi"
 
 / {
 	model = "Kendryte K230 EVB";
@@ -79,4 +80,9 @@
 		];
 		status = "okay";
 	};
+};
+
+&lcd {
+	dsi_reset-gpios = <&gpio0_ports 9 GPIO_ACTIVE_HIGH>;
+	backlight_gpio-gpios = <&gpio0_ports 31 GPIO_ACTIVE_HIGH>;
 };
