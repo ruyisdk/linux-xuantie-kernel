@@ -90,11 +90,13 @@ jobs:
                 make -j$(nproc)
                 make INSTALL_MOD_PATH=./modules_install modules_install
                 make INSTALL_HDR_PATH=./headers_install headers_install
+                cp -vf arch/riscv/boot/dts/canaan/*.dtb ./
                 cp -vf arch/riscv/boot/Image ./
                 cp -vf Documentation/admin-guide/kdump/gdbmacros.txt ./
-                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt
+                tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt *.dtb
                 cp -vf ${{ matrix.name }}.tar.gz ${GITHUB_WORKSPACE}/artifact
                 cp -vf arch/riscv/boot/Image ${GITHUB_WORKSPACE}/artifact
+                cp -vf arch/riscv/boot/dts/canaan/*.dtb ${GITHUB_WORKSPACE}/artifact
               popd
 
       - name: 'Upload Artifact'
@@ -103,3 +105,60 @@ jobs:
           name: k230-${{ matrix.name }}.tar.gz
           path: artifact/*
           retention-days: 90
+
+  test:
+    # env needed on target system:
+    # DUT_SERIAL: /dev/tty[device]
+    # DUT_IP: IP for th1520 board
+    # PC_IP: IP for host machine
+    runs-on: [self-hosted, k230d]
+    needs: [
+      kernel
+    ]
+    if: ${{ always() && !cancelled() && needs.kernel.result == 'success' }}
+    steps:
+      - name: 'Download artifact'
+        uses: actions/download-artifact@v4
+        with:
+          name: k230-linux-64ilp32.tar.gz
+          path: k230-linux-64ilp32
+      - name: 'Prepare files'
+        run: |
+            cp /opt/CI-tools/k230-ci/fw_dynamic.bin k230-linux-64ilp32/
+            cp /opt/CI-tools/k230-ci/gdbinit k230-linux-64ilp32/
+      - name: 'List all downloaded files'
+        run: ls -R $GITHUB_WORKSPACE
+      - name: 'test kernel'
+        run: |
+            export PATH="/opt/Xuantie-900-gcc-linux-6.6.0-glibc-x86_64-V2.10.0/bin:$PATH"
+            cd k230-linux-64ilp32
+            init_cp2112.sh
+            # reset board -> intercept uboot -> start debug server -> load kernel using gdb
+            # --push reset key to reset--
+            board_reset.sh
+            # --intercept uboot--
+            intercept_uboot.sh /dev/ttyACM1
+            # --start debug server--
+            DebugServerConsole > /dev/null 2>&1 &
+            echo "debug server started"
+            # --load kernel using gdb--
+            riscv64-unknown-linux-gnu-gdb -ex "target remote 127.0.0.1:1026" -ex "reset" -ex "reset" -x gdbinit > /dev/null 2>&1 &
+            echo "gdb started"
+            # --wait (print serial log will be better)--
+            # sleep 60
+            print_kernel_load_log.sh /dev/ttyACM1
+            # --run command to check kernel--
+            check_kernel.sh /dev/ttyACM1
+            cd ..
+      - name: 'Cleanup'
+        if: always()
+        run: |
+            # killall remaining processes
+            killall DebugServerConsole.elf > /dev/null 2>&1 || true
+            killall riscv64-unknown-linux-gnu-gdb > /dev/null 2>&1 || true
+
+            # Remove all hidden files that have a dot as first character, including the .git folder
+            rm -rf ./.??*
+
+            rm -rfv ./k230-linux-64ilp32.tar.gz
+            rm -rfv ./k230-linux-64ilp32
