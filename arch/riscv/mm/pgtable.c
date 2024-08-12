@@ -28,7 +28,7 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma,
 }
 EXPORT_SYMBOL_GPL(ptep_test_and_clear_young);
 
-#ifdef CONFIG_64BIT
+#if IS_ENABLED(CONFIG_64BIT) || (IS_ENABLED(CONFIG_ARCH_RV64ILP32) && !IS_ENABLED(CONFIG_MMU_SV32))
 pud_t *pud_offset(p4d_t *p4d, unsigned long address)
 {
 	if (pgtable_l4_enabled)
