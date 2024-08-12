@@ -24,7 +24,7 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma,
 {
 	if (!pte_young(ptep_get(ptep)))
 		return 0;
-	return test_and_clear_bit(_PAGE_ACCESSED_OFFSET, &pte_val(*ptep));
+	return test_and_clear_bit(_PAGE_ACCESSED_OFFSET, (unsigned long *)&pte_val(*ptep));
 }
 EXPORT_SYMBOL_GPL(ptep_test_and_clear_young);
 
