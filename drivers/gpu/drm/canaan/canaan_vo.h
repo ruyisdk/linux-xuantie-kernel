@@ -9,7 +9,7 @@
 #ifndef __CANAAN_VO_H__
 #define __CANAAN_VO_H__
 
-#define CANAAN_PLANE_NUMBER 5
+#define CANAAN_PLANE_NUMBER 6
 
 struct canaan_vo {
 	struct device *dev;
