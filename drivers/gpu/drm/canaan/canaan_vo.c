@@ -171,22 +171,32 @@ static void canaan_vo_update_osd(struct canaan_vo *vo,
 	dma_addr_t paddr = 0x00;
 	uint32_t stride = 0x00;
 	uint32_t disp_en = 0x00;
+	uint32_t rb_swap;
 
 	switch (fb->format->format) {
 	case DRM_FORMAT_ARGB8888:
 		reg_val = 0x53;
+		rb_swap = 0x4F;
 		break;
 	case DRM_FORMAT_ARGB4444:
 		reg_val = 0x54;
+		rb_swap = 0x4F;
 		break;
 	case DRM_FORMAT_ARGB1555:
 		reg_val = 0x55;
+		rb_swap = 0x4F;
 		break;
 	case DRM_FORMAT_RGB888:
 		reg_val = 0x00;
+		rb_swap = 0x4F;
+		break;
+	case DRM_FORMAT_BGR888:
+		reg_val = 0x00;
+		rb_swap = 0xF;
 		break;
 	case DRM_FORMAT_RGB565:
 		reg_val = 0x02;
+		rb_swap = 0x4F;
 		break;
 	default:
 		DRM_DEV_ERROR(vo->dev, "Invalid pixel format %d\n",
@@ -228,8 +238,8 @@ static void canaan_vo_update_osd(struct canaan_vo *vo,
 	writel(stride,
 	       vo->reg_base + plane_offset + VO_OSD0_7_STRIDE_REG_OFFSET);
 
-	writel(0x4F,
-	       vo->reg_base + plane_offset + VO_OSD0_7_DMA_CTRL_REG_OFFSET);
+	writel(rb_swap, vo->reg_base + plane_offset + VO_OSD0_7_DMA_CTRL_REG_OFFSET);
+
 	writel(0x100, vo->reg_base + plane_offset +
 			      VO_OSD0_7_ADDR_SEL_MODE_REG_OFFSET);
 
@@ -287,7 +297,8 @@ void canaan_vo_update_plane(struct canaan_vo *vo,
 	struct drm_crtc_state *crtc_state = plane_state->crtc->state;
 	struct drm_display_mode *adj_mode = &crtc_state->adjusted_mode;
 
-	if (vo->canaan_plane[0]->id == canaan_plane->id)
+	if ((vo->canaan_plane[0]->id == canaan_plane->id) ||
+		(vo->canaan_plane[5]->id == canaan_plane->id))
 		canaan_vo_update_video(vo, canaan_plane, adj_mode);
 	else
 		canaan_vo_update_osd(vo, canaan_plane, adj_mode);
@@ -510,7 +521,7 @@ static const uint32_t video_plane_formats[] = {
 
 static const uint32_t osd_plane_formats[] = {
 	DRM_FORMAT_ARGB8888, DRM_FORMAT_ARGB4444, DRM_FORMAT_ARGB1555,
-	DRM_FORMAT_RGB888,   DRM_FORMAT_RGB565,
+	DRM_FORMAT_RGB888,   DRM_FORMAT_RGB565, DRM_FORMAT_BGR888
 };
 
 static struct canaan_plane_config
@@ -570,6 +581,17 @@ static struct canaan_plane_config
 			.xctl_reg_offset = VO_DISP_OSD7_XCTL,
 			.yctl_reg_offset = VO_DISP_OSD7_YCTL,
 		},
+		{
+			.id = 5,
+			.name = "video_2",
+			.formats = video_plane_formats,
+			.num_formats = ARRAY_SIZE(video_plane_formats),
+			.plane_type = DRM_PLANE_TYPE_OVERLAY,
+			.plane_offset = VO_LAYER2_OFFSET,
+			.plane_enable_bit = 2,
+			.xctl_reg_offset = VO_DISP_LAYER2_XCTL,
+			.yctl_reg_offset = VO_DISP_LAYER2_YCTL,
+		}
 	};
 
 static int canaan_vo_bind(struct device *dev, struct device *master, void *data)
