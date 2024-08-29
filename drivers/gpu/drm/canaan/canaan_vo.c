@@ -453,22 +453,22 @@ static void canaan_vo_set_timing(struct canaan_vo *vo,
 	vtotal = mode->vtotal;
 
 	// 0 - 12 start ; 16 - 28 end
-	reg = (0x2 << 16) + 0x1;
+	reg = (0x5 << 16) + 0x2;
 	canaan_vo_write(vo, VO_DISP_HSYNC_CTL, reg);
 
-	reg = (0x6 << 16) + 0x5;
+	reg = (0x5 << 16) + 0x2;
 	canaan_vo_write(vo, VO_DISP_HSYNC1_CTL, reg);
 
-	reg = (0x5 << 16) + 0x1;
+	reg = (0x5 << 16) + 0x2;
 	canaan_vo_write(vo, VO_DISP_HSYNC2_CTL, reg);
 
-	reg = (0x1 << 16) + 0x1;
+	reg = (0x0 << 16) + 0x0;
 	canaan_vo_write(vo, VO_DISP_VSYNC1_CTL, reg);
 
-	reg = (0x1 << 16) + 0x1;
+	reg = (0x0 << 16) + 0x0;
 	canaan_vo_write(vo, VO_DISP_VSYNC2_CTL, reg);
 
-	reg = (5 + hsa + hbp + 1) + (((hact + (5 + hsa + hbp + 1)) - 1) << 16);
+	reg = (hbp) + ((hact + hbp - 1) << 16);
 	canaan_vo_write(vo, VO_DISP_XZONE_CTL, reg);
 
 	// set yzone

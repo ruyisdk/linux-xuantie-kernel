@@ -6,6 +6,8 @@
  *
  */
 
+#include "drm/drm_bridge.h"
+#include "drm/drm_of.h"
 #include <linux/clk.h>
 #include <linux/component.h>
 #include <linux/crc-ccitt.h>
@@ -69,8 +71,8 @@
 #define TXPHY_445_5_VOC (0x17)
 #define TXPHY_445_5_HS_FREQ (0x96)
 
-#define TXPHY_891_M (165)
-#define TXPHY_891_N (8)
+#define TXPHY_891_M (295)
+#define TXPHY_891_N (15)
 #define TXPHY_891_VOC (0x09)
 #define TXPHY_891_HS_FREQ (0x96)
 
@@ -331,14 +333,25 @@ static void canaan_dsi_encoder_enable(struct drm_encoder *encoder)
 		dsi->phy_freq = 445500;
 		dsi->clk_freq = 74250;
 		break;
-	case 148500:
+	case 148500: {
 		// 144.5M
+		void *dis_clk = ioremap(0x91100000, 0x1000);
+		u32 reg = 0;
+		u32 div = 3;
+
+		reg = readl(dis_clk + 0x78);
+		reg = (reg & ~(GENMASK(10, 3))) |
+		      (div << 3); //  8M =    pll1(2376) / 4 / 66
+		reg = reg | (1 << 31);
+		writel(reg, dis_clk + 0x78);
+
 		k230_dsi_config_4lan_phy(dsi, TXPHY_891_M, TXPHY_891_N,
 					 TXPHY_891_VOC, TXPHY_891_HS_FREQ);
 		// set clk todo
 		dsi->phy_freq = 890666;
 		dsi->clk_freq = 14850;
 		break;
+	}
 	case 39600: {
 		void *dis_clk = ioremap(0x91100000, 0x1000);
 		u32 reg = 0;
@@ -410,8 +423,10 @@ static void canaan_dsi_encoder_disable(struct drm_encoder *encoder)
 static int canaan_dsi_get_modes(struct drm_connector *connector)
 {
 	struct canaan_dsi *dsi = connector_to_canaan_dsi(connector);
-
-	return drm_panel_get_modes(dsi->panel, connector);
+	if (dsi->panel)
+		return drm_panel_get_modes(dsi->panel, connector);
+	else
+		return drm_bridge_get_modes(dsi->bridge, connector);
 }
 
 static const struct drm_connector_helper_funcs
@@ -424,7 +439,7 @@ canaan_dsi_connector_detect(struct drm_connector *connector, bool force)
 {
 	struct canaan_dsi *dsi = connector_to_canaan_dsi(connector);
 
-	return dsi->panel ? connector_status_connected :
+	return (dsi->panel || dsi->bridge) ? connector_status_connected :
 			    connector_status_disconnected;
 }
 
@@ -446,13 +461,8 @@ static int canaan_dsi_attach(struct mipi_dsi_host *host,
 			     struct mipi_dsi_device *device)
 {
 	struct canaan_dsi *dsi = host_to_canaan_dsi(host);
-	struct drm_panel *panel = of_drm_find_panel(device->dev.of_node);
-
-	if (IS_ERR(panel))
-		return PTR_ERR(panel);
 
 	dsi->connector.status = connector_status_connected;
-	dsi->panel = panel;
 	dsi->device = device;
 
 	dev_info(host->dev, "Attached device %s\n", device->name);
@@ -467,6 +477,7 @@ static int canaan_dsi_detach(struct mipi_dsi_host *host,
 
 	dsi->panel = NULL;
 	dsi->device = NULL;
+	dsi->bridge = NULL;
 
 	return 0;
 }
@@ -524,19 +535,28 @@ static int canaan_dsi_bind(struct device *dev, struct device *master,
 	}
 	dsi->encoder.possible_crtcs = BIT(0);
 
-	drm_connector_helper_add(&dsi->connector,
-				 &canaan_dsi_connector_helper_funcs);
-	ret = drm_connector_init(drm, &dsi->connector,
-				 &canaan_dsi_connector_funcs,
-				 DRM_MODE_CONNECTOR_DSI);
-	if (ret) {
-		dev_err(dsi->dev, "Couldn't initialise the DSI connector\n");
-		goto err_cleanup_connector;
+	dsi->drm = drm;
+
+	ret = drm_of_find_panel_or_bridge(dsi->dev->of_node, 1, -1, &dsi->panel, &dsi->bridge);
+	if (!dsi->panel && !dsi->bridge)
+		return ret;
+
+	if (dsi->panel) {
+		drm_connector_helper_add(&dsi->connector,
+					&canaan_dsi_connector_helper_funcs);
+		ret = drm_connector_init(dsi->drm, &dsi->connector,
+					&canaan_dsi_connector_funcs,
+					DRM_MODE_CONNECTOR_DSI);
+		if (ret) {
+			dev_err(dsi->dev, "Couldn't initialise the DSI connector\n");
+			goto err_cleanup_connector;
+		}
+
+		drm_connector_attach_encoder(&dsi->connector, &dsi->encoder);
 	}
 
-	drm_connector_attach_encoder(&dsi->connector, &dsi->encoder);
-
-	dsi->drm = drm;
+	if (dsi->bridge)
+		drm_bridge_attach(&dsi->encoder, dsi->bridge, NULL, DRM_BRIDGE_ATTACH_NO_CONNECTOR);
 
 	return 0;
 
@@ -565,7 +585,6 @@ static int canaan_dsi_probe(struct platform_device *pdev)
 	struct resource *res;
 	int ret;
 
-	dev_info(&pdev->dev, "probe\n");
 	dsi = devm_kzalloc(dev, sizeof(*dsi), GFP_KERNEL);
 	if (!dsi)
 		return -ENOMEM;
