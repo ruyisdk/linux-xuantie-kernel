@@ -29,6 +29,7 @@ struct canaan_dsi {
 	struct mipi_dsi_device *device;
 	struct drm_device *drm;
 	struct drm_panel *panel;
+	struct drm_bridge *bridge;
 
 	void __iomem *base;
 	u32 phy_freq;
