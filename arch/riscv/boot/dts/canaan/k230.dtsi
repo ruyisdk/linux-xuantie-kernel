@@ -585,11 +585,15 @@
 			status = "okay";
 
 			background = <0xffffff>;
-			vth_line = <11>;
+			vth_line = <10>;
 
 			vo_out: port {
 				#address-cells = <1>;
 				#size-cells = <0>;
+				vop_out_dsi: endpoint@1 {
+					reg = <0>;
+					remote-endpoint = <&dsi_in_vop>;
+				};
 			};
 		};
 
@@ -600,9 +604,16 @@
 			#size-cells = <0>;
 			status = "okay";
 
-			lcd: panel@0 {
-				compatible = "canaan,universal";
-				reg = <0>;
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					dsi_in_vop: endpoint {
+						remote-endpoint = <&vop_out_dsi>;
+					};
+				};
 			};
 		};
 
