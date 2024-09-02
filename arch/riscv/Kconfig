@@ -561,9 +561,17 @@ config RISCV_ISA_V_DEFAULT_ENABLE
 
 	  If you don't know what to do here, say Y.
 
+config TOOLCHAIN_HAS_ZAWRS
+	bool
+	default y
+	depends on !64BIT || $(cc-option,-mabi=lp64 -march=rv64ima_zawrs)
+	depends on !32BIT || $(cc-option,-mabi=ilp32 -march=rv32ima_zawrs)
+	depends on AS_HAS_OPTION_ARCH
+
 config RISCV_ISA_ZAWRS
 	bool "Zawrs extension support for more efficient busy waiting"
 	depends on RISCV_ALTERNATIVE
+	depends on TOOLCHAIN_HAS_ZAWRS
 	default y
 	help
 	  The Zawrs extension defines instructions to be used in polling loops
