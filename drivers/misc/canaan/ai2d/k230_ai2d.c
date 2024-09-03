@@ -5,6 +5,7 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
+#include "linux/dma-buf.h"
 #include <linux/cdev.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
@@ -35,6 +36,25 @@
 #include <linux/interrupt.h>
 #include <linux/poll.h>
 
+#ifdef MODULE_IMPORT_NS
+MODULE_IMPORT_NS(DMA_BUF);
+#endif
+
+struct mapped_memory {
+	struct list_head list;
+
+	union {
+		struct {
+			/* parse user dma_buf fd */
+			/* Descriptor of a dma_buf imported. */
+			int fd;
+			struct dma_buf *dmabuf;
+			struct sg_table *sgt;
+			struct dma_buf_attachment *attachment;
+		} dmabuf_desc;
+	};
+};
+
 struct ai2d_plat {
 	struct resource *res;
 	void __iomem *regs;
@@ -44,7 +64,9 @@ struct ai2d_plat {
 	int irq;
 	struct class *class;
 	struct device *device;
+	struct device *dev;
 	struct cdev cdev;
+	struct list_head dmabuf;
 };
 
 static struct ai2d_plat *plat;
@@ -103,12 +125,115 @@ static unsigned int ai2d_poll(struct file *file, poll_table *wait)
 static int ai2d_open(struct inode *inode, struct file *filp)
 {
 	ai2d_int_flag = 0;
+	INIT_LIST_HEAD(&plat->dmabuf);
 	return 0;
 }
+
+static void ai2d_unmap_dmabuf(struct ai2d_plat *plat, struct mapped_memory *mapped);
 
 static int ai2d_release(struct inode *inode, struct file *filp)
 {
 	ai2d_int_flag = 0;
+	struct mapped_memory *mapped;
+	struct mapped_memory *_mapped;
+	// free all dmabuf
+	list_for_each_entry_safe(mapped, _mapped, &plat->dmabuf, list) {
+		ai2d_unmap_dmabuf(plat, mapped);
+	}
+	return 0;
+}
+
+#define AI2D_IMPORT_DMABUF _IOWR('A', 0, struct ai2d_import_dmabuf)
+#define AI2D_REMOVE_DMABUF _IOW('A', 1, int)
+
+struct ai2d_import_dmabuf {
+	int fd;
+	uintptr_t addr;
+};
+
+static void ai2d_unmap_dmabuf(struct ai2d_plat *plat, struct mapped_memory *mapped)
+{
+	dma_buf_unmap_attachment(mapped->dmabuf_desc.attachment,
+					 mapped->dmabuf_desc.sgt,
+					 DMA_BIDIRECTIONAL);
+	dma_buf_detach(mapped->dmabuf_desc.dmabuf,
+				mapped->dmabuf_desc.attachment);
+	dma_buf_put(mapped->dmabuf_desc.dmabuf);
+	list_del(&mapped->list);
+	kfree(mapped);
+}
+
+static int ai2d_remove_dmabuf(struct ai2d_plat *plat, int fd)
+{
+	struct mapped_memory *mapped;
+	// free all dmabuf
+	list_for_each_entry(mapped, &plat->dmabuf, list) {
+		if (mapped->dmabuf_desc.fd == fd) {
+			ai2d_unmap_dmabuf(plat, mapped);
+			return 0;
+		}
+	}
+	return -EINVAL;
+}
+
+static int ai2d_map_dmabuf(struct ai2d_plat *plat, int fd, uintptr_t *addr)
+{
+	struct scatterlist *sg;
+	unsigned int i;
+	struct mapped_memory *mapped;
+
+	*addr = 0;
+	mapped = kmalloc(sizeof(struct mapped_memory), GFP_KERNEL);
+	if (mapped == NULL)
+		return -1;
+	memset(mapped, 0, sizeof(struct mapped_memory));
+	mapped->dmabuf_desc.fd = fd;
+	mapped->dmabuf_desc.dmabuf = dma_buf_get(fd);
+	if (IS_ERR(mapped->dmabuf_desc.dmabuf))
+		return PTR_ERR(mapped->dmabuf_desc.dmabuf);
+
+	mapped->dmabuf_desc.attachment =
+		dma_buf_attach(mapped->dmabuf_desc.dmabuf, plat->dev);
+	if (IS_ERR(mapped->dmabuf_desc.attachment)) {
+		dma_buf_put(mapped->dmabuf_desc.dmabuf);
+		return PTR_ERR(mapped->dmabuf_desc.attachment);
+	}
+	mapped->dmabuf_desc.sgt = dma_buf_map_attachment(
+		mapped->dmabuf_desc.attachment, DMA_BIDIRECTIONAL);
+	if (IS_ERR(mapped->dmabuf_desc.sgt)) {
+		dma_buf_detach(mapped->dmabuf_desc.dmabuf,
+					mapped->dmabuf_desc.attachment);
+		dma_buf_put(mapped->dmabuf_desc.dmabuf);
+		return PTR_ERR(mapped->dmabuf_desc.sgt);
+	}
+	for_each_sg(mapped->dmabuf_desc.sgt->sgl, sg,
+				mapped->dmabuf_desc.sgt->orig_nents, i) {
+		*addr = sg_dma_address(sg);
+	}
+	list_add(&mapped->list, &plat->dmabuf);
+	return 0;
+}
+
+static long ai2d_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	switch (cmd) {
+	case AI2D_IMPORT_DMABUF: {
+		struct ai2d_import_dmabuf parg;
+		unsigned long ret = copy_from_user(&parg, (void *)arg, sizeof(parg));
+
+		if (ret != 0)
+			return -1;
+		ret = ai2d_map_dmabuf(plat, parg.fd, &parg.addr);
+		if (ret != 0)
+			return -1;
+		ret = copy_to_user((void *)arg, &parg, sizeof(parg));
+		if (ret != 0)
+			return -1;
+		break;
+	}
+	case AI2D_REMOVE_DMABUF: return ai2d_remove_dmabuf(plat, (int)arg);
+	default: return -1;
+	}
 	return 0;
 }
 
@@ -118,6 +243,8 @@ const struct file_operations ai2d_fops = {
 	.release = ai2d_release,
 	.poll = ai2d_poll,
 	.fasync = ai2d_drv_fasync,
+	.compat_ioctl = ai2d_ioctl,
+	.unlocked_ioctl = ai2d_ioctl
 };
 
 static int ai2d_probe(struct platform_device *pdev)
@@ -197,6 +324,7 @@ static int ai2d_probe(struct platform_device *pdev)
 		err = PTR_ERR(plat->device);
 		goto cleanup_cdev;
 	}
+	plat->dev = &pdev->dev;
 
 	return 0;
 
