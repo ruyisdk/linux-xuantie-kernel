@@ -350,7 +350,7 @@ int vg_lite_hal_wait_interrupt(u32 timeout, u32 mask, u32 *value)
 	// FIXME: struct timeval tv;
 	unsigned long jiffies;
 	unsigned long result;
-#define IGNORE_INTERRUPT 0
+#define IGNORE_INTERRUPT 1
 #if IGNORE_INTERRUPT
 	unsigned int int_flag;
 #endif
@@ -378,7 +378,7 @@ int vg_lite_hal_wait_interrupt(u32 timeout, u32 mask, u32 *value)
 		int_flag = vg_lite_hal_peek(0x10);
 		if (int_flag)
 			result = int_flag;
-		dev_info(device->dev,
+		dev_vdbg(device->dev,
 			"vg_lite: waiting... idle: 0x%08X, int: 0x%08X, FE: 0x%08X 0x%08X 0x%08X\n",
 		    vg_lite_hal_peek(0x4), int_flag, vg_lite_hal_peek(0x500),
 		    vg_lite_hal_peek(0x504), vg_lite_hal_peek(0x508)
@@ -692,7 +692,7 @@ static irqreturn_t irq_handler(int irq, void *context)
 	struct vg_lite_device *device = context;
 
 	/* Read interrupt status. */
-	u32 flags = *(u32 *)((uint8_t *)device->gpu + VG_LITE_INTR_STATUS);
+	u32 flags = vg_lite_hal_peek(VG_LITE_INTR_STATUS);
 
 	if (flags) {
 		/* Combine with current interrupt flags. */
