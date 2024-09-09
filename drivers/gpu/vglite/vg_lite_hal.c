@@ -353,38 +353,36 @@ int vg_lite_hal_wait_interrupt(u32 timeout, u32 mask, u32 *value)
 #define IGNORE_INTERRUPT 1
 #if IGNORE_INTERRUPT
 	unsigned int int_flag;
+	u32 idle = 0x7fffffff;
 #endif
 
+	/* Convert timeval to jiffies. */
 	if (timeout == VG_LITE_INFINITE) {
 		/* Set 1 second timeout. */
-		// FIXME: tv.tv_sec = 1;
-		// tv.tv_usec = 0;
 		jiffies = msecs_to_jiffies(1000);
 	} else {
 		/* Convert timeout in ms to timeval. */
-		// tv.tv_sec = timeout / 1000;
-		// tv.tv_usec = (timeout % 1000) * 1000;
 		jiffies = msecs_to_jiffies(timeout);
 	}
-
-	/* Convert timeval to jiffies. */
-	// jiffies = timeval_to_jiffies(&tv);
 
 	/* Wait for interrupt, ignoring timeout. */
 	do {
 		result = wait_event_interruptible_timeout(
 			device->int_queue, device->int_flags & mask, jiffies);
 #if IGNORE_INTERRUPT
+		/* Wait until GPU is idle */
 		int_flag = vg_lite_hal_peek(0x10);
-		if (int_flag)
+		idle = vg_lite_hal_peek(0x04);
+		if (int_flag) {
 			result = int_flag;
-		dev_vdbg(device->dev,
-			"vg_lite: waiting... idle: 0x%08X, int: 0x%08X, FE: 0x%08X 0x%08X 0x%08X\n",
-		    vg_lite_hal_peek(0x4), int_flag, vg_lite_hal_peek(0x500),
-		    vg_lite_hal_peek(0x504), vg_lite_hal_peek(0x508)
-		);
+			dev_vdbg(device->dev,
+				"vg_lite: waiting... idle: 0x%08X, int: 0x%08X, FE: 0x%08X 0x%08X 0x%08X\n",
+				idle, int_flag, vg_lite_hal_peek(0x500),
+				vg_lite_hal_peek(0x504), vg_lite_hal_peek(0x508)
+			);
+		}
 #endif
-	} while (timeout == VG_LITE_INFINITE && result == 0);
+	} while ((timeout == VG_LITE_INFINITE && result == 0) || (idle != 0x7fffffff));
 
 	/* Report the event(s) got. */
 	if (value)
