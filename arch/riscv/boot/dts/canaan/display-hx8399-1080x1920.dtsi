@@ -4,6 +4,15 @@
 };
 
 &dsi {
+	ports {
+		port@1 {
+			reg = <1>;
+			dsi_out_hx8399: endpoint {
+				remote-endpoint = <&hx8399_in>;
+			};
+		};
+	};
+
 	lcd: panel@0 {
 		compatible = "canaan,universal";
 		reg = <0>;
@@ -55,6 +64,18 @@
 				vfront-porch = <206>;
 				vback-porch = <8>;
 				vsync-len = <5>;
+			};
+		};
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				hx8399_in: endpoint {
+					remote-endpoint = <&dsi_out_hx8399>;
+				};
 			};
 		};
 	};
