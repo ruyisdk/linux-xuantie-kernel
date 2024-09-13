@@ -215,3 +215,5 @@ static int __init force_task_2gb(char *p)
 	return 0;
 }
 early_param("force_task_2gb", force_task_2gb);
+EXPORT_SYMBOL_GPL(__fstate_save);
+EXPORT_SYMBOL_GPL(__fstate_restore);
