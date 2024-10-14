@@ -618,17 +618,64 @@
 		};
 
 		gnne: gnne@80400000 {
-			status              = "okay";
-			compatible          = "k230-gnne";
-			reg                 = <0x0 0x80400000 0x0 0x00000800>;
-			interrupts          = <189 IRQ_TYPE_LEVEL_HIGH>;
+			status = "okay";
+			compatible = "k230-gnne";
+			reg = <0x0 0x80400000 0x0 0x00000800>;
+			interrupts = <189 IRQ_TYPE_LEVEL_HIGH>;
 		};
 
 		ai2d: ai2d@80400c00 {
-			status              = "okay";
-			compatible          = "k230-ai2d";
-			reg                 = <0x0 0x80400c00 0x0 0x00000400>;
-			interrupts          = <191 IRQ_TYPE_LEVEL_HIGH>;
+			status = "okay";
+			compatible = "k230-ai2d";
+			reg = <0x0 0x80400c00 0x0 0x00000400>;
+			interrupts = <191 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+		tsensor: tsensor@91107000 {
+			status = "okay";
+			compatible = "canaan,k230-tsensor";
+			reg = <0x0 0x91107000 0x0 0x800>;
+			hardlock = <2>;
+		};
+
+		security: security {
+			status = "okay";
+			compatible = "simple-bus";
+			#address-cells = <2>;
+			#size-cells = <2>;
+			ranges;
+
+			aes: aes@91210200 {
+				status = "okay";
+				compatible = "canaan,k230-crypto";
+				reg	= <0x0 0x91210200 0x0 0x0100>;
+				hardlock = <7>;
+			};
+
+			hash: hash@91210800 {
+				status = "okay";
+				compatible = "canaan,k230-hash";
+				reg = <0x0 0x91210800 0x0 0x0100>;
+				hardlock = <6>;
+			};
+
+			rsa: rsa@91211000 {
+				status = "okay";
+				compatible = "canaan,k230-rsa";
+				reg	= <0x0 0x91211000 0x0 0x1000>;
+			};
+
+			trng: trng@91213000 {
+				status = "okay";
+				compatible = "canaan,k230-rng";
+				reg = <0x0 0x91213000 0x0 0x2AC>;
+			};
+
+			otp: otp@91213500 {
+				status = "okay";
+				compatible = "canaan,k230-otp";
+				reg = <0x0 0x91213500 0x0 0x300>;
+			};
 		};
 	};
 };

@@ -286,6 +286,17 @@ config IMX8MM_THERMAL
 	  cpufreq is used as the cooling device to throttle CPUs when the passive
 	  trip is crossed.
 
+config CANAAN_THERMAL
+	tristate "Temperature sensor driver for canaan k230 SoCs"
+	default ARCH_CANAAN
+	help
+	  Support Temperature Sensor (TSENSOR) module on canaan k230 SoC.
+	  If you say yes here you get thermal support for the canaan k230 SoC.
+	  The current chip supported is:
+	  - K230
+	  - K230D
+
+
 config K3_THERMAL
 	tristate "Texas Instruments K3 thermal support"
 	depends on ARCH_K3 || COMPILE_TEST
