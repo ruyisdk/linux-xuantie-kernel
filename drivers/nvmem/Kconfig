@@ -417,4 +417,14 @@ config NVMEM_QORIQ_EFUSE
 	  This driver can also be built as a module. If so, the module
 	  will be called nvmem_qoriq_efuse.
 
+config NVMEM_KENDRYTE_K230_OTP
+	tristate "Kendryte k230 OTP support"
+	default ARCH_CANAAN
+	help
+	  This is a OTP driver to kendryte k230 SOC.
+
+	  This driver can also be built as a module.
+	  If so, the module will be called
+	  nvmem_kendryte_otp.
+
 endif
