@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# k230 AES-GCM configuration
+#
+config CRYPTO_DEV_KENDRYTE_CRYP
+    tristate "Support for K230 crypto accelerators"
+    select CRYPTO_AES
+    select CRYPTO_BLKCIPHER
+    default ARCH_CANAAN
+    help
+        This driver interfaces with the hardware crypto
+        accelerator for K230.
+        Supporting AES-GCM encryption and
+        decryption.
+
+config CRYPTO_DEV_KENDRYTE_HASH
+    tristate "Support for K230 sha256 accelerators"
+    select CRYPTO_HASH
+    select CRYPTO_SHA256
+    default ARCH_CANAAN
+    help
+        This driver interfaces with the hardware
+        hash accelerator for K230.
+        Supporting sha256 hashing
+        algo.
+
+config CRYPTO_DEV_KENDRYTE_RSA
+    tristate "Support for k230 rsa-2048 accelerator"
+    select CRYPTO_SKCIPHER
+    default ARCH_CANAAN
+    help
+        This driver interfaces with the hardware
+        rsa accelerator for K230.
+        Supporting rsa-1024, rsa-2048, rsa-3072,
+        rsa-4096 encryption and decryption algo.
