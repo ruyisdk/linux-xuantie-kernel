@@ -122,5 +122,8 @@ source "sound/soc/codecs/Kconfig"
 # generic frame-work
 source "sound/soc/generic/Kconfig"
 
+# canaan k230 audio
+source "sound/soc/canaan/Kconfig"
+
 endif	# SND_SOC
 
