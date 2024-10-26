@@ -173,6 +173,7 @@ config RISCV
 	select OF_IRQ
 	select PCI_DOMAINS_GENERIC if PCI
 	select PCI_MSI if PCI
+	select RELOCATABLE if !MMU && !PHYS_RAM_BASE_FIXED
 	select RISCV_ALTERNATIVE if !XIP_KERNEL
 	select RISCV_APLIC
 	select RISCV_IMSIC
@@ -247,12 +248,6 @@ config MMU
 	help
 	  Select if you want MMU-based virtualised addressing space
 	  support by paged memory management. If unsure, say 'Y'.
-
-config PAGE_OFFSET
-	hex
-	default 0xC0000000 if 32BIT && MMU
-	default 0x80000000 if !MMU
-	default 0xff60000000000000 if 64BIT
 
 config KASAN_SHADOW_OFFSET
 	hex
