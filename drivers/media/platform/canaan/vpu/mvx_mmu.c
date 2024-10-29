@@ -718,27 +718,32 @@ struct mvx_mmu_pages *mvx_mmu_alloc_pages(struct device *dev, size_t count,
 	pages->capacity = capacity;
 	INIT_LIST_HEAD(&pages->dmabuf);
 
-	for (pages->count = 0; pages->count < count;) {
+	if (count) {
+		/*
+		 * Allocate a Linux page. It will typically be of the same size
+		 * as the MVE page, but could also be larger.
+		 */
+
+		/*
+		 * If the Linux page is larger than the MVE page, then
+		 * we iterate and add physical addresses with an offset from
+		 * the Linux page.
+		 */
 		phys_addr_t page;
 		unsigned int i;
 
-			/*
-			 * Allocate a Linux page. It will typically be of the same size
-			 * as the MVE page, but could also be larger.
-			 */
-		page = mvx_mmu_alloc_page(dev);
+		page = mvx_mmu_alloc_contiguous_pages(dev, count);
 		if (page == 0) {
 			ret = -ENOMEM;
 			goto release_pages;
 		}
 
-			/*
-			 * If the Linux page is larger than the MVE page, then
-			 * we iterate and add physical addresses with an offset from
-			 * the Linux page.
-			 */
-		for (i = 0; i < MVX_PAGES_PER_PAGE; i++)
-			pages->pages[pages->count++] = page + i * MVE_PAGE_SIZE;
+		for (pages->count = 0; pages->count < count;) {
+			for (i = 0; i < MVX_PAGES_PER_PAGE; i++) {
+				pages->pages[pages->count++] = page + i * MVE_PAGE_SIZE;
+				page += MVE_PAGE_SIZE;
+			}
+		}
 	}
 
 	return pages;
@@ -919,16 +924,19 @@ int mvx_mmu_resize_pages(struct mvx_mmu_pages *pages, size_t npages)
 	}
 
 	/* Allocate pages if npage is larger than allocated pages. */
-	while (pages->count < npages) {
+	if (pages->count < npages) {
 		phys_addr_t page;
 		unsigned int i;
 
-		page = mvx_mmu_alloc_page(pages->dev);
+		page = mvx_mmu_alloc_contiguous_pages(pages->dev, npages - pages->count);
 		if (page == 0)
 			return -ENOMEM;
 
-		for (i = 0; i < MVX_PAGES_PER_PAGE; i++)
-			pages->pages[pages->count++] = page + i * MVE_PAGE_SIZE;
+		for (; pages->count < npages;) {
+			for (i = 0; i < MVX_PAGES_PER_PAGE; i++)
+				pages->pages[pages->count++] = page + i * MVE_PAGE_SIZE;
+				page += MVE_PAGE_SIZE;
+		}
 	}
 
 	return remap_pages(pages, oldcount);
