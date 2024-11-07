@@ -51,3 +51,61 @@
 	dr_mode = "host";
 	status = "okay";
 };
+
+&i2c3 {
+	status = "okay";
+
+	lt9611: hdmi-bridge@3b {
+		compatible = "lontium,lt9611";
+		reg = <0x3b>;
+		reset-gpios = <&gpio0_ports 22 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&gpio0_ports>;
+		interrupts = <23 IRQ_TYPE_EDGE_FALLING>;
+		ports {
+			#address-cells  = <1>;
+			#size-cells     = <0>;
+			port@1 {
+				reg = <1>;
+				lt9611_in: endpoint {
+					remote-endpoint = <&dsi_out_lt9611>;
+				};
+			};
+
+			port@2 {
+				reg = <2>;
+				lt9611_out: endpoint {
+					remote-endpoint = <&hdmi_connector_in>;
+				};
+			};
+		};
+	};
+};
+
+&dsi {
+	ports {
+		port@1 {
+			reg = <1>;
+			dsi_out_lt9611: endpoint {
+				remote-endpoint = <&lt9611_in>;
+			};
+		};
+	};
+};
+
+/ {
+	hdmi: connector {
+		compatible = "hdmi-connector";
+		label = "hdmi";
+		type = "a";
+
+		port {
+			hdmi_connector_in: endpoint {
+				remote-endpoint = <&lt9611_out>;
+			};
+		};
+	};
+};
+
+&vo {
+	vth_line = <10>;
+};
