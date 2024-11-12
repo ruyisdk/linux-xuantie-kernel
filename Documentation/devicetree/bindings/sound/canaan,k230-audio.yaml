@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: "http://devicetree.org/schemas/sound/canaan,k230-audio.yaml#"
+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+
+title: Canaan K230 Audio Controller Device Tree Bindings
+
+maintainers:
+	- Sun Xiaopeng <sunxiaopeng@canaan-creative.com>
+
+description: |
+	This document defines the device tree bindings for the audio controller
+	found in the Canaan K230 SoC. The audio controller provides interfaces for
+	audio input and output functionalities.
+
+properties:
+	compatible:
+		enum:
+			- canaan,k230-audio
+		description: |
+			Specifies the compatible string for the Canaan K230 audio controller.
+
+	reg:
+		maxItems: 1
+		description: |
+			Specifies the base physical address and size of the audio controller's
+			register area.
+
+	status:
+		description: |
+			Standard property to indicate the operational status of the device.
+			Should be "okay" if the device is enabled.
+
+required:
+	- compatible
+	- reg
+
+additionalProperties: false
+
+examples:
+	- |
+		audio: audio@9140f400 {
+				compatible = "canaan,k230-audio";
+				reg = <0x0 0x9140f400 0x0 0xc00>;
+				status = "okay";
+		};
