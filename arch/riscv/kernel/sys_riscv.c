@@ -16,7 +16,6 @@
 #include <asm/unistd.h>
 #include <asm-generic/mman-common.h>
 #include <vdso/vsyscall.h>
-#include <asm/mman.h>
 
 static long riscv_sys_mmap(unsigned long addr, unsigned long len,
 			   unsigned long prot, unsigned long flags,
@@ -26,6 +25,7 @@ static long riscv_sys_mmap(unsigned long addr, unsigned long len,
 	if (unlikely(offset & (~PAGE_MASK >> page_shift_offset)))
 		return -EINVAL;
 
+<<<<<<< HEAD
 	/*
 	 * If only PROT_WRITE is specified then extend that to PROT_READ
 	 * protection_map[VM_WRITE] is now going to select shadow stack encodings.
@@ -35,6 +35,8 @@ static long riscv_sys_mmap(unsigned long addr, unsigned long len,
 	if (unlikely((prot & PROT_WRITE) && !(prot & PROT_READ)))
 		prot |= PROT_READ;
 
+=======
+>>>>>>> a5dfe022fdce... Revert "riscv/mm : ensure PROT_WRITE leads to VM_READ | VM_WRITE"
 	return ksys_mmap_pgoff(addr, len, prot, flags, fd,
 			       offset >> (PAGE_SHIFT - page_shift_offset));
 }
