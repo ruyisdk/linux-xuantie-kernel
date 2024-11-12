@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+%YAML 1.2
+---
+$id: "http://devicetree.org/schemas/sound/canaan,k230-inno-codec.yaml#"
+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+
+title: Canaan k230 Inno Codec
+
+maintainers:
+	- Sun Xiaopeng <sunxiaopeng@canaan-creative.com>
+
+compatible: "canaan,k230-inno-codec"
+description: "Inno Codec Device for K230 SoC"
+
+properties:
+  status:
+    description: "The status of the codec device"
+    type: string
+    default: "disabled"
+    values:
+      - "okay"
+      - "disabled"
+
+  reg:
+    description: "Base address and size of the codec registers"
+    type: <address>
+
+  clocks:
+    description: "Clocks used by the codec"
+    type: list
+    items: phandle
+
+  clock-names:
+    description: "Names corresponding to each clock"
+    type: list
+    items: string
+
+examples:
+  - |
+    inno_codec:inno_codec@0x9140e000 {
+      status = "okay";
+      compatible = "canaan,k230-inno-codec";
+      reg = <0x0 0x9140e000 0x0 0x1000>;
+      clocks = <&codec_adc_mclk>, <&codec_dac_mclk>;
+      clock-names = "adc", "dac";
+    };

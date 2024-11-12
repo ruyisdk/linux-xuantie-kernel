@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+%YAML 1.2
+---
+$id: "http://devicetree.org/schemas/sound/canaan,designware-i2s.yaml#"
+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+
+title: Canaan DesignWare I2S Controller
+
+maintainers:
+	- Sun Xiaopeng <sunxiaopeng@canaan-creative.com>
+
+description: |
+	This document describes the device tree bindings for the Canaan DesignWare
+	I2S controller found in the K230 SoC. The controller is compliant with the
+	Synopsys DesignWare I2S IP core and requires specific properties to function
+	correctly.
+
+properties:
+	compatible:
+		const: "canaan,snps,designware-i2s"
+		description: |
+			Must be "canaan,snps,designware-i2s" to identify the Canaan-specific
+			implementation of the DesignWare I2S controller.
+
+	reg:
+		maxItems: 1
+		description: |
+			Contains the base address and length of the I2S controller register set.
+
+	status:
+		enum:
+			- "okay"
+			- "disabled"
+		description: |
+			Standard property to enable or disable the device. Must be "okay" to
+			activate the I2S controller.
+
+	dmas:
+		minItems: 2
+		maxItems: 2
+		description: |
+			Phandles to the DMA channels for transmit and receive. The first item
+			is for transmit (TX), and the second is for receive (RX).
+
+	dma-names:
+		items:
+			- const: "tx"
+			- const: "rx"
+		description: |
+			Names corresponding to the DMA channels listed in the "dmas" property.
+
+	clocks:
+		maxItems: 1
+		description: |
+			Phandle to the clock provided to the I2S controller.
+
+	clock-names:
+		items:
+			- const: "i2sclk"
+		description: |
+			Name of the clock listed in the "clocks" property. Must be "i2sclk".
+
+required:
+	- compatible
+	- reg
+	- status
+	- dmas
+	- dma-names
+	- clocks
+	- clock-names
+
+additionalProperties: false
+
+examples:
+	- |
+		i2s: i2s@9140f000 {
+				compatible = "canaan,snps,designware-i2s";
+				reg = <0x0 0x9140f000 0x0 0x400>;
+				status = "okay";
+				dmas = <&pdma 1 0xfff 0 0x14>, <&pdma 1 0xfff 0 0x15>;
+				dma-names = "tx", "rx";
+				clocks = <&audio_dev_clk>;
+				clock-names = "i2sclk";
+		};

@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+%YAML 1.2
+---
+$id: "http://devicetree.org/schemas/sound/canaan,k230-audio-inno.yaml#"
+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+
+title: Canaan K230 Audio INNO Device Tree Bindings
+
+maintainers:
+- Sun Xiaopeng <sunxiaopeng@canaan-creative.com>
+
+description: |
+This document describes the device tree bindings for the audio subsystem
+on the Canaan K230 SoC using the INNO codec.
+
+properties:
+compatible:
+  const: "canaan,k230-audio-inno"
+  description: |
+    Must be "canaan,k230-audio-inno".
+
+canaan,model:
+  $ref: /schemas/types.yaml#/definitions/string
+  description: |
+    Custom model name for the sound card.
+
+canaan,k230-i2s-controller:
+  $ref: /schemas/types.yaml#/definitions/phandle
+  description: |
+    Phandle to the I2S controller node.
+
+canaan,k230-audio-codec:
+  $ref: /schemas/types.yaml#/definitions/phandle
+  description: |
+    Phandle to the audio codec node.
+
+required:
+- compatible
+- canaan,k230-i2s-controller
+- canaan,k230-audio-codec
+
+additionalProperties: false
+
+examples:
+- |
+  sound {
+      compatible = "canaan,k230-audio-inno";
+      canaan,model = "K230_I2S_INNO";
+      canaan,k230-i2s-controller = <&i2s>;
+      canaan,k230-audio-codec = <&inno_codec>;
+  };

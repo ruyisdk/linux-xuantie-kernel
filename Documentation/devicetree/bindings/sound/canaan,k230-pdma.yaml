@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: "http://devicetree.org/schemas/dma/canaan,k230-pdma.yaml#"
+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+
+title: Canaan K230 PDMA Controller
+
+maintainers:
+	- Sun Xiaopeng <sunxiaopeng@canaan-creative.com>
+
+description: |
+	The Canaan K230 PDMA controller is a peripheral DMA controller that supports
+	multiple channels and request signals.
+
+properties:
+	compatible:
+		const: canaan,k230-pdma
+		description: Must be "canaan,k230-pdma"
+
+	reg:
+		maxItems: 1
+		description: Base address and size of the PDMA registers.
+
+	interrupts:
+		maxItems: 1
+		description: Interrupt specifier for the PDMA controller.
+
+	clocks:
+		maxItems: 1
+		description: Reference to the PDMA controller clock.
+
+	dma-channels:
+		description: The number of DMA channels supported by the controller.
+
+	dma-requests:
+		description: The number of DMA request signals supported.
+
+	'#dma-cells':
+		const: 4
+		description: Must be 4. Specifies the number of cells in the DMA specifier.
+
+required:
+	- compatible
+	- reg
+	- interrupts
+	- clocks
+	- dma-channels
+	- dma-requests
+	- '#dma-cells'
+
+additionalProperties: false
+
+examples:
+	- |
+		pdma: pdma@80804000 {
+			compatible = "canaan,k230-pdma";
+			reg = <0x0 0x80804000 0x0 0x400>;
+			interrupts = <203 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&pdma_aclk_gate>;
+			dma-channels = <8>;
+			dma-requests = <35>;
+			#dma-cells = <4>;
+			status = "okay";
+		};
