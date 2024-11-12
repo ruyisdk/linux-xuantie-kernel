@@ -1,0 +1,21 @@
+config CANAAN_SND_DESIGNWARE_I2S
+	tristate "Synopsys I2S Device Driver"
+	depends on HAVE_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	help
+	  This option enables the Synopsys I2S device driver.
+	  The I2S (Inter-IC Sound) bus is used for connecting digital audio devices.
+	  Selecting this option will compile the driver as a module or built-in.
+	  It depends on the availability of clock support (HAVE_CLK) and selects
+	  the generic DMA engine PCM support for audio data transfer.
+	  Say Y or M if you have a Synopsys I2S device in your system.
+
+config CANAAN_SND_DESIGNWARE_PCM
+	bool "PCM PIO extension for I2S driver"
+	depends on CANAAN_SND_DESIGNWARE_I2S
+	help
+	 Say Y or N if you want to add a custom ALSA extension that registers
+	 a PCM and uses PIO to transfer data.
+	 This functionality is specially suited for I2S devices that don't have
+	 DMA support.
+

@@ -72,3 +72,5 @@ obj-$(CONFIG_SND_SOC)	+= ux500/
 obj-$(CONFIG_SND_SOC)	+= xilinx/
 obj-$(CONFIG_SND_SOC)	+= xtensa/
 obj-$(CONFIG_SND_SOC)	+= xuantie/
+obj-$(CONFIG_SND_SOC)	+= dwc_canaan/
+obj-$(CONFIG_SND_SOC)   += canaan/
