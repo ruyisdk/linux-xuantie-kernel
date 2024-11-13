@@ -212,3 +212,11 @@ rv32_nommu_virt_defconfig:
 PHONY += rv64ilp32_defconfig
 rv64ilp32_defconfig:
 	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 64ilp32.config
+
+PHONY += xuantie_defconfig
+xuantie_defconfig:
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 12HZ.config thp.config fs.config
+
+PHONY += xuantie_debug_defconfig
+xuantie_debug_defconfig:
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig thp.config fs.config debug.config ftrace.config ebpf.config kdump.config sched.config
