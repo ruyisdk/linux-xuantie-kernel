@@ -508,6 +508,13 @@
 			status = "disabled";
 		};
 
+		watchdog1: wdt1@91106800 {
+			compatible = "snps,dw-wdt";
+			reg = <0x0 0x91106800 0x0 0x800>;
+			interrupts = <108 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&wdt1>;
+		};
+
 		vpu: vpu@0x90400000 {
 			status              = "okay";
 			compatible          = "canaan,vpu";
