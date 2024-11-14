@@ -16,6 +16,7 @@
 #include <asm/switch_to.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
+#include <asm/vendor_extensions/thead_hwprobe.h>
 #include <asm-generic/mman-common.h>
 #include <vdso/vsyscall.h>
 
@@ -311,6 +312,10 @@ static void hwprobe_one_pair(struct riscv_hwprobe *pair,
 
 	case RISCV_HWPROBE_KEY_TIME_CSR_FREQ:
 		pair->value = riscv_timebase;
+		break;
+
+	case RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0:
+		hwprobe_isa_vendor_ext_thead_0(pair, cpus);
 		break;
 
 	/*
