@@ -14,6 +14,7 @@
 #include <asm/switch_to.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
+#include <asm/vendor_extensions/thead_hwprobe.h>
 #include <asm-generic/mman-common.h>
 #include <vdso/vsyscall.h>
 
@@ -215,6 +216,10 @@ static void hwprobe_one_pair(struct riscv_hwprobe *pair,
 		pair->value = hwprobe_misaligned(cpus);
 		break;
 
+	case RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0:
+		hwprobe_isa_vendor_ext_thead_0(pair, cpus);
+		break;
+
 	/*
 	 * For forward compatibility, unknown keys don't fail the whole
 	 * call, but get their element key set to -1 and value set to 0
@@ -302,7 +307,7 @@ static int __init init_hwprobe_vdso_data(void)
 		pair.key = key;
 		hwprobe_one_pair(&pair, cpu_online_mask);
 
-		WARN_ON_ONCE(pair.key < 0);
+		WARN_ON_ONCE(pair.key < 0 && key >= RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0);
 
 		avd->all_cpu_hwprobe_values[key] = pair.value;
 		/*
