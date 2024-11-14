@@ -1454,4 +1454,16 @@ config XUANTIE_TH1520_ADC
 	  This driver can also be built as a module. If so, the module will be
 	  called xuantie-th1520-adc.
 
+config K230_ADC
+	tristate "Canaan K230 ADC driver"
+	depends on OF
+	depends on ARCH_CANAAN
+	default ARCH_CANAAN
+	help
+	  Say yes here to support for Canaan K230 analog-to-digital
+	  converter.
+
+	  This driver can also be built as a module. If so, the module will be
+	  called k230-adc.
+
 endmenu

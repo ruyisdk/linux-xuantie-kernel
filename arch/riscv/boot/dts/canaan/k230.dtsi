@@ -515,6 +515,12 @@
 			clocks = <&wdt1>;
 		};
 
+		adc: adc@9140d000 {
+			compatible = "canaan,k230-adc";
+			reg = <0x0 0x9140d000 0x0 0x1000>;
+			clocks = <&adc_clk>;
+		};
+
 		vpu: vpu@0x90400000 {
 			status              = "okay";
 			compatible          = "canaan,vpu";
