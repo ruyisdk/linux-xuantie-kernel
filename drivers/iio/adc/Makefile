@@ -130,3 +130,4 @@ obj-$(CONFIG_XILINX_XADC) += xilinx-xadc.o
 obj-$(CONFIG_XILINX_AMS) += xilinx-ams.o
 obj-$(CONFIG_SD_ADC_MODULATOR) += sd_adc_modulator.o
 obj-$(CONFIG_XUANTIE_TH1520_ADC) += th1520-adc.o
+obj-$(CONFIG_K230_ADC) += k230-adc.o
