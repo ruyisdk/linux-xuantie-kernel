@@ -521,6 +521,18 @@
 			clocks = <&adc_clk>;
 		};
 
+		pwm0: pwm0@9140a000 {
+			compatible = "canaan,k230-pwm";
+			reg = <0x0 0x9140a000 0x0 0x40>;
+			clocks = <&pwm_pclk_gate>;
+		};
+
+		pwm1: pwm1@9140a040 {
+			compatible = "canaan,k230-pwm";
+			reg = <0x0 0x9140a040 0x0 0x40>;
+			clocks = <&pwm_pclk_gate>;
+		};
+
 		vpu: vpu@0x90400000 {
 			status              = "okay";
 			compatible          = "canaan,vpu";
