@@ -719,4 +719,17 @@ config PWM_XILINX
 	  To compile this driver as a module, choose M here: the module
 	  will be called pwm-xilinx.
 
+config PWM_K230
+	tristate "Canaan K230 PWM support"
+	default ARCH_CANAAN
+	depends on OF
+	depends on COMMON_CLK
+	depends on ARCH_CANAAN
+	help
+	  Generic PWM framework driver for the PWM controller on Canaan
+	  K230 SoCs.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called pwm-k230.
+
 endif
