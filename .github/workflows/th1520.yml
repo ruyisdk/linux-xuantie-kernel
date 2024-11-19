@@ -141,6 +141,9 @@ jobs:
             sudo chroot mnt sh -c 'apt update && apt dist-upgrade -y'
             # Add preinstalled software
             sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml iperf firmware-realtek'
+            # Install old version of OpenSBI to solve devicetree aon error (th1520-mainline-opensbi)
+            sudo chroot mnt sh -c 'apt install --allow-downgrades -y th1520-boot-firmware=2024.05.10+sdk1.5.4'
+            sudo chroot mnt sh -c 'apt-mark hold th1520-boot-firmware'
             sudo umount -l mnt
             zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
             zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
