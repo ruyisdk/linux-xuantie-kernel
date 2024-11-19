@@ -533,6 +533,11 @@
 			clocks = <&pwm_pclk_gate>;
 		};
 
+		rtc: rtc@0x91000c00 {
+			compatible = "canaan,k230-rtc";
+			reg = <0x0 0x91000c00 0x0 0x20>;
+		};
+
 		vpu: vpu@0x90400000 {
 			status              = "okay";
 			compatible          = "canaan,vpu";
