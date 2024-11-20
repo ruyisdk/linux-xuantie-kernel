@@ -910,6 +910,20 @@ int dw_spi_add_host(struct device *dev, struct dw_spi *dws)
 		dev_err(dev, "can not get IRQ\n");
 		goto err_free_host;
 	}
+	if (dws->caps & DW_SPI_CAP_INDEP_IRQ) {
+		int i;
+
+		for (i = 0; i < ARRAY_SIZE(dws->irqs); i++) {
+			if (dws->irqs[i] == 0)
+				break;
+			ret = request_irq(dws->irqs[i], dw_spi_irq,
+					  IRQF_SHARED, dev_name(dev), host);
+			if (ret < 0 && ret != -ENOTCONN) {
+				dev_err(dev, "can not get IRQ\n");
+				goto err_free_host;
+			}
+		}
+	}
 
 	dw_spi_init_mem_ops(dws);
 
