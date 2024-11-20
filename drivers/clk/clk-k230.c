@@ -739,6 +739,7 @@ static struct clk *_of_cannan_k230_clk_composite_setup(struct device_node *node)
 	if (true == mux) {
 		p_clk_ops->set_parent = k230_clk_composite_set_parent;
 		p_clk_ops->get_parent = k230_clk_composite_get_parent;
+		p_clk_ops->determine_rate = __clk_mux_determine_rate_closest;
 	}
 	if (true == rate) {
 		p_clk_ops->recalc_rate = k230_clk_composite_recalc_rate;
