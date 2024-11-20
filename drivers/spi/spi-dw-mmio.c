@@ -269,6 +269,24 @@ static int dw_spi_canaan_k210_init(struct platform_device *pdev,
 	return 0;
 }
 
+static int dw_spi_canaan_k230_init(struct platform_device *pdev,
+				   struct dw_spi_mmio *dwsmmio)
+{
+	int i, irq;
+
+	memset(dwsmmio->dws.irqs, 0, sizeof(dwsmmio->dws.irqs));
+	dwsmmio->dws.ip = DW_HSSI_ID;
+	dwsmmio->dws.caps = DW_SPI_CAP_INDEP_IRQ;
+	for (i = 1; i < ARRAY_SIZE(dwsmmio->dws.irqs); i++) {
+		irq = platform_get_irq(pdev, i);
+		if (irq < 0)
+			return 0;
+		dwsmmio->dws.irqs[i - 1] = irq;
+	}
+
+	return 0;
+}
+
 static void dw_spi_elba_override_cs(struct regmap *syscon, int cs, int enable)
 {
 	regmap_update_bits(syscon, ELBA_SPICS_REG, ELBA_SPICS_MASK(cs),
@@ -431,6 +449,7 @@ static const struct of_device_id dw_spi_mmio_of_match[] = {
 	},
 	{ .compatible = "microchip,sparx5-spi", dw_spi_mscc_sparx5_init},
 	{ .compatible = "canaan,k210-spi", dw_spi_canaan_k210_init},
+	{ .compatible = "canaan,k230-spi", dw_spi_canaan_k230_init},
 	{ .compatible = "amd,pensando-elba-spi", .data = dw_spi_elba_init},
 	{ /* end of table */}
 };
