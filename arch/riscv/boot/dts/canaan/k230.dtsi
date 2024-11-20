@@ -538,6 +538,67 @@
 			reg = <0x0 0x91000c00 0x0 0x20>;
 		};
 
+		spi0: spi@91584000 {
+			compatible = "canaan,k230-spi";
+			reg = <0x0 0x91584000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			interrupts = <146 IRQ_TYPE_LEVEL_HIGH>,
+				     <147 IRQ_TYPE_LEVEL_HIGH>,
+				     <148 IRQ_TYPE_LEVEL_HIGH>,
+				     <149 IRQ_TYPE_LEVEL_HIGH>,
+				     <150 IRQ_TYPE_LEVEL_HIGH>,
+				     <151 IRQ_TYPE_LEVEL_HIGH>,
+				     <152 IRQ_TYPE_LEVEL_HIGH>,
+				     <153 IRQ_TYPE_LEVEL_HIGH>,
+				     <154 IRQ_TYPE_LEVEL_HIGH>;
+			rx-sample-delay-ns = <5>;
+			num-cs = <1>;
+			reg-io-width = <4>;
+			clocks = <&ssi0_clk>;
+			status = "disabled";
+		};
+
+		spi1: spi@91582000 {
+			compatible = "canaan,k230-spi";
+			reg = <0x0 0x91582000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			interrupts = <155 IRQ_TYPE_LEVEL_HIGH>,
+				     <156 IRQ_TYPE_LEVEL_HIGH>,
+				     <157 IRQ_TYPE_LEVEL_HIGH>,
+				     <158 IRQ_TYPE_LEVEL_HIGH>,
+				     <159 IRQ_TYPE_LEVEL_HIGH>,
+				     <160 IRQ_TYPE_LEVEL_HIGH>,
+				     <161 IRQ_TYPE_LEVEL_HIGH>,
+				     <162 IRQ_TYPE_LEVEL_HIGH>,
+				     <163 IRQ_TYPE_LEVEL_HIGH>;
+			num-cs = <1>;
+			reg-io-width = <4>;
+			clocks = <&ssi1_clk>;
+			status = "disabled";
+		};
+
+		spi2: spi@91583000 {
+			compatible = "canaan,k230-spi";
+			reg = <0x0 0x91583000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			interrupts = <164 IRQ_TYPE_LEVEL_HIGH>,
+				     <165 IRQ_TYPE_LEVEL_HIGH>,
+				     <166 IRQ_TYPE_LEVEL_HIGH>,
+				     <167 IRQ_TYPE_LEVEL_HIGH>,
+				     <168 IRQ_TYPE_LEVEL_HIGH>,
+				     <169 IRQ_TYPE_LEVEL_HIGH>,
+				     <170 IRQ_TYPE_LEVEL_HIGH>,
+				     <171 IRQ_TYPE_LEVEL_HIGH>,
+				     <172 IRQ_TYPE_LEVEL_HIGH>;
+			num-cs = <1>;
+			reg-io-width = <4>;
+			clocks = <&ssi2_clk>;
+			status = "disabled";
+		};
+
 		vpu: vpu@0x90400000 {
 			status              = "okay";
 			compatible          = "canaan,vpu";

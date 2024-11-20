@@ -123,3 +123,12 @@
 		gpio_wl_reg_on = <&gpio0_ports 1 GPIO_ACTIVE_HIGH>;
 	};
 };
+
+&spi0 {
+	status = "okay";
+	spidev@0{
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <100000000>;
+	};
+};

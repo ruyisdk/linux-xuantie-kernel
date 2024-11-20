@@ -32,6 +32,7 @@
 /* DW SPI controller capabilities */
 #define DW_SPI_CAP_CS_OVERRIDE		BIT(0)
 #define DW_SPI_CAP_DFS32		BIT(1)
+#define DW_SPI_CAP_INDEP_IRQ		BIT(2)
 
 /* Register offsets (Generic for both DWC APB SSI and DWC SSI IP-cores) */
 #define DW_SPI_CTRLR0			0x00
@@ -158,6 +159,7 @@ struct dw_spi {
 	void __iomem		*regs;
 	unsigned long		paddr;
 	int			irq;
+	int			irqs[16];
 	u32			fifo_len;	/* depth of the FIFO buffer */
 	unsigned int		dfs_offset;     /* CTRLR0 DFS field offset */
 	u32			max_mem_freq;	/* max mem-ops bus freq */
