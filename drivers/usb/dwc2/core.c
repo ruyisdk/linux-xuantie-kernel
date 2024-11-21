@@ -1126,6 +1126,16 @@ int dwc2_phy_init(struct dwc2_hsotg *hsotg, bool select_phy)
 	u32 otgctl;
 	int retval = 0;
 
+	if (hsotg->params.usb_ctl) {
+		otgctl = readl(hsotg->params.usb_ctl);
+		otgctl |= USB_IDPULLUP0;
+		if (dwc2_is_host_mode(hsotg))
+			otgctl |= (USB_DMPULLDOWN0 | USB_DPPULLDOWN0);
+		else
+			otgctl &= ~(USB_DMPULLDOWN0 | USB_DPPULLDOWN0);
+		writel(otgctl, hsotg->params.usb_ctl);
+	}
+
 	if ((hsotg->params.speed == DWC2_SPEED_PARAM_FULL ||
 	     hsotg->params.speed == DWC2_SPEED_PARAM_LOW) &&
 	    hsotg->params.phy_type == DWC2_PHY_TYPE_PARAM_FS) {

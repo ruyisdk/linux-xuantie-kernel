@@ -266,6 +266,22 @@ static void dwc2_set_stm32mp15_hsotg_params(struct dwc2_hsotg *hsotg)
 	p->hird_threshold_en = false;
 }
 
+static void dwc2_set_k230_params(struct dwc2_hsotg *hsotg)
+{
+	struct dwc2_core_params *p = &hsotg->params;
+	u64 addr;
+	struct resource r;
+
+	if (device_property_read_u64(hsotg->dev, "ctl-reg", &addr) < 0)
+		return;
+
+	r.start = addr;
+	r.end = addr + 4;
+	r.name = "usb-ctl-reg";
+	r.flags = IORESOURCE_MEM;
+	p->usb_ctl = devm_ioremap_resource(hsotg->dev, &r);
+}
+
 const struct of_device_id dwc2_of_match_table[] = {
 	{ .compatible = "brcm,bcm2835-usb", .data = dwc2_set_bcm_params },
 	{ .compatible = "hisilicon,hi6220-usb", .data = dwc2_set_his_params },
@@ -305,6 +321,7 @@ const struct of_device_id dwc2_of_match_table[] = {
 	  .data = dwc2_set_stm32mp15_hsotg_params },
 	{ .compatible = "intel,socfpga-agilex-hsotg",
 	  .data = dwc2_set_socfpga_agilex_params },
+	{ .compatible = "canaan,k230-otg", .data = dwc2_set_k230_params },
 	{},
 };
 MODULE_DEVICE_TABLE(of, dwc2_of_match_table);
