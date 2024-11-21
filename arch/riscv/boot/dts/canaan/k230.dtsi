@@ -302,8 +302,9 @@
 		};
 
 		usb0: usb@91500000 {
-			compatible = "canaan,k230-otg", "snps,dwc2";
+			compatible = "canaan,k230-otg";
 			reg = <0x0 0x91500000 0x0 0x40000>;
+			ctl-reg = <0x0 0x9158507c>;
 			interrupts = <173 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clk_dummy>;
 			clock-names = "otg";
@@ -314,8 +315,9 @@
 		};
 
 		usb1: usb@91540000 {
-			compatible = "canaan,k230-otg", "snps,dwc2";
+			compatible = "canaan,k230-otg";
 			reg = <0x0 0x91540000 0x0 0x40000>;
+			ctl-reg = <0x0 0x9158509c>;
 			interrupts = <174 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clk_dummy>;
 			clock-names = "otg";
