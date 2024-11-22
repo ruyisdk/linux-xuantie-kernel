@@ -12,6 +12,7 @@
 struct canaan_plane_config {
 	char *name;
 	uint32_t id;
+	const uint32_t supported_rotations;
 	uint32_t possible_crtcs;
 	uint32_t num_formats;
 	const uint32_t *formats;

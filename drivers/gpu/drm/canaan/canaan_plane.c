@@ -31,6 +31,7 @@
 #include <drm/drm_plane.h>
 #include <drm/drm_plane_helper.h>
 #include <drm/drm_probe_helper.h>
+#include <drm/drm_blend.h>
 
 #include "canaan_vo.h"
 #include "canaan_crtc.h"
@@ -121,6 +122,12 @@ struct canaan_plane *canaan_plane_create(struct drm_device *drm_dev,
 	if (ret) {
 		DRM_DEV_ERROR(dev, "Failed to init Plane\n");
 		return ERR_PTR(ret);
+	}
+
+	if (config->supported_rotations) {
+		drm_plane_create_rotation_property(&canaan_plane->base, DRM_MODE_ROTATE_0,
+						   DRM_MODE_ROTATE_0 |
+						   config->supported_rotations);
 	}
 
 	drm_plane_helper_add(plane, &canaan_plane_helper_funcs);
