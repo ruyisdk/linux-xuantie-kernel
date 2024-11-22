@@ -264,12 +264,168 @@ static void canaan_vo_update_osd(struct canaan_vo *vo,
 			       VO_OSD0_7_STRIDE_REG_OFFSET));
 }
 
+
+static void canaan_vo_update_layer1(struct canaan_vo *vo,
+				   struct canaan_plane *canaan_plane,
+				   struct drm_display_mode *adj_mode)
+{
+	uint32_t reg_val = 0x00;
+	struct drm_plane_state *plane_state = canaan_plane->base.state;
+	struct drm_framebuffer *fb = plane_state->fb;
+	struct drm_gem_dma_object *cma_obj = drm_fb_dma_get_gem_obj(fb, 0);
+	struct canaan_plane_config *config = canaan_plane->config;
+	uint32_t plane_offset = config->plane_offset;
+	uint32_t plane_enable_bit = config->plane_enable_bit;
+	uint32_t xctl_reg_offset = config->xctl_reg_offset;
+	uint32_t yctl_reg_offset = config->yctl_reg_offset;
+	uint32_t actual_w, start_w, offset_w;
+	uint32_t actual_h, start_h, offset_h;
+	uint32_t y_addr, uv_addr;
+	uint32_t stride = 0x00;
+	uint32_t disp_en = 0x00;
+
+	reg_val = readl(vo->reg_base + plane_offset + VO_LAYER1_CTL);
+	reg_val = (reg_val & ~(GENMASK(3, 0))) | (7 + (0 << 3));
+
+	switch (fb->format->format) {
+	case DRM_FORMAT_NV12:
+		reg_val = (reg_val & ~(GENMASK(9, 8))) | ((0 << 9) + (0 << 8));
+		break;
+	case DRM_FORMAT_NV21:
+		reg_val = (reg_val & ~(GENMASK(9, 8))) | ((1 << 9) + (0 << 8));
+		break;
+	case DRM_FORMAT_NV16:
+		reg_val = (reg_val & ~(GENMASK(9, 8))) | ((0 << 9) + (1 << 8));
+		break;
+	case DRM_FORMAT_NV61:
+		reg_val = (reg_val & ~(GENMASK(9, 8))) | ((1 << 9) + (1 << 8));
+		break;
+	default:
+		DRM_DEV_ERROR(vo->dev, "Invalid pixel format %d\n",
+			      fb->format->format);
+		return;
+	}
+
+	switch (plane_state->rotation &
+		(DRM_MODE_REFLECT_X | DRM_MODE_REFLECT_Y |
+		 DRM_MODE_ROTATE_90 | DRM_MODE_ROTATE_270)) {
+
+		case DRM_MODE_REFLECT_X | DRM_MODE_REFLECT_Y:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x3 << 6) + (0x0 << 4));
+
+			actual_w = plane_state->src_w >> 16;
+			actual_h = plane_state->src_h >> 16;
+			break;
+		case DRM_MODE_REFLECT_X | DRM_MODE_ROTATE_90:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x1 << 6) + (0x1 << 4));
+
+			actual_w = plane_state->src_h >> 16;
+			actual_h = plane_state->src_w >> 16;
+			break;
+		case DRM_MODE_REFLECT_X | DRM_MODE_ROTATE_270:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x1 << 6) + (0x2 << 4));
+
+			actual_w = plane_state->src_h >> 16;
+			actual_h = plane_state->src_w >> 16;
+			break;
+		case DRM_MODE_REFLECT_X:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x1 << 6) + (0x0 << 4));
+
+			actual_w = plane_state->src_w >> 16;
+			actual_h = plane_state->src_h >> 16;
+			break;
+		case DRM_MODE_REFLECT_Y:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x2 << 6) + (0x0 << 4));
+
+			actual_w = plane_state->src_w >> 16;
+			actual_h = plane_state->src_h >> 16;
+			break;
+		case DRM_MODE_ROTATE_90:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x0 << 6) + (0x1 << 4));
+
+			actual_w = plane_state->src_h >> 16;
+			actual_h = plane_state->src_w >> 16;
+			break;
+		case DRM_MODE_ROTATE_270:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | ((0x0 << 6) + (0x3 << 4));
+
+			actual_w = plane_state->src_h >> 16;
+			actual_h = plane_state->src_w >> 16;
+			break;
+		case 0:
+			reg_val = (reg_val & ~(GENMASK(7, 4))) | (0x0 << 4);
+
+			actual_w = plane_state->src_w >> 16;
+			actual_h = plane_state->src_h >> 16;
+			break;
+	}
+
+	writel(reg_val, vo->reg_base + plane_offset + VO_LAYER1_CTL);
+
+	reg_val = (actual_w) | (actual_h << 16);
+	writel(reg_val, vo->reg_base + plane_offset + VO_LAYER1_ACT_SIZE);
+
+	offset_w = plane_state->crtc_x;
+	start_w = readl(vo->reg_base + VO_DISP_XZONE_CTL) & 0x1fff;
+	reg_val = ((start_w + offset_w + (plane_state->src_w >> 16) - 1) << 16)
+			 + (start_w + offset_w);
+	writel(reg_val, vo->reg_base + xctl_reg_offset);
+
+	offset_h = plane_state->crtc_y;
+	start_h = readl(vo->reg_base + VO_DISP_YZONE_CTL) & 0x1fff;
+	reg_val = ((start_h + offset_h + (plane_state->src_h >> 16) - 1) << 16) +
+		  (start_h + offset_h);
+	writel(reg_val, vo->reg_base + yctl_reg_offset);
+
+	y_addr = cma_obj->dma_addr;
+	writel(y_addr, vo->reg_base + plane_offset + VO_LAYER1_Y_ADDR0);
+	writel(y_addr, vo->reg_base + plane_offset + VO_LAYER1_Y_ADDR1);
+
+	uv_addr = cma_obj->dma_addr + fb->offsets[1];
+	writel(uv_addr,
+	       vo->reg_base + plane_offset + VO_LAYER1_UV_ADDR0);
+	writel(uv_addr,
+	       vo->reg_base + plane_offset + VO_LAYER1_UV_ADDR1);
+
+	stride = (actual_w) | (actual_w << 16);
+	writel(stride, vo->reg_base + plane_offset + VO_LAYER1_STRIDE);
+
+	disp_en = readl(vo->reg_base + VO_DISP_ENABLE);
+	disp_en |= 1 << plane_enable_bit;
+	writel(disp_en, vo->reg_base + VO_DISP_ENABLE);
+
+	writel(0x00010100, vo->reg_base + VO_LAYER1_OFFSET + VO_LAYER1_ADDR_SEL_MODE);
+
+	writel(0x11,  vo->reg_base + VO_REG_LOAD_CTL);
+
+	DRM_DEBUG_DRIVER("VIDEO_CTL_REG: 0x%02x\n",
+			 readl(vo->reg_base + plane_offset +
+			       VO_LAYER2_3_CTL_REG_OFFSET));
+	DRM_DEBUG_DRIVER("VIDEO_ACT_SIZE_REG: 0x%02x\n",
+			 readl(vo->reg_base + plane_offset +
+			       VO_LAYER2_3_ACT_SIZE_REG_OFFSET));
+	DRM_DEBUG_DRIVER("VIDEO_Y_ADDR0_REG: 0x%02x\n",
+			 readl(vo->reg_base + plane_offset +
+			       VO_LAYER2_3_Y_ADDR0_REG_OFFSET));
+	DRM_DEBUG_DRIVER("VIDEO_UV_ADDR0_REG: 0x%02x\n",
+			 readl(vo->reg_base + plane_offset +
+			       VO_LAYER2_3_UV_ADDR0_REG_OFFSET));
+	DRM_DEBUG_DRIVER("VIDEO_STRIDE_REG: 0x%02x\n",
+			 readl(vo->reg_base + plane_offset +
+			       VO_LAYER2_3_STRIDE_REG_OFFSET));
+}
+
+
+#define FRAC_16_16(mult, div)    (((mult) << 16) / (div))
+
 int canaan_vo_check_plane(struct canaan_vo *vo,
 			  struct canaan_plane *canaan_plane,
 			  struct drm_plane_state *plane_state)
 {
 	int ret = 0;
 	struct drm_crtc_state *crtc_state = NULL;
+	int min_scale = FRAC_16_16(1, 8);
+	int max_scale = FRAC_16_16(8, 1);
 
 	crtc_state = drm_atomic_get_crtc_state(plane_state->state,
 					       plane_state->crtc);
@@ -279,8 +435,8 @@ int canaan_vo_check_plane(struct canaan_vo *vo,
 	}
 
 	ret = drm_atomic_helper_check_plane_state(plane_state, crtc_state,
-						  DRM_PLANE_NO_SCALING,
-						  DRM_PLANE_NO_SCALING, true,
+						  min_scale,
+						  max_scale, true,
 						  true);
 	if (ret) {
 		DRM_DEV_ERROR(vo->dev, "Failed to check plane_state\n");
@@ -300,6 +456,8 @@ void canaan_vo_update_plane(struct canaan_vo *vo,
 	if ((vo->canaan_plane[0]->id == canaan_plane->id) ||
 		(vo->canaan_plane[5]->id == canaan_plane->id))
 		canaan_vo_update_video(vo, canaan_plane, adj_mode);
+	else if (vo->canaan_plane[6]->id == canaan_plane->id)
+		canaan_vo_update_layer1(vo, canaan_plane, adj_mode);
 	else
 		canaan_vo_update_osd(vo, canaan_plane, adj_mode);
 }
@@ -310,6 +468,13 @@ void canaan_vo_disable_plane(struct canaan_vo *vo,
 	struct canaan_plane_config *config = canaan_plane->config;
 	uint32_t plane_enable_bit = config->plane_enable_bit;
 	uint32_t disp_en = 0x00;
+	uint32_t reg = 0;
+
+	if (vo->canaan_plane[6]->id == canaan_plane->id) {
+		reg = readl(vo->reg_base + 0xA3c);
+		reg = (reg & ~(BIT_MASK(16))) | (0 << 16);
+		writel(reg, vo->reg_base + 0xA3c);
+	}
 
 	disp_en = readl(vo->reg_base + VO_DISP_ENABLE);
 	disp_en &= ~(1 << plane_enable_bit);
@@ -488,8 +653,8 @@ static void canaan_vo_set_timing(struct canaan_vo *vo,
 }
 
 void canaan_vo_enable_crtc(struct canaan_vo *vo,
-			   struct canaan_crtc *canaan_crtc,
-			   struct drm_display_mode *adjusted_mode)
+			struct canaan_crtc *canaan_crtc,
+			struct drm_display_mode *adjusted_mode)
 {
 	canaan_vo_init(vo);
 	// set timing
@@ -529,6 +694,7 @@ static struct canaan_plane_config
 		{
 			.id = 0,
 			.name = "video_3",
+			.supported_rotations = 0,
 			.formats = video_plane_formats,
 			.num_formats = ARRAY_SIZE(video_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_OVERLAY,
@@ -540,6 +706,7 @@ static struct canaan_plane_config
 		{
 			.id = 1,
 			.name = "OSD4",
+			.supported_rotations = 0,
 			.formats = osd_plane_formats,
 			.num_formats = ARRAY_SIZE(osd_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_PRIMARY,
@@ -551,6 +718,7 @@ static struct canaan_plane_config
 		{
 			.id = 2,
 			.name = "OSD5",
+			.supported_rotations = 0,
 			.formats = osd_plane_formats,
 			.num_formats = ARRAY_SIZE(osd_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_CURSOR,
@@ -562,6 +730,7 @@ static struct canaan_plane_config
 		{
 			.id = 3,
 			.name = "OSD6",
+			.supported_rotations = 0,
 			.formats = osd_plane_formats,
 			.num_formats = ARRAY_SIZE(osd_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_OVERLAY,
@@ -573,6 +742,7 @@ static struct canaan_plane_config
 		{
 			.id = 4,
 			.name = "OSD7",
+			.supported_rotations = 0,
 			.formats = osd_plane_formats,
 			.num_formats = ARRAY_SIZE(osd_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_OVERLAY,
@@ -584,6 +754,7 @@ static struct canaan_plane_config
 		{
 			.id = 5,
 			.name = "video_2",
+			.supported_rotations = 0,
 			.formats = video_plane_formats,
 			.num_formats = ARRAY_SIZE(video_plane_formats),
 			.plane_type = DRM_PLANE_TYPE_OVERLAY,
@@ -591,6 +762,19 @@ static struct canaan_plane_config
 			.plane_enable_bit = 2,
 			.xctl_reg_offset = VO_DISP_LAYER2_XCTL,
 			.yctl_reg_offset = VO_DISP_LAYER2_YCTL,
+		},
+		{
+			.id = 6,
+			.name = "video_3",
+			.supported_rotations = DRM_MODE_ROTATE_90 | DRM_MODE_ROTATE_270 |
+					DRM_MODE_REFLECT_X | DRM_MODE_REFLECT_Y,
+			.formats = video_plane_formats,
+			.num_formats = ARRAY_SIZE(video_plane_formats),
+			.plane_type = DRM_PLANE_TYPE_OVERLAY,
+			.plane_offset = VO_LAYER1_OFFSET,
+			.plane_enable_bit = 1,
+			.xctl_reg_offset = VO_DISP_LAYER1_XCTL,
+			.yctl_reg_offset = VO_DISP_LAYER1_YCTL,
 		}
 	};
 
