@@ -14,6 +14,7 @@
 #include <linux/device.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/delay.h>
 
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
@@ -495,32 +496,28 @@ static irqreturn_t canaan_vo_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static void canaan_vo_set_vtth_intr(struct canaan_vo *vo, bool status, u32 vpos)
-{
-	u32 reg = 0;
-
-	reg = (reg & ~(BIT_MASK(20))) | (status << 20);
-	if (status != 0)
-		reg = (reg & ~(GENMASK(12, 0))) | (vpos << 0);
-
-	canaan_vo_write(vo, VO_DISP_IRQ1_CTL, reg);
-}
-
 int canaan_vo_enable_vblank(struct canaan_vo *vo)
 {
+	u32 val;
+
 	atomic_set(&vo->vsync_enabled, 1);
 
-	canaan_vo_set_vtth_intr(vo, 1, vo->vth_line);
-	// canaan_vo_write(vo, VO_REG_LOAD_CTL, 0x11);
+	val = canaan_vo_read(vo, VO_DISP_IRQ1_CTL);
+	val |= (1 << 20);
+	canaan_vo_write(vo, VO_DISP_IRQ1_CTL, val);
+
 	return 0;
 }
 
 void canaan_vo_disable_vblank(struct canaan_vo *vo)
 {
+	u32 val;
+
 	atomic_set(&vo->vsync_enabled, 0);
 
-	canaan_vo_set_vtth_intr(vo, 0, vo->vth_line);
-	// canaan_vo_write(vo, VO_REG_LOAD_CTL, 0x11);
+	val = canaan_vo_read(vo, VO_DISP_IRQ1_CTL);
+	val &= ~(1 << 20);
+	canaan_vo_write(vo, VO_DISP_IRQ1_CTL, val);
 }
 
 static void canaan_vo_init(struct canaan_vo *vo)
@@ -595,9 +592,6 @@ static void canaan_vo_init(struct canaan_vo *vo)
 		canaan_vo_write(vo, VO_HSCALE_BASE + ((i * 4 + 2) << 2),
 				H_Coef[i * 3 + 2]);
 	}
-
-	// // set vline irq
-	// canaan_vo_set_vtth_intr(vo, 1, 11);
 }
 
 static void canaan_vo_set_timing(struct canaan_vo *vo,
@@ -650,6 +644,9 @@ static void canaan_vo_set_timing(struct canaan_vo *vo,
 	reg = 0;
 	reg = (hact - 1) + ((vact - 1) << 16) + (0x1 << 15);
 	canaan_vo_write(vo, 0x780, reg); // enalbe remap  0x77f8437
+
+	reg = 32 - __builtin_clz(vtotal) - 1;
+	canaan_vo_write(vo, VO_DISP_IRQ1_CTL, reg);
 }
 
 void canaan_vo_enable_crtc(struct canaan_vo *vo,
@@ -669,7 +666,13 @@ void canaan_vo_enable_crtc(struct canaan_vo *vo,
 void canaan_vo_disable_crtc(struct canaan_vo *vo,
 			    struct canaan_crtc *canaan_crtc)
 {
-	// canaan_vo_write(vo, VO_REG_LOAD_CTL, 0x0);
+	void *rst;
+
+	rst = ioremap(0x91101090, 4);
+	writel(0x0, rst);
+	fsleep(1000);
+	writel(0xffffffff, rst);
+	iounmap(rst);
 }
 
 void canaan_vo_flush_config(struct canaan_vo *vo)
@@ -809,10 +812,8 @@ static int canaan_vo_bind(struct device *dev, struct device *master, void *data)
 	}
 
 	of_property_read_u32(np, "background", &vo->background);
-	of_property_read_u32(np, "vth_line", &vo->vth_line);
 
 	dev_info(vo->dev, "background color is %x\n", vo->background);
-	dev_info(vo->dev, "vth_line line is %x\n", vo->vth_line);
 
 	atomic_set(&vo->vsync_enabled, 0);
 	vo->irq = platform_get_irq(pdev, 0);

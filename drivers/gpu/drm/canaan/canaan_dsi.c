@@ -68,7 +68,7 @@
 
 #define TXPHY_445_5_M (295)
 #define TXPHY_445_5_N (15)
-#define TXPHY_445_5_VOC (0x17)
+#define TXPHY_445_5_VOC (0x19)
 #define TXPHY_445_5_HS_FREQ (0x96)
 
 #define TXPHY_891_M (295)
@@ -206,8 +206,8 @@ static u32 canaan_dsi_get_hcomponent_lbcc(struct canaan_dsi *dsi,
 
 	lbcc = hcomponent * dsi->phy_freq / 8;
 
-	frac = lbcc % mode->clock;
-	lbcc = lbcc / mode->clock;
+	frac = lbcc % dsi->clk_freq;
+	lbcc = lbcc / dsi->clk_freq;
 	if (frac)
 		lbcc++;
 
@@ -313,6 +313,78 @@ static void canaan_mipi_dsi_set_test_mode(struct canaan_dsi *dsi)
 	dsi_write(dsi, VID_MODE_CFG, reg);
 }
 
+static int canaan_dsi_clk_cfg(struct canaan_dsi *dsi, u32 clk)
+{
+	struct mipi_dsi_device *device = dsi->device;
+	u32 val, div, phy_clk_freq, voc_freq, i, m, n = 0, voc;
+	u64 cmp, tmp, diff, closest = 100000000;
+	void *dis_clk;
+
+	div = DIV64_U64_ROUND_CLOSEST(594000, clk);
+	dsi->clk_freq = 594000 / div;
+	phy_clk_freq = dsi->clk_freq * 3 * 8 / device->lanes / 2;
+	if (phy_clk_freq > 1250000 || phy_clk_freq < 40000)
+		return -1;
+	else if (phy_clk_freq < 55000)
+		voc = 0x3f;
+	else if (phy_clk_freq < 82500)
+		voc = 0x37;
+	else if (phy_clk_freq < 110000)
+		voc = 0x2f;
+	else if (phy_clk_freq < 165000)
+		voc = 0x27;
+	else if (phy_clk_freq < 220000)
+		voc = 0x1f;
+	else if (phy_clk_freq < 330000)
+		voc = 0x17;
+	else if (phy_clk_freq < 440000)
+		voc = 0x0f;
+	else if (phy_clk_freq < 660000)
+		voc = 0x07;
+	else if (phy_clk_freq < 1149000)
+		voc = 0x03;
+	else
+		voc = 0x01;
+
+	voc_freq = phy_clk_freq * (1 << (voc >> 4));
+	cmp = voc_freq;
+	cmp = cmp * 1000;
+	cmp = div64_u64(cmp, 24);
+	for (i = 1; i <= 16; i++) {
+		tmp = cmp * i + 500000;
+		val = div64_u64(tmp, 1000000);
+		if (val > 625)
+			continue;
+		tmp = val * 1000000 / i;
+		diff = abs(cmp - tmp);
+		if (closest > diff) {
+			closest = diff;
+			n = i;
+			m = val;
+			if (diff == 0)
+				break;
+		}
+	}
+	if (!n)
+		return -1;
+	voc_freq = 24000;
+	voc_freq = voc_freq * 2 * m;
+	voc_freq = div64_u64(voc_freq, n);
+	voc_freq = div64_u64(voc_freq, (1 << (voc >> 4)));
+	dsi->phy_freq = voc_freq;
+
+	dis_clk = ioremap(0x91100000, 0x1000);
+	val = readl(dis_clk + 0x78);
+	val = (val & ~(GENMASK(10, 3))) | ((div - 1) << 3);
+	val = val | (1 << 31);
+	writel(val, dis_clk + 0x78);
+	iounmap(dis_clk);
+
+	k230_dsi_config_4lan_phy(dsi, m - 2, n - 1, voc, 0x96);
+
+	return 0;
+}
+
 static void canaan_dsi_encoder_enable(struct drm_encoder *encoder)
 {
 	struct canaan_dsi *dsi = encoder_to_canaan_dsi(encoder);
@@ -324,56 +396,9 @@ static void canaan_dsi_encoder_enable(struct drm_encoder *encoder)
 	DRM_DEBUG_DRIVER("Enabling DSI output\n");
 
 	dev_vdbg(dsi->dev, "DSI encoder enable %u\n", adjusted_mode->clock);
-	switch (adjusted_mode->clock) {
-	case 74250:
-		// 74.25M
-		k230_dsi_config_4lan_phy(dsi, TXPHY_445_5_M, TXPHY_445_5_N,
-					 TXPHY_445_5_VOC, TXPHY_445_5_HS_FREQ);
-		// set clk todo
-		dsi->phy_freq = 445500;
-		dsi->clk_freq = 74250;
-		break;
-	case 148500: {
-		// 144.5M
-		void *dis_clk = ioremap(0x91100000, 0x1000);
-		u32 reg = 0;
-		u32 div = 3;
-
-		reg = readl(dis_clk + 0x78);
-		reg = (reg & ~(GENMASK(10, 3))) |
-		      (div << 3); //  8M =    pll1(2376) / 4 / 66
-		reg = reg | (1 << 31);
-		writel(reg, dis_clk + 0x78);
-
-		k230_dsi_config_4lan_phy(dsi, TXPHY_891_M, TXPHY_891_N,
-					 TXPHY_891_VOC, TXPHY_891_HS_FREQ);
-		// set clk todo
-		dsi->phy_freq = 890666;
-		dsi->clk_freq = 14850;
-		break;
-	}
-	case 39600: {
-		void *dis_clk = ioremap(0x91100000, 0x1000);
-		u32 reg = 0;
-		u32 div = 14;
-
-		reg = readl(dis_clk + 0x78);
-		reg = (reg & ~(GENMASK(10, 3))) |
-		      (div << 3); //  8M =    pll1(2376) / 4 / 66
-		reg = reg | (1 << 31);
-		writel(reg, dis_clk + 0x78);
-		// 475.5M
-		k230_dsi_config_4lan_phy(dsi, TXPHY_475_M, TXPHY_475_N,
-					 TXPHY_475_VOC, TXPHY_475_HS_FREQ);
-		// set clk todo
-		dsi->phy_freq = 475200;
-		dsi->clk_freq = 39600;
-		break;
-	}
-	default:
+	if (canaan_dsi_clk_cfg(dsi, adjusted_mode->clock))
 		dev_err(dsi->dev, "MIPI clock not support\n");
-		break;
-	}
+
 	// set dsi lan num
 	canaan_dsi_set_lan_num(dsi, device->lanes);
 	// set lpdt
@@ -420,6 +445,18 @@ static void canaan_dsi_encoder_disable(struct drm_encoder *encoder)
 	}
 }
 
+bool canaan_dsi_encoder_mode_fixup(struct drm_encoder *encoder,
+				   const struct drm_display_mode *mode,
+				   struct drm_display_mode *adjusted_mode)
+{
+	u32 div;
+
+	div = DIV64_U64_ROUND_CLOSEST(594000, mode->clock);
+	adjusted_mode->clock = 594000 / div;
+
+	return true;
+}
+
 static int canaan_dsi_get_modes(struct drm_connector *connector)
 {
 	struct canaan_dsi *dsi = connector_to_canaan_dsi(connector);
@@ -453,6 +490,7 @@ static const struct drm_connector_funcs canaan_dsi_connector_funcs = {
 };
 
 static const struct drm_encoder_helper_funcs canaan_dsi_enc_helper_funcs = {
+	.mode_fixup = canaan_dsi_encoder_mode_fixup,
 	.disable = canaan_dsi_encoder_disable,
 	.enable = canaan_dsi_encoder_enable,
 };
