@@ -4,27 +4,27 @@
  */
 
 #include "k230.dtsi"
-#include "display-st7701-480x800.dtsi"
+#include "display-ili9806-480x800.dtsi"
 
 / {
-	model = "Banana Pi CanMV K230D Zero";
+	model = "Canaan CanMV-K230";
 	compatible = "canaan,canmv-k230", "canaan,kendryte-k230";
 
 	aliases {
-		serial2 = &uart2;
-		mmc0 = &mmc_sd1;
-		mmc1 = &mmc_sd0;
+		serial3 = &uart3;
+		i2c0 = &i2c4;
+		i2c1 = &i2c3;
+		mmc0 = &mmc_sd0;
+		mmc1 = &mmc_sd1;
 	};
 
 	chosen {
 		stdout-path = "serial0:115200n8";
-		bootargs = "root=/dev/mmcblk0p2 loglevel=8 rw rootdelay=4 \
-						rootfstype=ext4 console=ttyS0,115200  earlycon=sbi";
 	};
 
 	ddr: memory@0 {
 		device_type = "memory";
-		reg = <0x0 0x0 0x0 0x8000000>;
+		reg = <0x0 0x0 0x0 0x40000000>;
 	};
 
 	sound {
@@ -36,12 +36,36 @@
 	};
 };
 
+&usb0 {
+	status = "okay";
+};
+
+&usb1 {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&mmc_sd0{
+	status = "okay";
+	io_fixed_1v8;
+	rx_delay_line = <0x0d>;
+	tx_delay_line = <0x40>;
+};
+
+&mmc_sd1{
+	status = "okay";
+	no-1-8-v;
+	cap-sd-highspeed;
+	mshc_ctrl_r = <0x00>;
+	};
+
 &uart0 {
 	status = "okay";
 };
-&uart2 {
+&uart3 {
 	status = "okay";
 };
+
 &mmc_sd1{
 	status = "okay";
 	no-1-8-v;
@@ -52,24 +76,19 @@
 	status = "okay";
 };
 &usb1 {
+	dr_mode = "host";
 	status = "okay";
 };
 
 &i2c4 {
 	status = "okay";
-	touchscreen@38 {
-		compatible = "edt,edt-ft5306";
-		reg = <0x38>;
-		reset-gpios = <&gpio1_ports 4 GPIO_ACTIVE_LOW>;
-		interrupt-parent = <&gpio1_ports>;
-		interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
-	};
 };
 
-&lcd {
-	dsi_reset-gpios = <&gpio1_ports 5 GPIO_ACTIVE_HIGH>;
-};
 
+
+&vo {
+	vth_line = <10>;
+};
 &mipi0 {
 	// set to csi2
 	id = <2>;
@@ -85,4 +104,18 @@
 			  K230_RESET_M2_TYPE
 			  K230_RESET_M2_DONE_BIT
 			  K230_RESET_M2_ASSERT_BIT>;
+};
+&i2c3 {
+	status = "okay";
+	touchscreen@38 {
+		compatible = "edt,edt-ft5306";
+		reg = <0x38>;
+		reset-gpios = <&gpio0_ports 24 GPIO_ACTIVE_LOW>;
+		interrupt-parent = <&gpio0_ports>;
+		interrupts = <23 IRQ_TYPE_EDGE_FALLING>;
+	};
+};
+&lcd {
+	dsi_reset-gpios = <&gpio0_ports 22 GPIO_ACTIVE_HIGH>;
+	backlight_gpio-gpios = <&gpio0_ports 25 GPIO_ACTIVE_HIGH>;
 };
