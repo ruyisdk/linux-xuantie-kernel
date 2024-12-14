@@ -4,6 +4,7 @@
  */
 
 #include "k230.dtsi"
+#include "display-st7701-480x800.dtsi"
 
 / {
 	model = "Canaan CanMV-K230";
@@ -11,10 +12,10 @@
 
 	aliases {
 		serial3 = &uart3;
-		i2c0 = &i2c4;
-		i2c1 = &i2c3;
 		mmc0 = &mmc_sd0;
 		mmc1 = &mmc_sd1;
+		i2c0 = &i2c4;
+		i2c1 = &i2c3;
 	};
 
 	chosen {
@@ -23,7 +24,7 @@
 
 	ddr: memory@0 {
 		device_type = "memory";
-		reg = <0x0 0x0 0x0 0x40000000>;
+		reg = <0x0 0x0 0x0 0x20000000>;
 	};
 
 	sound {
@@ -41,89 +42,33 @@
 &uart3 {
 	status = "okay";
 };
-&mmc_sd0{
-	status = "okay";
-	no-1-8-v;
-	cap-sd-highspeed;
-	rx_delay_line = <0x0d>;
-	tx_delay_line = <0xb0>;
-	clocks = <&sd0_cclk_gate>,<&sd0_cclk_gate>;
-	clock-names = "core", "bus";
-};
 &mmc_sd1{
 	status = "okay";
 	no-1-8-v;
 	cap-sd-highspeed;
 	mshc_ctrl_r = <0x00>;
 };
+
 &usb0 {
 	status = "okay";
 };
 &usb1 {
-	dr_mode = "host";
 	status = "okay";
 };
 
 &i2c3 {
 	status = "okay";
-
-	lt9611: hdmi-bridge@3b {
-		compatible = "lontium,lt9611";
-		reg = <0x3b>;
-		reset-gpios = <&gpio0_ports 22 GPIO_ACTIVE_HIGH>;
+	touchscreen@38 {
+		compatible = "edt,edt-ft5306";
+		reg = <0x38>;
+		reset-gpios = <&gpio0_ports 21 GPIO_ACTIVE_LOW>;
 		interrupt-parent = <&gpio0_ports>;
-		interrupts = <23 IRQ_TYPE_EDGE_FALLING>;
-		ports {
-			#address-cells  = <1>;
-			#size-cells     = <0>;
-			port@1 {
-				reg = <1>;
-				lt9611_in: endpoint {
-					remote-endpoint = <&dsi_out_lt9611>;
-				};
-			};
-
-			port@2 {
-				reg = <2>;
-				lt9611_out: endpoint {
-					remote-endpoint = <&hdmi_connector_in>;
-				};
-			};
-		};
+		interrupts = <22 IRQ_TYPE_EDGE_FALLING>;
 	};
 };
-&i2c4
-{
+
+&i2c4 {
 	status = "okay";
-};
-
-&dsi {
-	ports {
-		port@1 {
-			reg = <1>;
-			dsi_out_lt9611: endpoint {
-				remote-endpoint = <&lt9611_in>;
-			};
-		};
-	};
-};
-
-/ {
-	hdmi: connector {
-		compatible = "hdmi-connector";
-		label = "hdmi";
-		type = "a";
-
-		port {
-			hdmi_connector_in: endpoint {
-				remote-endpoint = <&lt9611_out>;
-			};
-		};
-	};
-};
-
-&vo {
-	vth_line = <10>;
 };
 &mipi0
 {
@@ -135,4 +80,10 @@
 			  K230_RESET_CSI2_DONE_BIT K230_RESET_CSI2_ASSERT_BIT>,
 	<&sysctl_reset K230_RESET_M2_REG_OFFSET K230_RESET_M2_TYPE
 		 K230_RESET_M2_DONE_BIT K230_RESET_M2_ASSERT_BIT>;
+};
+
+
+&lcd {
+	dsi_reset-gpios = <&gpio0_ports 20 GPIO_ACTIVE_HIGH>;
+	backlight_gpio-gpios = <&gpio0_ports 25 GPIO_ACTIVE_HIGH>;
 };
