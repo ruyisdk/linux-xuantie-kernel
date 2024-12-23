@@ -13,6 +13,7 @@
 #include <asm/processor.h>
 #include <asm/ptrace.h>
 #include <asm/csr.h>
+#include <asm/xuantie_csr_ext.h>
 
 #ifdef CONFIG_FPU
 extern void __fstate_save(struct task_struct *save_to);
@@ -83,6 +84,8 @@ do {							\
 		__switch_to_vector(__prev, __next);	\
 	if (has_matrix())				\
 		__switch_to_matrix(__prev, __next);	\
+	if (has_xuantie_csr_ext())				\
+		__switch_to_xuantie_csr_ext(__prev, __next);	\
 	((last) = __switch_to(__prev, __next));		\
 } while (0)
 

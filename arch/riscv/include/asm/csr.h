@@ -423,6 +423,12 @@
 #define CSR_XRLENB		0xcc1
 #define CSR_XMISA		0xcc2
 
+/* XUANTIE Extended Control and Status Register */
+#ifdef CONFIG_XUANTIE_CSR_EXT
+#define CSR_FXCR		0x800
+#define CSR_UTNMODE		0x8da
+#endif
+
 #ifdef CONFIG_RISCV_M_MODE
 # define CSR_STATUS	CSR_MSTATUS
 # define CSR_IE		CSR_MIE

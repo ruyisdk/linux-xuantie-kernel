@@ -721,6 +721,18 @@ config XUANTIE_ISA
 
 	  If unsure, say N.
 
+config XUANTIE_CSR_EXT
+	bool "XUANTIE_CSR_EXT (FXCR, UTNMODE)"
+	default y
+	depends on FPU
+	help
+	  This config enable XUANTIE U-mode Extended Control and Status Register.
+	  These CSRs may be set to different values ​​by the user in different processes, and
+	  can be saved and restored when switching tasks in combination with dts.
+	  Please refer to the XUANTIE processor user manual for CSR definitions.
+
+	  If you don't know what to do here, say Y.
+
 menu "Kernel features"
 
 source "kernel/Kconfig.hz"
