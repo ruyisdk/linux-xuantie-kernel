@@ -87,3 +87,9 @@
 	dsi_reset-gpios = <&gpio0_ports 20 GPIO_ACTIVE_HIGH>;
 	backlight_gpio-gpios = <&gpio0_ports 25 GPIO_ACTIVE_HIGH>;
 };
+&mmc_sd0 {
+	status = "okay";
+	no-1-8-v;
+	rx_delay_line = <0x0d>;
+	tx_delay_line = <0xc0>;
+};
