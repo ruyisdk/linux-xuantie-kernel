@@ -73,3 +73,22 @@
 	dsi_reset-gpios = <&gpio0_ports 20 GPIO_ACTIVE_HIGH>;
 	backlight_gpio-gpios = <&gpio0_ports 25 GPIO_ACTIVE_HIGH>;
 };
+&mmc_sd0 {
+	status = "okay";
+	io_fixed_1v8;
+	rx_delay_line = <0x0d>;
+	tx_delay_line = <0x00>;
+	bcmdhd_wlan {
+		compatible = "android,bcmdhd_wlan";
+		gpio_wl_reg_on = <&gpio0_ports 1 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&spi0 {
+	status = "okay";
+	spidev@0{
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <100000000>;
+	};
+};

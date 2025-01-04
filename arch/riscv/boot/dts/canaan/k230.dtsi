@@ -18,6 +18,13 @@
 		serial0 = &uart0;
 	};
 
+	chosen {
+		opensbi-domains {
+			compatible = "opensbi,domain,config";
+			system-suspend-test;
+		};
+	};
+
 	cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
