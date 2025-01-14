@@ -220,3 +220,11 @@ xuantie_defconfig:
 PHONY += xuantie_debug_defconfig
 xuantie_debug_defconfig:
 	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig thp.config fs.config debug.config ftrace.config ebpf.config kdump.config sched.config
+
+PHONY += xuantie_rv32_defconfig
+xuantie_rv32_defconfig:
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config 12HZ.config fs.config
+
+PHONY += xuantie_rv32_debug_defconfig
+xuantie_rv32_debug_defconfig:
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config debug.config ftrace.config ebpf.config
