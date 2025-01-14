@@ -929,6 +929,7 @@ extern uintptr_t _dtb_early_pa;
 #endif /* CONFIG_XIP_KERNEL */
 extern u64 satp_mode;
 extern bool pgtable_l4_enabled;
+extern bool pgtable_l5_enabled;
 
 void paging_init(void);
 void misc_mem_init(void);
