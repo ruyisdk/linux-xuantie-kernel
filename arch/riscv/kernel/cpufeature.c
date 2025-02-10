@@ -576,6 +576,14 @@ unsigned long riscv_get_elf_hwcap(void)
 	return hwcap;
 }
 
+static bool param_check_unaligned_access = true;
+static int __init parse_check_unaligned_access(char *arg)
+{
+	param_check_unaligned_access = false;
+	return 0;
+}
+early_param("no_check_unaligned_access", parse_check_unaligned_access);
+
 void check_unaligned_access(int cpu)
 {
 	u64 start_cycles, end_cycles;
@@ -587,6 +595,9 @@ void check_unaligned_access(int cpu)
 	void *dst;
 	void *src;
 	long speed = RISCV_HWPROBE_MISALIGNED_SLOW;
+
+	if (!param_check_unaligned_access)
+		return;
 
 	/* We are already set since the last check */
 	if (per_cpu(misaligned_access_speed, cpu) != RISCV_HWPROBE_MISALIGNED_UNKNOWN)
