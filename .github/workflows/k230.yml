@@ -137,7 +137,7 @@ jobs:
             # --push reset key to reset--
             board_reset.sh
             # --intercept uboot--
-            intercept_uboot.sh /dev/ttyACM1
+            intercept_uboot.sh /dev/ttyACM0
             # --start debug server--
             DebugServerConsole > /dev/null 2>&1 &
             echo "debug server started"
@@ -146,9 +146,9 @@ jobs:
             echo "gdb started"
             # --wait (print serial log will be better)--
             # sleep 60
-            print_kernel_load_log.sh /dev/ttyACM1
+            print_kernel_load_log.sh /dev/ttyACM0
             # --run command to check kernel--
-            check_kernel.sh /dev/ttyACM1
+            check_kernel.sh /dev/ttyACM0
             cd ..
       - name: 'Cleanup'
         if: always()
