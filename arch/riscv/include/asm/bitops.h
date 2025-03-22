@@ -25,14 +25,27 @@
 #include <asm/alternative-macros.h>
 #include <asm/hwcap.h>
 
-#if (BITS_PER_LONG == 64)
+#if (__riscv_xlen == 64)
 #define CTZW	"ctzw "
 #define CLZW	"clzw "
+
+#if (BITS_PER_LONG == 64)
+#define CTZ	"ctz "
+#define CLZ	"clz "
 #elif (BITS_PER_LONG == 32)
-#define CTZW	"ctz "
-#define CLZW	"clz "
+#define CTZ	"ctzw "
+#define CLZ	"clzw "
 #else
 #error "Unexpected BITS_PER_LONG"
+#endif
+
+#elif (__riscv_xlen == 32)
+#define CTZW	"ctz "
+#define CLZW	"clz "
+#define CTZ	"ctz "
+#define CLZ	"clz "
+#else
+#error "Unexpected __riscv_xlen"
 #endif
 
 static __always_inline unsigned long variable__ffs(unsigned long word)
@@ -45,7 +58,7 @@ static __always_inline unsigned long variable__ffs(unsigned long word)
 
 	asm volatile (".option push\n"
 		      ".option arch,+zbb\n"
-		      "ctz %0, %1\n"
+		      CTZ "%0, %1\n"
 		      ".option pop\n"
 		      : "=r" (word) : "r" (word) :);
 
@@ -101,7 +114,7 @@ static __always_inline unsigned long variable__fls(unsigned long word)
 
 	asm volatile (".option push\n"
 		      ".option arch,+zbb\n"
-		      "clz %0, %1\n"
+		      CLZ "%0, %1\n"
 		      ".option pop\n"
 		      : "=r" (word) : "r" (word) :);
 
