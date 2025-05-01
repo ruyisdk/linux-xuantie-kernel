@@ -278,12 +278,7 @@ static void __init riscv_spinlock_init(void)
 		return;
 	}
 
-	if (IS_ENABLED(CONFIG_RISCV_ISA_ZABHA) &&
-	    IS_ENABLED(CONFIG_RISCV_ISA_ZACAS) &&
-	    riscv_isa_extension_available(NULL, ZABHA) &&
-	    riscv_isa_extension_available(NULL, ZACAS)) {
-		using_ext = "using Zabha";
-	} else if (riscv_isa_extension_available(NULL, ZICCRSE)) {
+	if (riscv_isa_extension_available(NULL, ZICCRSE)) {
 		using_ext = "using Ziccrse";
 	}
 #if defined(CONFIG_RISCV_COMBO_SPINLOCKS)
@@ -295,7 +290,7 @@ static void __init riscv_spinlock_init(void)
 #endif
 
 	if (!using_ext)
-		pr_err("Queued spinlock without Zabha or Ziccrse");
+		pr_err("Queued spinlock without Ziccrse");
 	else
 		pr_info("Queued spinlock %s: enabled\n", using_ext);
 }
