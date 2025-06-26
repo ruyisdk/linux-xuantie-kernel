@@ -17,11 +17,11 @@ env:
   KBUILD_BUILD_HOST: ci-riscv-builder
   KDEB_COMPRESS: none
   KDEB_CHANGELOG_DIST: unstable
-  TH1520_IMAGE_BASE_URL: https://mirror.iscas.ac.cn/revyos/extra/images/lpi4amain
-  TH1520_IMAGE_DATE: 20240127
-  TH1520_BOOT: boot-lpi4amain-20240127_105111.ext4.zst
-  TH1520_ROOT: root-lpi4amain-20240127_105111.ext4.zst
-  TH1520_UBOOT_BASE_URL: https://github.com/revyos/thead-u-boot/releases/download/20240529/
+  TH1520_IMAGE_BASE_URL: https://fast-mirror.isrc.ac.cn/revyos/extra/images/lpi4a/
+  TH1520_IMAGE_DATE: 20250526
+  TH1520_BOOT: boot-lpi4a-20250526_182059.ext4.zst
+  TH1520_ROOT: root-lpi4a-20250526_182059.ext4.zst
+  TH1520_UBOOT_BASE_URL: https://github.com/revyos/thead-u-boot/releases/download/20250110/
   TH1520_UBOOT: u-boot-with-spl-lpi4a-main.bin
 
 jobs:
@@ -123,16 +123,13 @@ jobs:
         run: |
             export TIMESTAMP=$(date +%Y%m%d-%H%M%S)
             zstd -d ${TH1520_BOOT}
-            mv boot*.ext4 boot-lpi4amain-ci-${TIMESTAMP}.ext4
+            mv boot*.ext4 boot-th1520ci-ci-${TIMESTAMP}.ext4
             zstd -d ${TH1520_ROOT}
-            mv root*.ext4 root-lpi4amain-ci-${TIMESTAMP}.ext4
+            mv root*.ext4 root-th1520ci-ci-${TIMESTAMP}.ext4
             rm -rf ${TH1520_BOOT} ${TH1520_ROOT}
             mkdir -p mnt
-            sudo mount root-lpi4amain-ci-${TIMESTAMP}.ext4 mnt
-            sudo mount boot-lpi4amain-ci-${TIMESTAMP}.ext4 mnt/boot
-            # sdk 1.5.4 rootfs in mmcblk0p4
-            sudo sed -i 's/mmcblk0p3/mmcblk0p4/g' mnt/etc/fstab
-            sudo sed -i 's/mmcblk0p3/mmcblk0p4/g' mnt/etc/default/u-boot
+            sudo mount root-th1520ci-ci-${TIMESTAMP}.ext4 mnt
+            sudo mount boot-th1520ci-ci-${TIMESTAMP}.ext4 mnt/boot
             sudo chroot mnt sh -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"
             sudo chroot mnt sh -c "echo root:root | chpasswd"
             sudo chroot mnt sh -c 'apt remove -y linux-image* linux-headers*'
@@ -142,8 +139,8 @@ jobs:
             # Add preinstalled software
             sudo chroot mnt sh -c 'apt install -y cpufrequtils python3-ruamel.yaml iperf firmware-realtek'
             sudo umount -l mnt
-            zstd boot-lpi4amain-ci-${TIMESTAMP}.ext4
-            zstd root-lpi4amain-ci-${TIMESTAMP}.ext4
+            zstd boot-th1520ci-ci-${TIMESTAMP}.ext4
+            zstd root-th1520ci-ci-${TIMESTAMP}.ext4
 
       - name: 'Upload Artifact EMMC'
         uses: actions/upload-artifact@v4
