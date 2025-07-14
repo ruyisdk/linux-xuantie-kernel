@@ -291,6 +291,27 @@ config SAMPLE_RISCV_QOS
 	help
 	  Test RISCV QOS srmcfg.
 
+config SAMPLE_IPI_BENCHMARK
+	tristate "Test IPI performance on SMP systems"
+	depends on SMP
+	help
+	  Build a kernel module that benchmarks Inter-Processor Interrupt (IPI)
+	  performance on SMP (Symmetric Multi-Processing) systems.
+	  This module provides a comprehensive benchmark suite to measure IPI
+	  latency and throughput between different CPU cores and NUMA nodes.
+	  It supports various test scenarios including:
+	  - Point-to-point IPI tests between specific CPU pairs
+	  - Broadcast IPI tests from one CPU to all other CPUs
+	  - Cross-NUMA node IPI performance analysis
+	  The benchmark results help in understanding system performance
+	  characteristics for workloads that rely heavily on inter-processor
+	  communication, such as parallel computing applications and kernel
+	  synchronization primitives.
+	  If the system has only one online CPU, IPI tests to other CPUs
+	  cannot be performed and will return -ENOENT.
+	  Say M to build this as a module (sample_ipi_benchmark.ko).
+	  Say N if you don't need IPI performance testing.
+
 source "samples/rust/Kconfig"
 
 endif # SAMPLES
