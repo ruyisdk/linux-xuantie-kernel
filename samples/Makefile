@@ -39,3 +39,4 @@ obj-$(CONFIG_SAMPLE_CORESIGHT_SYSCFG)	+= coresight/
 obj-$(CONFIG_SAMPLE_FPROBE)		+= fprobe/
 obj-$(CONFIG_SAMPLES_RUST)		+= rust/
 obj-$(CONFIG_SAMPLE_RISCV_QOS)	+= riscv_qos/
+obj-$(CONFIG_SAMPLE_IPI_BENCHMARK)	+= ipi_bench/
