@@ -19,13 +19,17 @@
 #include <linux/init.h>
 #include <linux/ktime.h>
 
-#define NTIMES 100000
+#define NTIMES 100
 
 #define POKE_ANY	0
 #define DRY_RUN		1
 #define POKE_SELF	2
 #define POKE_ALL	3
 #define POKE_ALL_LOCK	4
+
+int ntimes = NTIMES;
+module_param(ntimes, int, 0664);
+MODULE_PARM_DESC(ntimes, "The iterations");
 
 static void __init handle_ipi_spinlock(void *t)
 {
@@ -119,31 +123,31 @@ static int __init init_bench_ipi(void)
 	ktime_t ipi, total;
 	int ret;
 
-	ret = bench_ipi(NTIMES, DRY_RUN, &ipi, &total);
+	ret = bench_ipi(ntimes, DRY_RUN, &ipi, &total);
 	if (ret)
 		pr_err("Dry-run FAILED: %d\n", ret);
 	else
 		pr_err("Dry-run:        %18llu, %18llu ns\n", ipi, total);
 
-	ret = bench_ipi(NTIMES, POKE_SELF, &ipi, &total);
+	ret = bench_ipi(ntimes, POKE_SELF, &ipi, &total);
 	if (ret)
 		pr_err("Self-IPI FAILED: %d\n", ret);
 	else
 		pr_err("Self-IPI:       %18llu, %18llu ns\n", ipi, total);
 
-	ret = bench_ipi(NTIMES, POKE_ANY, &ipi, &total);
+	ret = bench_ipi(ntimes, POKE_ANY, &ipi, &total);
 	if (ret)
 		pr_err("Normal IPI FAILED: %d\n", ret);
 	else
 		pr_err("Normal IPI:     %18llu, %18llu ns\n", ipi, total);
 
-	ret = bench_ipi(NTIMES, POKE_ALL, &ipi, &total);
+	ret = bench_ipi(ntimes, POKE_ALL, &ipi, &total);
 	if (ret)
 		pr_err("Broadcast IPI FAILED: %d\n", ret);
 	else
 		pr_err("Broadcast IPI:  %18llu, %18llu ns\n", ipi, total);
 
-	ret = bench_ipi(NTIMES, POKE_ALL_LOCK, &ipi, &total);
+	ret = bench_ipi(ntimes, POKE_ALL_LOCK, &ipi, &total);
 	if (ret)
 		pr_err("Broadcast lock FAILED: %d\n", ret);
 	else
