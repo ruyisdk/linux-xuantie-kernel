@@ -290,6 +290,7 @@ config SAMPLE_RISCV_QOS
 	depends on SMP
 	help
 	  Test RISCV QOS srmcfg.
+
 config SAMPLE_IPI_BENCHMARK
 	tristate "Test IPI performance on SMP systems"
 	depends on SMP
