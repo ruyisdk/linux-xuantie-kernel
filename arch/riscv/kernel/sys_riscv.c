@@ -327,6 +327,7 @@ static void hwprobe_one_pair(struct riscv_hwprobe *pair,
 
 	/* Not implemented */
 	case RISCV_HWPROBE_KEY_VENDOR_EXT_SIFIVE_0:
+	case RISCV_HWPROBE_KEY_VENDOR_EXT_MIPS_0:
 		pair->value = 0;
 		break;
 
