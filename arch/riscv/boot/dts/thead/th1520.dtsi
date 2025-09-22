@@ -258,6 +258,11 @@
 			<0x00000000 0x00000029 0xffffffff 0xffffffff 0x0007fff8>,
 			<0x00000000 0x0000002a 0xffffffff 0xffffffff 0x0007fff8>;
 	};
+
+	th1520_wdt: th1520_wdt {
+		compatible = "th1520,pmic-watchdog";
+		status = "okay";
+	};
 	
 	osc: oscillator {
 		compatible = "fixed-clock";

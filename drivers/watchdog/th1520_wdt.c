@@ -360,33 +360,22 @@ static int th1520_wdt_probe(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id th1520_wdt_of_match[] = {
+	{ .compatible = "th1520,pmic-watchdog" },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, th1520_wdt_of_match);
+
+
 static struct platform_driver th1520_wdt_driver = {
 	.driver = {
 		.name = DRV_NAME,
+		.of_match_table = th1520_wdt_of_match,
 	},
 	.probe = th1520_wdt_probe,
 };
 
-static int __init th1520_wdt_init(void)
-{
-	static struct platform_device *pdev;
-	int ret;
-
-	pdev = platform_device_register_simple(DRV_NAME, -1, NULL, 0);
-	if (IS_ERR(pdev))
-		return PTR_ERR(pdev);
-
-	ret = platform_driver_register(&th1520_wdt_driver);
-	if (ret) {
-		platform_device_unregister(pdev);
-		return PTR_ERR(pdev);
-	}
-
-	pr_info("Watchdog module: %s loaded\n", DRV_NAME);
-
-	return 0;
-}
-device_initcall(th1520_wdt_init);
+module_platform_driver(th1520_wdt_driver);
 
 MODULE_AUTHOR("Wei.Liu <lw312886@linux.alibaba.com>");
 MODULE_DESCRIPTION("PMIC Watchdog Driver for TH1520");
