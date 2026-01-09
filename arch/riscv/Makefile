@@ -215,11 +215,11 @@ rv64ilp32_defconfig:
 
 PHONY += xuantie_defconfig
 xuantie_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 12HZ.config thp.config fs.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 12HZ.config thp.config fs.config rv64_crypto.config
 
 PHONY += xuantie_debug_defconfig
 xuantie_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig thp.config fs.config xt_debug.config ftrace.config ebpf.config kdump.config sched.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig thp.config fs.config rv64_crypto.config xt_debug.config ftrace.config ebpf.config kdump.config sched.config
 
 PHONY += xuantie_rv32_defconfig
 xuantie_rv32_defconfig:
