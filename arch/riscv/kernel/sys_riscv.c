@@ -219,7 +219,7 @@ static void hwprobe_isa_ext1(struct riscv_hwprobe *pair,
 	 * doesn't have.
 	 */
 	for_each_cpu(cpu, cpus) {
-		/* struct riscv_isainfo *isainfo = &hart_isa[cpu]; */
+		struct riscv_isainfo *isainfo = &hart_isa[cpu];
 
 		/*
 		 * Only use EXT_KEY() for extensions which can be
@@ -227,7 +227,7 @@ static void hwprobe_isa_ext1(struct riscv_hwprobe *pair,
 		 * configuration, as no other checks, besides presence
 		 * in the hart_isa bitmap, are made.
 		 */
-		/* Nothing here yet */
+		EXT_KEY(ZICFISS);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
