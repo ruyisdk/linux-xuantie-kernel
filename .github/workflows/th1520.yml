@@ -23,6 +23,7 @@ env:
   TH1520_ROOT: root-lpi4amain-20240127_105111.ext4.zst
   TH1520_UBOOT_BASE_URL: https://github.com/revyos/thead-u-boot/releases/download/20240529/
   TH1520_UBOOT: u-boot-with-spl-lpi4a-main.bin
+  DEB_BUILD_PROFILES: pkg.linux-upstream.nokernelheaders
 
 jobs:
   kernel:
@@ -43,10 +44,11 @@ jobs:
       - name: Install software
         run: |
               sudo apt update && \
-              sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+              sudo apt install -y gdisk dosfstools g++-riscv64-linux-gnu build-essential \
                                   libncurses-dev gawk flex bison openssl libssl-dev tree \
-                                  dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf device-tree-compiler \
-                                  devscripts debhelper pahole qemu-user-static binfmt-support zstd ninja-build wget
+                                  dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf \
+                                  device-tree-compiler xz-utils devscripts ccache debhelper bc gcc-riscv64-linux-gnu \
+                                  pahole qemu-user-static binfmt-support zstd ninja-build wget libdw-dev
 
       - name: Checkout source
         uses: actions/checkout@v4
