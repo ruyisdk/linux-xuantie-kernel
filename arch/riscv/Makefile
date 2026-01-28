@@ -54,23 +54,7 @@ endif
 endif
 endif
 
-# ISA string setting
-riscv-march-$(CONFIG_ARCH_RV32I)	:= rv32ima
-riscv-march-$(CONFIG_ARCH_RV64I)	:= rv64ima
-riscv-march-$(CONFIG_ARCH_RV64ILP32)	:= rv64ima
-riscv-march-$(CONFIG_FPU)		:= $(riscv-march-y)fd
-riscv-march-$(CONFIG_RISCV_ISA_C)	:= $(riscv-march-y)c
-riscv-march-$(CONFIG_RISCV_ISA_V)	:= $(riscv-march-y)v
-
-ifdef CONFIG_TOOLCHAIN_NEEDS_OLD_ISA_SPEC
-KBUILD_CFLAGS += -Wa,-misa-spec=2.2
-KBUILD_AFLAGS += -Wa,-misa-spec=2.2
-else
-riscv-march-$(CONFIG_TOOLCHAIN_NEEDS_EXPLICIT_ZICSR_ZIFENCEI) := $(riscv-march-y)_zicsr_zifencei
-endif
-
-# XUANTIE ISA
-riscv-march-$(CONFIG_XUANTIE_ISA) := $(riscv-march-y)_xtheadc
+include $(srctree)/arch/riscv/Makefile.isa
 
 # Remove F,D from isa string for xuantie-toolchain (e.g. gcc-10.4).
 # Remove F,D,V from isa string for upstream-toolchain.

@@ -57,12 +57,22 @@
  */
 #define smp_mb__after_spinlock()	RISCV_FENCE(iorw,iorw)
 
+#ifdef CONFIG_ARCH_SOPHGO
 #define __smp_store_release(p, v)					\
 do {									\
 	compiletime_assert_atomic_type(*p);				\
 	RISCV_FENCE(rw, w);						\
 	WRITE_ONCE(*p, v);						\
+	RISCV_FENCE(w,rw);						\
 } while (0)
+#else
+#define __smp_store_release(p, v)					\
+do {									\
+	compiletime_assert_atomic_type(*p);				\
+	RISCV_FENCE(rw,w);						\
+	WRITE_ONCE(*p, v);						\
+} while (0)
+#endif
 
 #define __smp_load_acquire(p)						\
 ({									\
@@ -70,6 +80,18 @@ do {									\
 	compiletime_assert_atomic_type(*p);				\
 	RISCV_FENCE(r, rw);						\
 	___p1;								\
+})
+
+#define smp_cond_load_acquire(ptr, cond_expr) ({			\
+	typeof(ptr) __PTR = (ptr);					\
+	__unqual_scalar_typeof(*ptr) VAL;				\
+	for (;;) {							\
+		VAL = __smp_load_acquire(__PTR);			\
+		if (cond_expr)						\
+			break;						\
+		cpu_relax();						\
+	}								\
+	(typeof(*ptr))VAL;						\
 })
 
 #ifdef CONFIG_RISCV_ISA_ZAWRS
