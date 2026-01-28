@@ -16,6 +16,7 @@ env:
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc.tar.xz
   rv64ilp32_toolchain: https://github.com/ruyisdk/riscv-gnu-toolchain-rv64ilp32/releases/download/2025.01.16
   rv64ilp32_toolchain_file_name: riscv64ilp32-elf-ubuntu-22.04-gcc-nightly-2025.01.16-nightly.tar.gz
+  UPSTREAM_6_6_COMMITID: cbb31f77b879f2c1aeb5e9e69823982ef2e88efc # 6.6.121
 
 jobs:
   kernel-build:
@@ -104,11 +105,11 @@ jobs:
         run: |
               if [ x"${{ matrix.name }}" = x"linux-32ilp32-upstream" ] || [ x"${{ matrix.name }}" = x"linux-64lp64-upstream" ] ; then
                 cd ..
-                wget -qc https://github.com/torvalds/linux/archive/ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
-                tar zxf ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz
-                cp linux-xuantie-kernel/arch/riscv/configs/defconfig linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa/arch/riscv/configs/defconfig
+                wget -qc https://github.com/gregkh/linux/archive/${{ env.UPSTREAM_6_6_COMMITID }}.tar.gz
+                tar zxf ${{ env.UPSTREAM_6_6_COMMITID }}.tar.gz
+                cp linux-xuantie-kernel/arch/riscv/configs/defconfig linux-${{ env.UPSTREAM_6_6_COMMITID }}/arch/riscv/configs/defconfig
                 rm -rf linux-xuantie-kernel
-                mv linux-ffc253263a1375a65fa6c9f62a893e9767fbebfa linux-xuantie-kernel
+                mv linux-${{ env.UPSTREAM_6_6_COMMITID }} linux-xuantie-kernel
                 cd linux-xuantie-kernel
               fi
 
