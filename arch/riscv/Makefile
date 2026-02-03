@@ -226,7 +226,7 @@ rv64_randconfig:
 
 PHONY += rv32_defconfig
 rv32_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config tee.config
 
 PHONY += rv32_nommu_virt_defconfig
 rv32_nommu_virt_defconfig:
@@ -234,20 +234,20 @@ rv32_nommu_virt_defconfig:
 
 PHONY += rv64ilp32_defconfig
 rv64ilp32_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 64ilp32.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 64ilp32.config tee.config
 
 PHONY += xuantie_defconfig
 xuantie_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config HZ_12.config rv64_nonportable.config fs.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config HZ_12.config rv64_nonportable.config fs.config tee.config
 
 PHONY += xuantie_debug_defconfig
 xuantie_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config numa.config kvm_guest.config vdebug.config rv64_nonportable.config fs.config rv64_tso.config ftrace.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config numa.config kvm_guest.config vdebug.config rv64_nonportable.config fs.config rv64_tso.config ftrace.config tee.config
 
 PHONY += xuantie_rv32_defconfig
 xuantie_rv32_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config HZ_12.config fs.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config HZ_12.config fs.config tee.config
 
 PHONY += xuantie_rv32_debug_defconfig
 xuantie_rv32_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config xt_debug.config ftrace.config ebpf.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config xt_debug.config ftrace.config ebpf.config tee.config
