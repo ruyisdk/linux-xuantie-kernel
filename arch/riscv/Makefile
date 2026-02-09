@@ -238,16 +238,16 @@ rv64ilp32_defconfig:
 
 PHONY += xuantie_defconfig
 xuantie_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config HZ_12.config rv64_nonportable.config fs.config tee.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config HZ_12.config rv64_nonportable.config fs.config tee.config xt_test.config
 
 PHONY += xuantie_debug_defconfig
 xuantie_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config numa.config kvm_guest.config vdebug.config rv64_nonportable.config fs.config rv64_tso.config ftrace.config tee.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config vdpa.config vfio.config virtio_iommu.config sched.config numa.config kvm_guest.config vdebug.config rv64_nonportable.config fs.config rv64_tso.config ftrace.config tee.config xt_test.config
 
 PHONY += xuantie_rv32_defconfig
 xuantie_rv32_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config HZ_12.config fs.config tee.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config HZ_12.config fs.config tee.config xt_test.config
 
 PHONY += xuantie_rv32_debug_defconfig
 xuantie_rv32_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config xt_debug.config ftrace.config ebpf.config tee.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config xt_debug.config ftrace.config ebpf.config tee.config xt_test.config
