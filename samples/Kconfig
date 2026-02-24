@@ -291,6 +291,14 @@ config SAMPLE_RISCV_QOS
 	help
 	  Test RISCV QOS srmcfg.
 
+config SAMPLE_IPI_BENCHMARK
+	tristate "Test IPI performance on SMP systems"
+	depends on SMP
+	help
+	  Test IPI performance on SMP systems. If system has only one online
+	  CPU, sending IPI to other CPU is obviously not possible, and ENOENT
+	  is returned for corresponding test.
+
 source "samples/rust/Kconfig"
 
 endif # SAMPLES
