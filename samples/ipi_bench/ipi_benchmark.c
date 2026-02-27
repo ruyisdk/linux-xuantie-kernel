@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Copyright (C) 2019-2021 zhenwei pi pizhenwei@bytedance.com.
  */
@@ -273,13 +274,14 @@ static inline void ipi_bench_report_single(struct bench_args *ba)
 	if (elapsed > run_delay)
 		elapsed -= run_delay;
 
-	pr_info("ipi_bench: CPU [%3d] [NODE%d] -> CPU [%3d] [NODE%d],
-			wait [%d], loops [%d], forked [%ld], start [%ld],  \
-			finish [%ld], elapsed [%ld], ipitime [%ld], \
-			run delay [%ld] in ms, AVG call [%ld], ipi [%ld] in ns\n",
-		    src, cpu_to_node(src), dst, cpu_to_node(dst), wait, loops,
-			forked / 1000, start / 1000, finish / 1000, elapsed / 1000, ipitime / 1000,
-			run_delay / 1000, elapsed / loops, ipitime / loops);
+	pr_info("ipi_bench: CPU [%3d] [NODE%d] -> CPU [%3d] [NODE%d],",
+		    src, cpu_to_node(src), dst, cpu_to_node(dst));
+	pr_info("wait [%d], loops [%d], forked [%ld], start [%ld]",
+		    wait, loops, forked / 1000, start / 1000);
+	pr_info("finish [%ld], elapsed [%ld], ipitime [%ld],",
+			finish / 1000, elapsed / 1000, ipitime / 1000);
+	pr_info("run delay [%ld] in ms, AVG call [%ld], ipi [%ld] in ns\n",
+		    run_delay / 1000, elapsed / loops, ipitime / loops);
 }
 
 static inline void ipi_bench_report_all(struct bench_args *ba)
@@ -299,12 +301,12 @@ static inline void ipi_bench_report_all(struct bench_args *ba)
 	if (elapsed > run_delay)
 		elapsed -= run_delay;
 
-	pr_info("ipi_bench: CPU [%3d] [NODE%d] -> all CPUs, wait [%d],
-			loops [%d], forked [%ld], start [%ld], finish [%ld], \
-			elapsed [%ld], run delay [%ld] in ms, AVG call [%ld] in ns\n",
-			src, cpu_to_node(src), wait, loops,
-			forked / 1000, start / 1000, finish / 1000, elapsed / 1000,
-		    run_delay / 1000, elapsed / loops);
+	pr_info("ipi_bench: CPU [%3d] [NODE%d] -> all CPUs, wait [%d]",
+			src, cpu_to_node(src), wait);
+	pr_info("loops [%d], forked [%ld], start [%ld], finish [%ld],",
+			loops, forked / 1000, start / 1000, finish / 1000);
+	pr_info("elapsed [%ld], run delay [%ld] in ms, AVG call [%ld] in ns\n",
+			elapsed / 1000, run_delay / 1000, elapsed / loops);
 }
 
 static int ipi_bench_self(int src)
@@ -380,7 +382,7 @@ static int ipi_bench_mesh(int pairs, int acrossnuma)
 	int ret = -1, i, node = -1;
 
 	zalloc_cpumask_var(&cpumask, GFP_KERNEL);
-	bas = kcalloc(n, sizeof(*ba), GFP_KERNEL);
+	bas = kcalloc(pairs, sizeof(*ba), GFP_KERNEL);
 	if (!bas)
 		goto out;
 
@@ -436,7 +438,7 @@ static int ipi_bench_all(int broadcasts)
 	int ret = -1, i;
 
 	zalloc_cpumask_var(&cpumask, GFP_KERNEL);
-	bas = kcalloc(n, sizeof(*ba), GFP_KERNEL);
+	bas = kcalloc(broadcasts, sizeof(*ba), GFP_KERNEL);
 	if (!bas) {
 		pr_info("ipi_bench: no enough memory\n");
 		goto out;
