@@ -119,7 +119,7 @@ _save_context:
 	add t0, t1, t0
 	/* Check if exception code lies within bounds */
 	bgeu t0, t2, 3f
-	REG_L t1, 0(t0)
+	PTR_L t1, 0(t0)
 2:
 	jalr t1
 	j ret_from_exception
