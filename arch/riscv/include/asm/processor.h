@@ -14,7 +14,6 @@
 
 #include <asm/ptrace.h>
 #include <asm/hwcap.h>
-#include <asm/hw_breakpoint.h>
 
 /*
  * addr is a hint to the maximum userspace address that mmap should provide, so
@@ -78,7 +77,6 @@
 #ifndef __ASSEMBLY__
 
 struct task_struct;
-struct perf_event;
 struct pt_regs;
 
 /*
@@ -105,11 +103,6 @@ struct thread_struct {
 #ifdef CONFIG_XUANTIE_CSR_EXT
 	u32 fxcr;
 	u32 utnmode;
-#endif
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-	struct perf_event *ptrace_bps[HW_BP_NUM_MAX];
-	struct arch_hw_breakpoint hbp_break[HW_BP_NUM_MAX];
-	struct arch_hw_breakpoint hbp_watch[HW_BP_NUM_MAX];
 #endif
 #ifdef CONFIG_DYNAMIC_MEMORY_CONSISTENCY_MODEL
 	unsigned long memory_consistency_model;

@@ -16,7 +16,6 @@
 #include <linux/tick.h>
 #include <linux/ptrace.h>
 #include <linux/uaccess.h>
-#include <linux/hw_breakpoint.h>
 
 #include <asm/unistd.h>
 #include <asm/processor.h>
@@ -174,9 +173,6 @@ void flush_thread(void)
 		current->thread_info.pmlen = 0;
 	}
 #endif
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-	flush_ptrace_hw_breakpoint(current);
-#endif
 }
 
 void arch_release_task_struct(struct task_struct *tsk)
@@ -213,9 +209,6 @@ int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 	/* Ensure all threads in this mm have the same pointer masking mode. */
 	if (p->mm && (clone_flags & CLONE_VM))
 		set_bit(MM_CONTEXT_LOCK_PMLEN, &p->mm->context.flags);
-#endif
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-	clear_ptrace_hw_breakpoint(p);
 #endif
 
 	memset(&p->thread.s, 0, sizeof(p->thread.s));

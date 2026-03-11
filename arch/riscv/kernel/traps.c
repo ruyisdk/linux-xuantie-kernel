@@ -272,24 +272,12 @@ void handle_break(struct pt_regs *regs)
 	if (probe_breakpoint_handler(regs))
 		return;
 
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-#ifdef CONFIG_KGDB
-	if (!kgdb_io_module_registered && notify_die(DIE_DEBUG, "EBREAK", regs, 0, regs->cause, SIGTRAP)
-	    == NOTIFY_STOP)
-		return;
-#else
-	if (notify_die(DIE_DEBUG, "EBREAK", regs, 0, regs->cause, SIGTRAP)
-	    == NOTIFY_STOP)
-		return;
-#endif
-#endif
-
 	current->thread.bad_cause = regs->cause;
 
 	if (user_mode(regs))
 		force_sig_fault(SIGTRAP, TRAP_BRKPT, (void __user *)instruction_pointer(regs));
 #ifdef CONFIG_KGDB
-	else if (kgdb_io_module_registered && notify_die(DIE_TRAP, "EBREAK", regs, 0, regs->cause, SIGTRAP)
+	else if (notify_die(DIE_TRAP, "EBREAK", regs, 0, regs->cause, SIGTRAP)
 								== NOTIFY_STOP)
 		return;
 #endif

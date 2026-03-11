@@ -19,7 +19,6 @@
 #include <linux/regset.h>
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
-#include <linux/hw_breakpoint.h>
 #include <asm/usercfi.h>
 
 enum riscv_regset {
@@ -35,10 +34,6 @@ enum riscv_regset {
 #endif
 #ifdef CONFIG_RISCV_USER_CFI
 	REGSET_CFI,
-#endif
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-	REGSET_HW_BREAK,
-	REGSET_HW_WATCH,
 #endif
 };
 
@@ -269,219 +264,6 @@ static int riscv_cfi_set(struct task_struct *target,
 }
 #endif
 
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-static void ptrace_hbptriggered(struct perf_event *bp,
-				struct perf_sample_data *data,
-				struct pt_regs *regs)
-{
-	struct arch_hw_breakpoint *bkpt = counter_arch_bp(bp);
-
-	force_sig_fault(SIGTRAP, TRAP_HWBKPT, (void __user *)bkpt->addr);
-}
-
-static int hw_break_get(struct task_struct *target,
-			const struct user_regset *regset,
-			struct membuf to)
-{
-	/* send total number of h/w debug triggers */
-	struct user_hwdebug_state hw_state;
-
-	hw_state.dbg_slots = hw_breakpoint_slots(regset->core_note_type);
-	membuf_write(&to, &hw_state, sizeof(hw_state));
-
-	return 0;
-}
-
-static inline int hw_break_empty(u64 addr, u64 type, u64 len)
-{
-	/* TODO: for now adjusted to current riscv-gdb behavior */
-	return (!addr && !len);
-}
-
-static int hw_break_cache_trigger(struct task_struct *target, u32 note_type,
-				  u64 addr, u64 type, u64 len, u32 idx)
-{
-	struct arch_hw_breakpoint *bp;
-	u64 bp_type;
-	u64 bp_len;
-
-	if (!hw_break_empty(addr, type, len)) {
-		/* bp len: gdb to kernel */
-		switch (len) {
-		case 2:
-			bp_len = HW_BREAKPOINT_LEN_2;
-			break;
-		case 4:
-			bp_len = HW_BREAKPOINT_LEN_4;
-			break;
-		case 8:
-			bp_len = HW_BREAKPOINT_LEN_8;
-			break;
-		default:
-			pr_warn("%s: unsupported len: %llu\n", __func__, len);
-			return -EINVAL;
-		}
-
-		/* bp type: gdb to kernel */
-		switch (type) {
-		case 0:
-			bp_type = HW_BREAKPOINT_X;
-			break;
-		case 1:
-			bp_type = HW_BREAKPOINT_R;
-			break;
-		case 2:
-			bp_type = HW_BREAKPOINT_W;
-			break;
-		case 3:
-			bp_type = HW_BREAKPOINT_RW;
-			break;
-		default:
-			pr_warn("%s: unsupported type: %llu\n", __func__, type);
-			return -EINVAL;
-		}
-	}
-
-	if (note_type == NT_RISCV_HW_BREAK)
-		bp = &(target->thread.hbp_break[idx]);
-	if (note_type == NT_RISCV_HW_WATCH)
-		bp = &(target->thread.hbp_watch[idx]);
-
-	bp->addr = addr;
-	bp->type = bp_type;
-	bp->len = bp_len;
-
-	return 0;
-}
-
-static int hw_break_register_trigger(struct task_struct *target, u32 note_type,
-				  u64 addr, u64 type, u64 len, u32 idx)
-{
-	struct perf_event *bp = ERR_PTR(-EINVAL);
-	struct perf_event_attr attr;
-
-	bp = target->thread.ptrace_bps[idx];
-	if (bp) {
-		attr = bp->attr;
-
-		if (hw_break_empty(addr, type, len)) {
-			attr.disabled = 1;
-		} else {
-			attr.bp_addr = addr;
-			attr.bp_type = type;
-			attr.bp_len = len;
-			attr.disabled = 0;
-		}
-
-		return modify_user_hw_breakpoint(bp, &attr);
-	}
-
-	ptrace_breakpoint_init(&attr);
-	attr.bp_addr = addr;
-	attr.bp_type = type;
-	attr.bp_len = len;
-
-	bp = register_user_hw_breakpoint(&attr, ptrace_hbptriggered,
-					 NULL, target);
-	if (IS_ERR(bp)) {
-		pr_err("%s failed! ret=%ld\n", __func__, PTR_ERR(bp));
-		return PTR_ERR(bp);
-	}
-
-	target->thread.ptrace_bps[idx] = bp;
-
-	return 0;
-}
-
-static int hw_break_setup_trigger(struct task_struct *target)
-{
-	u32 i, idx = 0;
-
-	flush_ptrace_hw_breakpoint(target);
-
-	for (i = 0; i < HW_BP_NUM_MAX; i++) {
-		if (target->thread.hbp_break[i].addr) {
-			hw_break_register_trigger(target, NT_RISCV_HW_BREAK,
-				target->thread.hbp_break[i].addr,
-				target->thread.hbp_break[i].type,
-				target->thread.hbp_break[i].len, idx);
-			idx++;
-		}
-	}
-
-	for (i = 0; i < HW_BP_NUM_MAX; i++) {
-		if (target->thread.hbp_watch[i].addr) {
-			hw_break_register_trigger(target, NT_RISCV_HW_WATCH,
-				target->thread.hbp_watch[i].addr,
-				target->thread.hbp_watch[i].type,
-				target->thread.hbp_watch[i].len, idx);
-			idx++;
-		}
-	}
-
-	return idx;
-}
-
-static int hw_break_set(struct task_struct *target,
-			const struct user_regset *regset,
-			unsigned int pos, unsigned int count,
-			const void *kbuf, const void __user *ubuf)
-{
-	int ret, idx = 0, offset, limit, note_type;
-	u64 addr;
-	u64 type;
-	u64 size;
-
-#define PTRACE_HBP_ADDR_SZ	sizeof(u64)
-#define PTRACE_HBP_TYPE_SZ	sizeof(u64)
-#define PTRACE_HBP_SIZE_SZ	sizeof(u64)
-
-	note_type = regset->core_note_type; // NT_RISCV_HW_BREAK(0x904) | NT_RISCV_HW_WATCH(0x905)
-
-	/* Resource info and pad */
-	offset = offsetof(struct user_hwdebug_state, dbg_regs);
-	user_regset_copyin_ignore(&pos, &count, &kbuf, &ubuf, 0, offset);
-
-	/* trigger settings */
-	limit = regset->n * regset->size;
-	while (count && offset < limit) {
-		if (count <= PTRACE_HBP_ADDR_SZ)
-			return -EINVAL;
-
-		ret = user_regset_copyin(&pos, &count, &kbuf, &ubuf, &addr,
-					 offset, offset + PTRACE_HBP_ADDR_SZ);
-		if (ret)
-			return ret;
-
-		offset += PTRACE_HBP_ADDR_SZ;
-
-		ret = user_regset_copyin(&pos, &count, &kbuf, &ubuf, &type,
-					 offset, offset + PTRACE_HBP_TYPE_SZ);
-		if (ret)
-			return ret;
-
-		offset += PTRACE_HBP_TYPE_SZ;
-
-		ret = user_regset_copyin(&pos, &count, &kbuf, &ubuf, &size,
-					 offset, offset + PTRACE_HBP_SIZE_SZ);
-		if (ret)
-			return ret;
-
-		offset += PTRACE_HBP_SIZE_SZ;
-
-		ret = hw_break_cache_trigger(target, note_type, addr, type, size, idx);
-		if (ret)
-			return ret;
-
-		idx++;
-	}
-
-	hw_break_setup_trigger(target);
-
-	return 0;
-}
-#endif
-
 static const struct user_regset riscv_user_regset[] = {
 	[REGSET_X] = {
 		.core_note_type = NT_PRSTATUS,
@@ -530,24 +312,6 @@ static const struct user_regset riscv_user_regset[] = {
 		.size = sizeof(__u64),
 		.regset_get = riscv_cfi_get,
 		.set = riscv_cfi_set,
-	},
-#endif
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-	[REGSET_HW_BREAK] = {
-		.core_note_type = NT_RISCV_HW_BREAK,
-		.n = sizeof(struct user_hwdebug_state) / sizeof(u32),
-		.size = sizeof(u32),
-		.align = sizeof(u32),
-		.regset_get = hw_break_get,
-		.set = hw_break_set,
-	},
-	[REGSET_HW_WATCH] = {
-		.core_note_type = NT_RISCV_HW_WATCH,
-		.n = sizeof(struct user_hwdebug_state) / sizeof(u32),
-		.size = sizeof(u32),
-		.align = sizeof(u32),
-		.regset_get = hw_break_get,
-		.set = hw_break_set,
 	},
 #endif
 };
