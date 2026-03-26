@@ -111,7 +111,6 @@ do {							\
 	__switch_to_envcfg(__next);			\
 	qos_sched_in(__next);				\
 	((last) = __switch_to(__prev, __next));		\
-	qos_sched_in(__next);				\
 } while (0)
 
 #endif /* _ASM_RISCV_SWITCH_TO_H */
