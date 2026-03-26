@@ -33,9 +33,9 @@
 #define MISALIGNED_BUFFER_SIZE 0x4000
 #define MISALIGNED_COPY_SIZE ((MISALIGNED_BUFFER_SIZE / 2) - 0x80)
 
-static bool any_cpu_has_zicboz __initdata;
+static bool any_cpu_has_zicboz;
 static bool any_cpu_has_zicbop;
-static bool any_cpu_has_zicbom __initdata;
+static bool any_cpu_has_zicbom;
 
 unsigned long elf_hwcap __read_mostly;
 
