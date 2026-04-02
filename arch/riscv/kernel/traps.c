@@ -37,6 +37,14 @@ int show_unhandled_signals = 1;
 
 static DEFINE_SPINLOCK(die_lock);
 
+static bool param_riscv_v_vstate_discard __read_mostly;
+static int __init parse_riscv_v_vstate_discard(char *arg)
+{
+	param_riscv_v_vstate_discard = true;
+	return 0;
+}
+early_param("riscv_v_vstate_discard", parse_riscv_v_vstate_discard);
+
 static void dump_kernel_instr(const char *loglvl, struct pt_regs *regs)
 {
 	char str[sizeof("0000 ") * 12 + 2 + 1], *p = str;
@@ -313,7 +321,8 @@ asmlinkage __visible __trap_section void do_trap_ecall_u(struct pt_regs *regs)
 		regs->epc += 4;
 		regs->orig_a0 = regs->a0;
 
-		riscv_v_vstate_discard(regs);
+		if (param_riscv_v_vstate_discard)
+			riscv_v_vstate_discard(regs);
 
 		syscall = syscall_enter_from_user_mode(regs, syscall);
 
