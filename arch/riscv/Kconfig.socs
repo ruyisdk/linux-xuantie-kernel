@@ -75,6 +75,7 @@ config SOC_VIRT
 
 config ARCH_CANAAN
 	bool "Canaan Kendryte SoC"
+	select DRM if RISCV
 	help
 	  This enables support for Canaan Kendryte series SoC platform hardware.
 
