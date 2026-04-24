@@ -149,8 +149,7 @@ SYM_FUNC_START(ftrace_caller)
 	mv	a1, ra
 	mv	a3, sp
 
-ftrace_call:
-	.global ftrace_call
+SYM_INNER_LABEL(ftrace_call, SYM_L_GLOBAL)
 	call	ftrace_stub
 
 #ifdef CONFIG_FUNCTION_GRAPH_TRACER
@@ -160,8 +159,7 @@ ftrace_call:
 #ifdef HAVE_FUNCTION_GRAPH_FP_TEST
 	mv	a2, s0
 #endif
-ftrace_graph_call:
-	.global ftrace_graph_call
+SYM_INNER_LABEL(ftrace_graph_call, SYM_L_GLOBAL)
 	call	ftrace_stub
 #endif
 	RESTORE_ABI
