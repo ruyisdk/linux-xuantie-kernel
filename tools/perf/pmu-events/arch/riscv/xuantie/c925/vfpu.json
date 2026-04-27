@@ -1,0 +1,177 @@
+[
+    {
+        "EventName": "vfpu_ex1_rep",
+        "EventCode": "0x00000059",
+        "BriefDescription": "Number of inst replayed in VFPU EX1 stage"
+    },
+    {
+        "EventName": "topdown.backend_bound.core.rvv_stall",
+        "EventCode": "0x0000005a",
+        "BriefDescription": "Number of stall cycles caused by vfpu blocking execution instructions"
+    },
+    {
+        "EventName": "inst.sca.fp.arith.spec",
+        "EventCode": "0x0000005b",
+        "BriefDescription": "Number of executed scalar floating-point instructions"
+    },
+    {
+        "EventName": "inst.fp.arith.half.spec",
+        "EventCode": "0x0000005c",
+        "BriefDescription": "Number of executed half-precision scalar floating-point micro-instructions"
+    },
+    {
+        "EventName": "inst.fp.arith.single.spec",
+        "EventCode": "0x0000005d",
+        "BriefDescription": "Number of executed single-precision scalar floating-point micro-instructions"
+    },
+    {
+        "EventName": "inst.fp.arith.double.spec",
+        "EventCode": "0x0000005e",
+        "BriefDescription": "Number of executed double-precision scalar floating-point micro-instructions"
+    },
+    {
+        "EventName": "inst.rvv.arith.spec",
+        "EventCode": "0x0000005f",
+        "BriefDescription": "Number of executed vector macro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.spec",
+        "EventCode": "0x00000060",
+        "BriefDescription": "Number of executed vector micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.fp.spec",
+        "EventCode": "0x00000061",
+        "BriefDescription": "Number of executed vector floating-point micro-instructions"
+    },
+    {
+        "EventName": "inst.rvv.arith.fp.spec",
+        "EventCode": "0x00000062",
+        "BriefDescription": "Number of executed vector floating-point macro-instructions"
+    },
+    {
+        "EventName": "uop.sca.fp.arith.bf.spec",
+        "EventCode": "0x00000063",
+        "BriefDescription": "Number of executed bfloat16 micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.vint8.spec",
+        "EventCode": "0x00000064",
+        "BriefDescription": "Number of vector micro-instructions executed with source operands of type int8"
+    },
+    {
+        "EventName": "uop.rvv.arith.vint16.spec",
+        "EventCode": "0x00000065",
+        "BriefDescription": "Number of vector micro-instructions executed with source operands of type int16"
+    },
+    {
+        "EventName": "uop.rvv.arith.vint32.spec",
+        "EventCode": "0x00000066",
+        "BriefDescription": "Number of vetor micro-instructions executed with source operands of type int32"
+    },
+    {
+        "EventName": "uop.rvv.arith.vint64.spec",
+        "EventCode": "0x00000067",
+        "BriefDescription": "Number of vector micro-instructions executed with source operands of type int64"
+    },
+    {
+        "EventName": "uop.rvv.arith.fix_point.spec",
+        "EventCode": "0x00000068",
+        "BriefDescription": "Number of executed fixed-point micro-instructions"
+    },
+    {
+        "EventName": "uop.fp.arith.fdiv.spec",
+        "EventCode": "0x00000069",
+        "BriefDescription": "Number of executed floting-point division micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.idiv.spec",
+        "EventCode": "0x0000006a",
+        "BriefDescription": "Number of executed integer division micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.zvkn.spec",
+        "EventCode": "0x0000006b",
+        "BriefDescription": "Number of executed ZVKN-extension micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.zvks.spec",
+        "EventCode": "0x0000006c",
+        "BriefDescription": "Number of executed ZVKS-extension micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.vmulu64.spec",
+        "EventCode": "0x0000006d",
+        "BriefDescription": "Number of micro-instructions executed in vector 64-bit integer multiplication unit"
+    },
+    {
+        "EventName": "uop.rvv.arith.vmulu.spec",
+        "EventCode": "0x0000006e",
+        "BriefDescription": "Number of micro-instructions executed in vector integer multiplication unit"
+    },
+    {
+        "EventName": "uop.rvv.arith.vdot.spec",
+        "EventCode": "0x0000006f",
+        "BriefDescription": "Number of executed RISC-V and Xuantie dot-extension micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.vfmul.spec",
+        "EventCode": "0x00000070",
+        "BriefDescription": "Number of executed floating-point multiplication micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.vfadd.spec",
+        "EventCode": "0x00000071",
+        "BriefDescription": "Number of executed floating-point addition micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.perm.spec",
+        "EventCode": "0x00000072",
+        "BriefDescription": "Number of executed permutation micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.redu.spec",
+        "EventCode": "0x00000073",
+        "BriefDescription": "Number of executed integer reduction micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.fred.spec",
+        "EventCode": "0x00000074",
+        "BriefDescription": "Number of executed floating-point reduction micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.mask.spec",
+        "EventCode": "0x00000075",
+        "BriefDescription": "Number of executed vector masked micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.arith.vlmax.spec",
+        "EventCode": "0x00000076",
+        "BriefDescription": "Number of vector micro-instructions excuted with max number of element"
+    },
+    {
+        "EventName": "uop.rvv.arith.agnostic.spec",
+        "EventCode": "0x00000077",
+        "BriefDescription": "Number of vector micro-instructions excuted with agnostic policy"
+    },
+    {
+        "EventName": "uop.rvv.arith.idiv_direct.spec",
+        "EventCode": "0x00000078",
+        "BriefDescription": "Number of vector integer division micro-instructions producing special value types"
+    },
+    {
+        "EventName": "uop.rvv.vadd.spec",
+        "EventCode": "0x000000ae",
+        "BriefDescription": "Number of executed vector integer addition micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.vmacc.spec",
+        "EventCode": "0x000000af",
+        "BriefDescription": "Number of executed vector integer multiply-add micro-instructions"
+    },
+    {
+        "EventName": "uop.rvv.vfmacc.spec",
+        "EventCode": "0x000000b0",
+        "BriefDescription": "Number of executed vector floating-point multiply-add micro-instructions"
+    }
+]

@@ -1,0 +1,182 @@
+[
+    {
+        "EventName": "topdown.backend_bound.memory.store.l2_miss",
+        "EventCode": "0x00000079",
+        "BriefDescription": "store l2 miss and results in issue block"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.store.l1_miss",
+        "EventCode": "0x0000007a",
+        "BriefDescription": "store l1 miss and results in issue block"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.load.l2_miss",
+        "EventCode": "0x0000007b",
+        "BriefDescription": "load l2 miss and results in issue block"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.load.l1_miss",
+        "EventCode": "0x0000007c",
+        "BriefDescription": "load l1 miss and results in issue block"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.load.struct_hazard",
+        "EventCode": "0x0000007d",
+        "BriefDescription": "load struct hazards and results in issue block"
+    },
+    {
+        "EventName": "topdown.bad_speculation.rar_hazard_early_flush",
+        "EventCode": "0x0000007e",
+        "BriefDescription": "rar hazard results in early flush"
+    },
+    {
+        "EventName": "topdown.bad_speculation.rar_hazard_abnr_flush",
+        "EventCode": "0x0000007f",
+        "BriefDescription": "rar hazard results in retire flush"
+    },
+    {
+        "EventName": "topdown.bad_speculation.raw_hazard_early_flush",
+        "EventCode": "0x00000080",
+        "BriefDescription": "raw hazard results in early flush"
+    },
+    {
+        "EventName": "topdown.bad_speculation.raw_hazard_abnr_flush",
+        "EventCode": "0x00000081",
+        "BriefDescription": "raw hazard results in retire flush"
+    },
+    {
+        "EventName": "inst.load.unalign",
+        "EventCode": "0x00000083",
+        "BriefDescription": "load unalign split"
+    },
+    {
+        "EventName": "inst.store.unalign",
+        "EventCode": "0x00000084",
+        "BriefDescription": "store unalign split"
+    },
+    {
+        "EventName": "cache.l1d.wr.access",
+        "EventCode": "0x0000008a",
+        "BriefDescription": "store access l1 dcache"
+    },
+    {
+        "EventName": "cache.l1d.wr.miss",
+        "EventCode": "0x0000008b",
+        "BriefDescription": "store l1 dcache miss"
+    },
+    {
+        "EventName": "cache.l1d.refill.inner",
+        "EventCode": "0x0000008c",
+        "BriefDescription": "l1 dcache miss and l2c hit"
+    },
+    {
+        "EventName": "cache.l1d.refill.outer",
+        "EventCode": "0x0000008d",
+        "BriefDescription": "l1 dcache miss and l2c miss"
+    },
+    {
+        "EventName": "cache.l1d.wb",
+        "EventCode": "0x0000008e",
+        "BriefDescription": "l1 dcache dirty line eviction"
+    },
+    {
+        "EventName": "cache.l1d.wb.victim",
+        "EventCode": "0x0000008f",
+        "BriefDescription": "l1 dcache dirty line evicted by new cache line refill"
+    },
+    {
+        "EventName": "cache.l1d.wb.clean",
+        "EventCode": "0x00000090",
+        "BriefDescription": "l1 dcache dirty line evicted by cmo or snoop"
+    },
+    {
+        "EventName": "cache.l1d.inval",
+        "EventCode": "0x00000091",
+        "BriefDescription": "l1 dcache line invalidated by cmo or snoop"
+    },
+    {
+        "EventName": "inst.ldst.load.spec",
+        "EventCode": "0x00000092",
+        "BriefDescription": "load inst, not include prefetch"
+    },
+    {
+        "EventName": "inst.ldst.store.spec",
+        "EventCode": "0x00000093",
+        "BriefDescription": "store inst, not include cmo"
+    },
+    {
+        "EventName": "inst.ldst.lr.spec",
+        "EventCode": "0x00000094",
+        "BriefDescription": "lr inst"
+    },
+    {
+        "EventName": "inst.ldst.sc",
+        "EventCode": "0x00000095",
+        "BriefDescription": "sc inst"
+    },
+    {
+        "EventName": "inst.ldst.sc.pass",
+        "EventCode": "0x00000096",
+        "BriefDescription": "sc pass"
+    },
+    {
+        "EventName": "inst.ldst.sc.fail",
+        "EventCode": "0x00000097",
+        "BriefDescription": "sc fail"
+    },
+    {
+        "EventName": "inst.ldst.amo",
+        "EventCode": "0x00000098",
+        "BriefDescription": "amo inst"
+    },
+    {
+        "EventName": "inst.ldst.load_acquire.spec",
+        "EventCode": "0x00000099",
+        "BriefDescription": "load acquire inst"
+    },
+    {
+        "EventName": "inst.ldst.store_release.spec",
+        "EventCode": "0x0000009a",
+        "BriefDescription": "store release inst"
+    },
+    {
+        "EventName": "inst.ldst.fence",
+        "EventCode": "0x0000009b",
+        "BriefDescription": "fence inst"
+    },
+    {
+        "EventName": "inst.ldst.fencei",
+        "EventCode": "0x0000009c",
+        "BriefDescription": "fencei inst"
+    },
+    {
+        "EventName": "inst.ldst.dvm_sync",
+        "EventCode": "0x0000009d",
+        "BriefDescription": "dvm sync inst"
+    },
+    {
+        "EventName": "inst.ldst.vec_load.spec",
+        "EventCode": "0x0000009e",
+        "BriefDescription": "vector load inst(each split inst counts 1)"
+    },
+    {
+        "EventName": "inst.ldst.vec_store.spec",
+        "EventCode": "0x0000009f",
+        "BriefDescription": "vector store inst(each split inst counts 1)"
+    },
+    {
+        "EventName": "inst.ldst.float_load.spec",
+        "EventCode": "0x000000a0",
+        "BriefDescription": "float load inst"
+    },
+    {
+        "EventName": "inst.ldst.float_store.spec",
+        "EventCode": "0x000000a1",
+        "BriefDescription": "float store inst"
+    },
+    {
+        "EventName": "inst.ldst.spec",
+        "EventCode": "0x000000b3",
+        "BriefDescription": "lsu inst cmplt num"
+    }
+]

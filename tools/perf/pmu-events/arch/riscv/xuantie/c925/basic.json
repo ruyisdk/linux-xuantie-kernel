@@ -1,0 +1,117 @@
+[
+    {
+        "EventName": "cycles.hart",
+        "EventCode": "0x00000001",
+        "BriefDescription": "cpu execute cycle"
+    },
+    {
+        "EventName": "inst.ret",
+        "EventCode": "0x00000002",
+        "BriefDescription": "inst retire num"
+    },
+    {
+        "EventName": "inst.brjmp.spec",
+        "EventCode": "0x00000003",
+        "BriefDescription": "speculative execute br num"
+    },
+    {
+        "EventName": "inst.mispred.brjmp.spec",
+        "EventCode": "0x00000004",
+        "BriefDescription": "speculative execute br mispred num"
+    },
+    {
+        "EventName": "cache.l1i.rd.access",
+        "EventCode": "0x00000005",
+        "BriefDescription": "l1 icache acc num"
+    },
+    {
+        "EventName": "cache.l1i.rd.miss",
+        "EventCode": "0x00000006",
+        "BriefDescription": "l1 icache acc miss num"
+    },
+    {
+        "EventName": "cache.l1d.rd.access",
+        "EventCode": "0x00000007",
+        "BriefDescription": "l1 dcache load acc num"
+    },
+    {
+        "EventName": "cache.l1d.rd.miss",
+        "EventCode": "0x00000008",
+        "BriefDescription": "l1 dcache load acc miss num"
+    },
+    {
+        "EventName": "tlb.l1i.access",
+        "EventCode": "0x00000009",
+        "BriefDescription": "itlb acc num"
+    },
+    {
+        "EventName": "tlb.l1i.miss",
+        "EventCode": "0x0000000a",
+        "BriefDescription": "itlb acc miss num"
+    },
+    {
+        "EventName": "tlb.l1d.access",
+        "EventCode": "0x0000000b",
+        "BriefDescription": "dtlb acc num"
+    },
+    {
+        "EventName": "tlb.l1d.miss",
+        "EventCode": "0x0000000c",
+        "BriefDescription": "dtlb acc miss num"
+    },
+    {
+        "EventName": "tlb.pf.access",
+        "EventCode": "0x0000000d",
+        "BriefDescription": "ptlb acc num"
+    },
+    {
+        "EventName": "tlb.pf.miss",
+        "EventCode": "0x0000000e",
+        "BriefDescription": "ptlb acc miss num"
+    },
+    {
+        "EventName": "cache.l2.access",
+        "EventCode": "0x0000000f",
+        "BriefDescription": "l2 acc num"
+    },
+    {
+        "EventName": "cache.l2.miss",
+        "EventCode": "0x00000010",
+        "BriefDescription": "l2 acc miss num"
+    },
+    {
+        "EventName": "uop.spec",
+        "EventCode": "0x00000011",
+        "BriefDescription": "rename stage issue slots num"
+    },
+    {
+        "EventName": "topdown.frontend_bound.slots",
+        "EventCode": "0x00000012",
+        "BriefDescription": "rename stage no stall and no in recovery, rename stage bubble slot num"
+    },
+    {
+        "EventName": "topdown.bad_speculation.recovery_bubbles",
+        "EventCode": "0x00000013",
+        "BriefDescription": "backend flush, rename stage stall cycle num"
+    },
+    {
+        "EventName": "topdown.frontend_bound.latency.slots",
+        "EventCode": "0x00000014",
+        "BriefDescription": "rename stage no stall, frontend waste slots num"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.load",
+        "EventCode": "0x00000015",
+        "BriefDescription": "issue queue full, and exist inflight load cycle num"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.store",
+        "EventCode": "0x00000016",
+        "BriefDescription": "issue queue full, and exist inflight store cycle num"
+    },
+    {
+        "EventName": "uop.ret",
+        "EventCode": "0x00000017",
+        "BriefDescription": "retire uop num"
+    }
+]

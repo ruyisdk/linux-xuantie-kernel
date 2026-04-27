@@ -1,0 +1,62 @@
+[
+    {
+        "EventName": "inst.mispred.branch",
+        "EventCode": "0x00000018",
+        "BriefDescription": "speculative cond br mispred num"
+    },
+    {
+        "EventName": "inst.mispred.uncond_branch",
+        "EventCode": "0x00000019",
+        "BriefDescription": "speculative uncond br mispred num"
+    },
+    {
+        "EventName": "inst.mispred.ind",
+        "EventCode": "0x0000001a",
+        "BriefDescription": "speculative indir mispred num"
+    },
+    {
+        "EventName": "inst.mispred.ret",
+        "EventCode": "0x0000001b",
+        "BriefDescription": "speculative return mispred num"
+    },
+    {
+        "EventName": "inst.brjmp.branch.spec",
+        "EventCode": "0x0000001c",
+        "BriefDescription": "speculative execute cond br num"
+    },
+    {
+        "EventName": "inst.brjmp.uncond_branch.spec",
+        "EventCode": "0x0000001d",
+        "BriefDescription": "speculative execute uncond br num"
+    },
+    {
+        "EventName": "inst.brjmp.ind.spec",
+        "EventCode": "0x0000001e",
+        "BriefDescription": "speculative execute indir br num"
+    },
+    {
+        "EventName": "inst.brjmp.ret.spec",
+        "EventCode": "0x0000001f",
+        "BriefDescription": "speculative execute return num"
+    },
+    {
+        "EventName": "inst.brjmp.branch.tk",
+        "EventCode": "0x00000020",
+        "BriefDescription": "speculative br taken num"
+    },
+    {
+        "EventName": "cache.l1i.rd.miss.latency",
+        "EventCode": "0x000000b8",
+        "BriefDescription": "stall cycle because of l1 icache miss"
+    },
+    {
+        "EventName": "tlb.l1i.miss.latency",
+        "EventCode": "0x000000b9",
+        "BriefDescription": "stall cycle because of l1 itle miss"
+    },
+    {
+        "EventName": "inst.mispred.brjmp.latency",
+        "EventCode": "0x000000ba",
+        "BriefDescription": "stall cycle because of br miss"
+    }
+]

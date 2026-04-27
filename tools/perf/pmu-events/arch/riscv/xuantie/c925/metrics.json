@@ -1,6 +1,6 @@
 [
     {
-        "MetricExpr": "(topdown.frontend_bound.slots - topdown.bad_speculation.recovery_bubbles * 6) / topdown.slots ",
+        "MetricExpr": "(topdown.frontend_bound.slots - topdown.bad_speculation.recovery_bubbles * 4) / topdown.slots ",
         "PublicDescription": "Fraction of slots unused due to the frontend's inability to supply enough uops",
         "BriefDescription": "Fraction of slots unused due to the frontend's inability to supply enough uops",
         "CommonMetricgroupName": "TopdownL1",
@@ -8,7 +8,7 @@
         "MetricName": "topdown.frontend_bound.rate"
     },
     {
-        "MetricExpr": "(uop.spec - uop.ret + topdown.bad_speculation.recovery_bubbles * 6) / topdown.slots",
+        "MetricExpr": "(uop.spec - uop.ret + topdown.bad_speculation.recovery_bubbles * 4) / topdown.slots",
         "PublicDescription": "Fraction of slots wasted due to incorrect speculations",
         "BriefDescription": "Fraction of slots wasted due to incorrect speculations",
         "CommonMetricgroupName": "TopdownL1",
@@ -417,7 +417,7 @@
         "MetricName": "topdown.backend_bound.memory.store_bound.rate"
     },
     {
-        "MetricExpr": "cycles.hart * 6",
+        "MetricExpr": "cycles.hart * 4",
         "PublicDescription": "Total slots",
         "BriefDescription": "Total slots",
         "MetricGroup": "Common",
@@ -564,7 +564,7 @@
         "MetricName": "bus.wr.rate"
     },
     {
-        "MetricExpr": "rc6 * 6 / topdown.frontend_bound.latency.slots",
+        "MetricExpr": "rc6 * 4 / topdown.frontend_bound.latency.slots",
         "PublicDescription": "Frontend MPR bubble stall rate",
         "BriefDescription": "Frontend MPR bubble stall rate",
         "MetricGroup": "Common",

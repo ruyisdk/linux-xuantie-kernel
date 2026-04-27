@@ -1,0 +1,87 @@
+[
+    {
+        "EventName": "cache.l2.wb",
+        "EventCode": "0x000000a2",
+        "BriefDescription": "l2 cache wb number, dirty snpresp data included."
+    },
+    {
+        "EventName": "cache.l2.rd",
+        "EventCode": "0x000000a3",
+        "BriefDescription": "l2 cache read access."
+    },
+    {
+        "EventName": "cache.l2.wr",
+        "EventCode": "0x000000a4",
+        "BriefDescription": "l2 cache store miss req from lsu."
+    },
+    {
+        "EventName": "cache.l2.refill.rd",
+        "EventCode": "0x000000a5",
+        "BriefDescription": "l2 cache refill raised by lsu/ifu."
+    },
+    {
+        "EventName": "cache.l2.refill.wr",
+        "EventCode": "0x000000a6",
+        "BriefDescription": "l2 cache refill raised by lsu stream write."
+    },
+    {
+        "EventName": "cache.l2.wb.victim",
+        "EventCode": "0x000000a7",
+        "BriefDescription": "l2 cache write back to next-level cache raised by cache replace."
+    },
+    {
+        "EventName": "cache.l2.wb.clean",
+        "EventCode": "0x000000a8",
+        "BriefDescription": "l2 cache write back to next-level cache raised by CMO or snoop."
+    },
+    {
+        "EventName": "cache.l2.inval",
+        "EventCode": "0x000000a9",
+        "BriefDescription": "l2 cache invalidation to next-level cache raised by CMO or snoop."
+    },
+    {
+        "EventName": "cache.l2.refill.inst",
+        "EventCode": "0x000000aa",
+        "BriefDescription": "l2 cache refill raised by ifu load miss."
+    },
+    {
+        "EventName": "bus.access",
+        "EventCode": "0x000000ab",
+        "BriefDescription": "bus req count."
+    },
+    {
+        "EventName": "bus.rd.access",
+        "EventCode": "0x000000ac",
+        "BriefDescription": "bus read access count."
+    },
+    {
+        "EventName": "bus.wr.access",
+        "EventCode": "0x000000af",
+        "BriefDescription": "bus evict/write access count."
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.demand_read.l3",
+        "EventCode": "0x000000bb",
+        "BriefDescription": "cacheable demand read data from l3"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.demand_read.peer_core",
+        "EventCode": "0x000000bc",
+        "BriefDescription": "cacheable demand read data from peer core"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.demand_read.dram",
+        "EventCode": "0x000000bd",
+        "BriefDescription": "cacheable demand read data from dram"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.demand_ostd_read",
+        "EventCode": "0x000000be",
+        "BriefDescription": "cacheable demand read with l2 miss and already sended bus req cycle"
+    },
+    {
+        "EventName": "topdown.backend_bound.memory.demand_read",
+        "EventCode": "0x000000bf",
+        "BriefDescription": "cacheable demand read with l2 miss"
+    }
+]
