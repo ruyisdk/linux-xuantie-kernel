@@ -56,7 +56,7 @@
     },
     {
         "EventName": "bus.wr.access",
-        "EventCode": "0x000000af",
+        "EventCode": "0x000000ad",
         "BriefDescription": "bus evict/write access count."
     },
     {
