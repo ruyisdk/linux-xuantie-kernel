@@ -8,8 +8,8 @@ on:
     - cron: "0 2 * * *"
 
 env:
-  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1770908769007
-  xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.3.0-20260204.tar.gz
+  xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1777015432925
+  xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0-20260323.tar.gz
   rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
   rv32_toolchain_file_name: riscv32-glibc-ubuntu-22.04-gcc.tar.xz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
@@ -30,11 +30,11 @@ jobs:
             toolchain_prefix: riscv64-unknown-linux-gnu-
             config: defconfig
           - name: linux-64lp64-xuantie
-            toolchain_variant: rv64_toolchain
+            toolchain_variant: xt64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
             config: defconfig
           - name: linux-64lp64-test
-            toolchain_variant: rv64_toolchain
+            toolchain_variant: xt64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
             config: defconfig
 
@@ -94,6 +94,11 @@ jobs:
                 tar -xvf ${rv64_toolchain_file_name} -C /opt
                 rm -v ${rv64_toolchain_file_name}
               fi
+              if [ x"${{ matrix.toolchain_variant }}" = x"xt64_toolchain" ]; then
+                wget -qc ${xt64_toolchain}/${xt64_toolchain_file_name}
+                tar -xvf ${xt64_toolchain_file_name} -C /opt
+                rm -v ${xt64_toolchain_file_name}
+              fi
               if [ x"${{ matrix.toolchain_variant }}" = x"rv64ilp32_toolchain" ]; then
                 wget -qc ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
                 tar -xvf ${rv64ilp32_toolchain_file_name} -C /opt
@@ -116,7 +121,7 @@ jobs:
       # patch defconfig and compile kernel source
       - name: Compile Kernel
         run: |
-              export PATH="/opt/riscv/bin:$PATH"
+              export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
 
               if [ x"${{ matrix.name }}" = x"linux-64lp64-test" ] || [ x"${{ matrix.name }}" = x"linux-32ilp32-test" ] ; then
                 scripts/kconfig/merge_config.sh -m arch/riscv/configs/${{ matrix.config }} .github/kernel_fragments/ftrace.fragment
@@ -156,7 +161,7 @@ jobs:
   xt-qemu-64lp64:
     needs: kernel-build
     runs-on: ubuntu-latest
-    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:test
     strategy:
       fail-fast: false
       matrix:
@@ -177,19 +182,15 @@ jobs:
         with:
           name: ${{ matrix.kernel }}.tar.gz
 
-      - name: Download rootfs opensbi and unpack artifacts
+      - name: Prepare rootfs opensbi and unpack artifacts
         run: |
-              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv64.ext2.tar.gz
-              tar -xvf rootfs_rv64.ext2.tar.gz
-              wget -qc https://github.com/riscv-software-src/opensbi/releases/download/v1.4/opensbi-1.4-rv-bin.tar.xz
-              xz -d opensbi-1.4-rv-bin.tar.xz
-              tar -xvf opensbi-1.4-rv-bin.tar
-              mv opensbi-1.4-rv-bin/share/opensbi/lp64/generic/firmware/fw_dynamic.bin .
+              cp ${XUANTIE_LINUX_SDK}/images/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
+              cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
 
       - name: Run Qemu
         run: |
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -monitor none -serial telnet:localhost:5678,server &
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
@@ -204,7 +205,7 @@ jobs:
   xt-qemu-32ilp32:
     needs: kernel-build
     runs-on: ubuntu-latest
-    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:test
     strategy:
       fail-fast: false
       matrix:
@@ -222,14 +223,11 @@ jobs:
         with:
           name: ${{ matrix.kernel }}.tar.gz
 
-      - name: Download rootfs opensbi and unpack artifacts
+      - name: Prepare rootfs opensbi and unpack artifacts
         run: |
               wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv32.ext2.tar.gz
               tar -xvf rootfs_rv32.ext2.tar.gz
-              wget -qc https://github.com/riscv-software-src/opensbi/releases/download/v1.4/opensbi-1.4-rv-bin.tar.xz
-              xz -d opensbi-1.4-rv-bin.tar.xz
-              tar -xvf opensbi-1.4-rv-bin.tar
-              mv opensbi-1.4-rv-bin/share/opensbi/ilp32/generic/firmware/fw_dynamic.bin .
+              cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv32.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
 
       - name: Run Qemu
