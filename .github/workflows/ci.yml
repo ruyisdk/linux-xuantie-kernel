@@ -138,13 +138,6 @@ jobs:
 
               make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
-      - name: Build perf
-        if: ${{ matrix.toolchain_variant != 'rv64ilp32_toolchain' }}
-        run: |
-              export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
-              make -C tools/perf ARCH=riscv CROSS_COMPILE=${{ matrix.toolchain_prefix }} NO_LIBTRACEEVENT=1 NO_LIBPYTHON=1 NO_LIBPERL=1 NO_DWARF=1 NO_LIBUNWIND=1 NO_LIBCRYPTO=1 NO_SDT=1 NO_JVMTI=1 NO_LIBELF=1 LDFLAGS="-static" -j$(nproc) || true
-              cp tools/perf/perf ./perf_riscv || true
-
 
       - name: Packaging Tarball
         run: |
@@ -155,7 +148,7 @@ jobs:
               fi
               mv arch/riscv/boot/Image ./
               cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-              tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config $([ -f perf_riscv ] && echo perf_riscv)
+              tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -194,21 +187,16 @@ jobs:
               cp ${XUANTIE_LINUX_SDK}/images/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
               cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
-              # inject perf into rootfs
-              if [ -f perf_riscv ]; then
-                mkdir -p /tmp/rootfs_mnt
-                mount -o loop ./rootfs_rv64.ext4 /tmp/rootfs_mnt
-                cp perf_riscv /tmp/rootfs_mnt/usr/bin/perf
-                chmod +x /tmp/rootfs_mnt/usr/bin/perf
-                umount /tmp/rootfs_mnt
-              fi
 
       - name: Run Qemu
         run: |
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -monitor none -serial telnet:localhost:5678,server &
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -netdev user,id=net0 -device virtio-net-device,netdev=net0 -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
+
+      - name: Install perf via apt
+        run: .github/ci_scripts/check_qemu.exp 'apt-get update && apt-get install -y perf' 300
 
       - name: Check perf test
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62' 180 FAILED
