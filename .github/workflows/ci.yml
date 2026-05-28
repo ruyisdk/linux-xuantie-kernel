@@ -190,24 +190,18 @@ jobs:
               # resize rootfs to have space for perf install
               e2fsck -fy ./rootfs_rv64.ext4 || true
               resize2fs ./rootfs_rv64.ext4 2G
-              # mount rootfs and install perf via chroot
-              mkdir -p /tmp/rootfs_mnt
-              mount -o loop ./rootfs_rv64.ext4 /tmp/rootfs_mnt
-              cp /qemu/bin/qemu-riscv64 /tmp/rootfs_mnt/usr/bin/
-              mount --bind /proc /tmp/rootfs_mnt/proc
-              mount --bind /sys /tmp/rootfs_mnt/sys
-              mount --bind /dev /tmp/rootfs_mnt/dev
-              chroot /tmp/rootfs_mnt /bin/bash -c 'apt-get update && apt-get install -y perf' || true
-              umount /tmp/rootfs_mnt/proc /tmp/rootfs_mnt/sys /tmp/rootfs_mnt/dev
-              rm -f /tmp/rootfs_mnt/usr/bin/qemu-riscv64
-              umount /tmp/rootfs_mnt
 
       - name: Run Qemu
         run: |
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -monitor none -serial telnet:localhost:5678,server &
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -netdev user,id=net0 -device virtio-net-device,netdev=net0 -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
+
+      - name: Setup network and install perf
+        run: |
+          .github/ci_scripts/check_qemu.exp 'ip link set eth0 up && udhcpc -i eth0 || dhclient eth0 || true' 60
+          .github/ci_scripts/check_qemu.exp 'apt-get update && apt-get install -y perf' 300
 
       - name: Check perf test
         run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62' 180 FAILED
