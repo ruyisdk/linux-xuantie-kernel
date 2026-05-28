@@ -138,6 +138,13 @@ jobs:
 
               make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
+      - name: Build perf
+        if: ${{ matrix.toolchain_variant != 'rv64ilp32_toolchain' }}
+        run: |
+              export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
+              make -C tools/perf ARCH=riscv CROSS_COMPILE=${{ matrix.toolchain_prefix }} NO_LIBTRACEEVENT=1 NO_LIBPYTHON=1 NO_LIBPERL=1 NO_DWARF=1 NO_LIBUNWIND=1 NO_LIBCRYPTO=1 NO_SDT=1 NO_JVMTI=1 NO_LIBELF=1 LDFLAGS="-static" -j$(nproc) || true
+              cp tools/perf/perf ./perf_riscv || true
+
 
       - name: Packaging Tarball
         run: |
@@ -148,7 +155,7 @@ jobs:
               fi
               mv arch/riscv/boot/Image ./
               cp Documentation/admin-guide/kdump/gdbmacros.txt ./
-              tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config
+              tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config $([ -f perf_riscv ] && echo perf_riscv)
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -187,6 +194,14 @@ jobs:
               cp ${XUANTIE_LINUX_SDK}/images/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
               cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
+              # inject perf into rootfs
+              if [ -f perf_riscv ]; then
+                mkdir -p /tmp/rootfs_mnt
+                mount -o loop ./rootfs_rv64.ext4 /tmp/rootfs_mnt
+                cp perf_riscv /tmp/rootfs_mnt/usr/bin/perf
+                chmod +x /tmp/rootfs_mnt/usr/bin/perf
+                umount /tmp/rootfs_mnt
+              fi
 
       - name: Run Qemu
         run: |
