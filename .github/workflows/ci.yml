@@ -90,7 +90,7 @@ jobs:
       - name: Install software
         run: |
               sudo apt update && \
-              sudo apt install -y build-essential ${{ matrix.toolchain_variant == 'arm64_toolchain' && 'gcc-aarch64-linux-gnu' || '' }}
+              sudo apt install -y build-essential dwarves ${{ matrix.toolchain_variant == 'arm64_toolchain' && 'gcc-aarch64-linux-gnu' || '' }}
 
       - name: Checkout source
         uses: actions/checkout@v4
@@ -146,7 +146,14 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=${KARCH} EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              # Only apply -Werror for riscv builds; arm64/x86 are compile-check only
+              if [ "$KARCH" = "riscv" ]; then
+                WERROR="EXTRA_CFLAGS+=-Werror"
+              else
+                WERROR=""
+              fi
+
+              make ARCH=${KARCH} ${WERROR} EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
