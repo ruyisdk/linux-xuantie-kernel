@@ -204,7 +204,9 @@ jobs:
           .github/ci_scripts/check_qemu.exp 'apt-get update && apt-get install -y perf' 300
 
       - name: Check perf test
-        run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62; true' 180 '' Ok
+        run: |
+          .github/ci_scripts/check_qemu.exp 'echo 10 > /proc/sys/kernel/perf_event_max_sample_rate' 30
+          .github/ci_scripts/check_qemu.exp 'perf test -s 8,17,19,20,21,22,23,25,26,35,56,64,66,68,80,82,85,105,110' 180 FAILED
 
       - name: Check perf stat
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
