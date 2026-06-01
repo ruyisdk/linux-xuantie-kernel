@@ -5,6 +5,7 @@
 
 #include <linux/bitmap.h>
 #include <linux/cpu_pm.h>
+#include <linux/idr.h>
 #include <linux/io.h>
 #include <linux/irq.h>
 #include <linux/of.h>
@@ -22,8 +23,6 @@
 
 #define XUANTIE_LINK_PMU_NUM_COUNTERS		6
 #define XUANTIE_LINK_PMU_COUNTER_MASK		GENMASK_ULL(63, 0)
-
-#define HPCP_EVENT_OF BIT_ULL(63)
 
 /* HPCP reg */
 #define XUANTIE_LINK_PMU_L3IMP				0x048
@@ -47,7 +46,7 @@
 #define XUANTIE_LINK_PMU_HPCPINTPEND		0x5e8
 #define XUANTIE_LINK_PMU_VENDOR_N_IMP_ID	0x600 // XL300
 
-/* HPCP event */
+/* XL100/XL200/XL300 HPCP event */
 #define NO_EVENT		0x000
 #define ALL_L3_DA		0x001
 #define ALL_L3_DM		0x002
@@ -74,6 +73,24 @@
 #define L3_RSTALL(CN)	(C0_L3_RSTALL + 0x040 * CN)
 #define L3_WVLD(CN)		(C0_L3_WVLD + 0x040 * CN)
 #define L3_WSTALL(CN)	(C0_L3_WSTALL + 0x040 * CN)
+/* XL300 RCID events */
+#define R0_L3_DA		0x100001
+#define R0_L3_DM		0x100002
+#define R0_L3_IA		0x100003
+#define R0_L3_IM		0x100004
+#define R0_L3_RVLD		0x100005
+#define R0_L3_RSTALL	0x100006
+#define R0_L3_WVLD		0x100007
+#define R0_L3_WSTALL	0x100008
+/* RN=0..7 */
+#define RCID_L3_DA(RN)		(R0_L3_DA + 0x040 * RN)
+#define RCID_L3_DM(RN)		(R0_L3_DM + 0x040 * RN)
+#define RCID_L3_IA(RN)		(R0_L3_IA + 0x040 * RN)
+#define RCID_L3_IM(RN)		(R0_L3_IM + 0x040 * RN)
+#define RCID_L3_RVLD(RN)	(R0_L3_RVLD + 0x040 * RN)
+#define RCID_L3_RSTALL(RN)	(R0_L3_RSTALL + 0x040 * RN)
+#define RCID_L3_WVLD(RN)	(R0_L3_WVLD + 0x040 * RN)
+#define RCID_L3_WSTALL(RN)	(R0_L3_WSTALL + 0x040 * RN)
 
 #define to_xuantie_link_pmu(p) (container_of(p, struct xuantie_link_pmu, pmu))
 
@@ -88,10 +105,11 @@
 	PMU_EVENT_ATTR_ID(_name, xuantie_link_pmu_sysfs_event_show, _id)
 
 static u32 xuantie_link_pmu_cpuhp_state;
-static bool debug_enable;
 
 struct xuantie_link_devtype_data {
 	u32 quirks;
+	struct ida *ida;
+	const char *name_prefix;
 };
 
 struct xuantie_link_hw_events {
@@ -101,26 +119,34 @@ struct xuantie_link_hw_events {
 
 struct xuantie_link_pmu {
 	struct pmu pmu;
-	struct xuantie_link_hw_events __percpu *hw_events;
+	struct xuantie_link_hw_events hw_events;
 	struct hlist_node node;
 	struct notifier_block pm_nb;
 	void __iomem *pmu_base;
 	cpumask_t cpumask;
 	u64 identifier;
 	const struct xuantie_link_devtype_data *devtype_data;
+	const char *name;
+	int instance_id;
 	u32 irq;
+	bool debug_enable;
 };
 
 static ssize_t debug_enable_show(struct device *dev,
 				 struct device_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%d\n", debug_enable);
+	struct xuantie_link_pmu *xuantie_link_pmu =
+		to_xuantie_link_pmu(dev_get_drvdata(dev));
+
+	return sprintf(buf, "%d\n", xuantie_link_pmu->debug_enable);
 }
 static ssize_t debug_enable_store(struct device *dev,
 				  struct device_attribute *attr,
 				  const char *buf, size_t count)
 {
-	int ret = kstrtobool(buf, &debug_enable);
+	struct xuantie_link_pmu *xuantie_link_pmu =
+		to_xuantie_link_pmu(dev_get_drvdata(dev));
+	int ret = kstrtobool(buf, &xuantie_link_pmu->debug_enable);
 
 	return ret < 0 ? ret : count;
 }
@@ -243,12 +269,120 @@ static struct attribute *xuantie_link_pmu_event_attrs[] = {
 	XUANTIE_LINK_EVENT_ATTR(c7_l3_wvld, L3_WVLD(7)),
 	XUANTIE_LINK_EVENT_ATTR(c7_l3_wstall, L3_WSTALL(7)),
 
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_da, RCID_L3_DA(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_dm, RCID_L3_DM(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_ia, RCID_L3_IA(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_im, RCID_L3_IM(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_rvld, RCID_L3_RVLD(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_rstall, RCID_L3_RSTALL(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_wvld, RCID_L3_WVLD(0)),
+	XUANTIE_LINK_EVENT_ATTR(rcid0_l3_wstall, RCID_L3_WSTALL(0)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_da, RCID_L3_DA(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_dm, RCID_L3_DM(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_ia, RCID_L3_IA(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_im, RCID_L3_IM(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_rvld, RCID_L3_RVLD(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_rstall, RCID_L3_RSTALL(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_wvld, RCID_L3_WVLD(1)),
+	XUANTIE_LINK_EVENT_ATTR(rcid1_l3_wstall, RCID_L3_WSTALL(1)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_da, RCID_L3_DA(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_dm, RCID_L3_DM(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_ia, RCID_L3_IA(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_im, RCID_L3_IM(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_rvld, RCID_L3_RVLD(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_rstall, RCID_L3_RSTALL(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_wvld, RCID_L3_WVLD(2)),
+	XUANTIE_LINK_EVENT_ATTR(rcid2_l3_wstall, RCID_L3_WSTALL(2)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_da, RCID_L3_DA(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_dm, RCID_L3_DM(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_ia, RCID_L3_IA(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_im, RCID_L3_IM(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_rvld, RCID_L3_RVLD(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_rstall, RCID_L3_RSTALL(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_wvld, RCID_L3_WVLD(3)),
+	XUANTIE_LINK_EVENT_ATTR(rcid3_l3_wstall, RCID_L3_WSTALL(3)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_da, RCID_L3_DA(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_dm, RCID_L3_DM(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_ia, RCID_L3_IA(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_im, RCID_L3_IM(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_rvld, RCID_L3_RVLD(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_rstall, RCID_L3_RSTALL(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_wvld, RCID_L3_WVLD(4)),
+	XUANTIE_LINK_EVENT_ATTR(rcid4_l3_wstall, RCID_L3_WSTALL(4)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_da, RCID_L3_DA(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_dm, RCID_L3_DM(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_ia, RCID_L3_IA(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_im, RCID_L3_IM(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_rvld, RCID_L3_RVLD(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_rstall, RCID_L3_RSTALL(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_wvld, RCID_L3_WVLD(5)),
+	XUANTIE_LINK_EVENT_ATTR(rcid5_l3_wstall, RCID_L3_WSTALL(5)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_da, RCID_L3_DA(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_dm, RCID_L3_DM(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_ia, RCID_L3_IA(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_im, RCID_L3_IM(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_rvld, RCID_L3_RVLD(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_rstall, RCID_L3_RSTALL(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_wvld, RCID_L3_WVLD(6)),
+	XUANTIE_LINK_EVENT_ATTR(rcid6_l3_wstall, RCID_L3_WSTALL(6)),
+
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_da, RCID_L3_DA(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_dm, RCID_L3_DM(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_ia, RCID_L3_IA(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_im, RCID_L3_IM(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_rvld, RCID_L3_RVLD(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_rstall, RCID_L3_RSTALL(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_wvld, RCID_L3_WVLD(7)),
+	XUANTIE_LINK_EVENT_ATTR(rcid7_l3_wstall, RCID_L3_WSTALL(7)),
+
 	NULL
 };
+
+static umode_t
+xuantie_link_pmu_event_attr_is_visible(struct kobject *kobj,
+				       struct attribute *attr, int unused)
+{
+	struct device *dev = kobj_to_dev(kobj);
+	struct xuantie_link_pmu *xuantie_link_pmu =
+		to_xuantie_link_pmu(dev_get_drvdata(dev));
+	struct perf_pmu_events_attr *eattr =
+		container_of(attr, struct perf_pmu_events_attr, attr.attr);
+	u32 id = (u32)eattr->id;
+
+	if (xuantie_link_pmu->devtype_data->quirks ==
+	    XUANTIE_LINK_DEV_TYPE_XL300)
+		return attr->mode;
+
+	/* ALL_L3_WVLD/WSTALL are XL300-only. */
+	if (id == ALL_L3_WVLD || id == ALL_L3_WSTALL)
+		return 0;
+
+	/* CORE_N domain WVLD/WSTALL sub-offsets are XL300-only. */
+	if (id >= C0_L3_DA && id <= L3_WSTALL(7)) {
+		u32 sub = (id - C0_L3_DA) % 0x40;
+
+		if (sub == (C0_L3_WVLD - C0_L3_DA) ||
+		    sub == (C0_L3_WSTALL - C0_L3_DA))
+			return 0;
+	}
+
+	/* All RCID events are XL300-only */
+	if (id >= R0_L3_DA && id <= RCID_L3_WSTALL(7))
+		return 0;
+
+	return attr->mode;
+}
 
 static const struct attribute_group xuantie_link_pmu_events_attr_group = {
 	.name = "events",
 	.attrs = xuantie_link_pmu_event_attrs,
+	.is_visible = xuantie_link_pmu_event_attr_is_visible,
 };
 
 static ssize_t cpumask_show(struct device *dev, struct device_attribute *attr,
@@ -312,9 +446,31 @@ xuantie_link_pmu_set_event_period(struct perf_event *event,
 	local64_set(&hwc->prev_count, val);
 	writeq(val, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPCOUNT0 +
 			    idx * 8);
-	if (debug_enable)
+	if (xuantie_link_pmu->debug_enable)
 		pr_info("%s: writeq idx=%d reg=%x val=%llx\n", __func__, idx,
 			XUANTIE_LINK_PMU_HPCPCOUNT0 + idx * 8, val);
+}
+
+static void
+xuantie_link_pmu_inhibit_set(struct xuantie_link_pmu *xuantie_link_pmu, int idx)
+{
+	u64 val = readq(xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINHIBIT);
+
+	val |= BIT_ULL(idx);
+	writeq(val, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINHIBIT);
+	if (xuantie_link_pmu->debug_enable)
+		pr_info("%s: idx=%d inhibit=0x%llx\n", __func__, idx, val);
+}
+
+static void
+xuantie_link_pmu_inhibit_clr(struct xuantie_link_pmu *xuantie_link_pmu, int idx)
+{
+	u64 val = readq(xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINHIBIT);
+
+	val &= ~BIT_ULL(idx);
+	writeq(val, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINHIBIT);
+	if (xuantie_link_pmu->debug_enable)
+		pr_info("%s: idx=%d inhibit=0x%llx\n", __func__, idx, val);
 }
 
 static void
@@ -322,13 +478,14 @@ xuantie_link_pmu_counter_start(struct perf_event *event,
 			       struct xuantie_link_pmu *xuantie_link_pmu)
 {
 	int idx = event->hw.idx;
-	int event_id = event->hw.config;
-	u64 val = (~HPCP_EVENT_OF) & event_id;
+	u32 event_id = (u32)event->hw.config;
+	u64 val = event_id;
 
 	writeq(val, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPEVT0CR +
 			    idx * 8);
-	if (debug_enable)
-		pr_info("%s: writeq idx=%d event_id=%x reg=%x val=%llx\n",
+	xuantie_link_pmu_inhibit_clr(xuantie_link_pmu, idx);
+	if (xuantie_link_pmu->debug_enable)
+		pr_info("%s: writeq idx=%d event_id=0x%x reg=0x%x val=0x%llx\n",
 			__func__, idx, event_id,
 			XUANTIE_LINK_PMU_HPCPEVT0CR + idx * 8, val);
 }
@@ -338,13 +495,49 @@ xuantie_link_pmu_counter_stop(struct perf_event *event,
 			      struct xuantie_link_pmu *xuantie_link_pmu)
 {
 	int idx = event->hw.idx;
-	u64 val = HPCP_EVENT_OF + NO_EVENT;
 
-	writeq(val, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPEVT0CR +
-			    idx * 8);
-	if (debug_enable)
-		pr_info("%s: writeq idx=%d reg=%x val=%llx\n", __func__, idx,
-			XUANTIE_LINK_PMU_HPCPEVT0CR + idx * 8, val);
+	xuantie_link_pmu_inhibit_set(xuantie_link_pmu, idx);
+	if (xuantie_link_pmu->debug_enable)
+		pr_info("%s: idx=%d inhibited\n", __func__, idx);
+}
+
+static bool
+xuantie_link_pmu_event_valid(struct xuantie_link_pmu *xuantie_link_pmu,
+			     u32 cfg)
+{
+	bool xl300 = xuantie_link_pmu->devtype_data->quirks ==
+		     XUANTIE_LINK_DEV_TYPE_XL300;
+	u32 max_sub = xl300 ? (C0_L3_WSTALL - C0_L3_DA) :
+			      (C0_L3_RSTALL - C0_L3_DA);
+	u32 base, idx, sub;
+
+	/* ALL_L3_* domain: 0x001..0x006 on XL100/200, 0x007..0x008 on XL300. */
+	if (cfg >= ALL_L3_DA && cfg <= ALL_L3_RSTALL)
+		return true;
+	if (xl300 && (cfg == ALL_L3_WVLD || cfg == ALL_L3_WSTALL))
+		return true;
+
+	/* CORE_N domain (N=0..7): base 0x041 + N*0x40. */
+	base = C0_L3_DA;
+	if (cfg >= base && cfg <= L3_WSTALL(7)) {
+		idx = (cfg - base) / 0x40;
+		sub = (cfg - base) % 0x40;
+		if (idx <= 7 && sub <= max_sub)
+			return true;
+	}
+
+	/* RCID_N domain (N=0..7): XL300 only. */
+	if (xl300) {
+		base = R0_L3_DA;
+		if (cfg >= base && cfg <= RCID_L3_WSTALL(7)) {
+			idx = (cfg - base) / 0x40;
+			sub = (cfg - base) % 0x40;
+			if (idx <= 7 && sub <= (R0_L3_WSTALL - R0_L3_DA))
+				return true;
+		}
+	}
+
+	return false;
 }
 
 static int xuantie_link_pmu_event_init(struct perf_event *event)
@@ -352,6 +545,7 @@ static int xuantie_link_pmu_event_init(struct perf_event *event)
 	struct xuantie_link_pmu *xuantie_link_pmu =
 		to_xuantie_link_pmu(event->pmu);
 	struct hw_perf_event *hwc = &event->hw;
+	struct perf_event *sibling;
 
 	/*
 	 * Sampling is not supported, as counters are shared
@@ -370,6 +564,33 @@ static int xuantie_link_pmu_event_init(struct perf_event *event)
 		pr_err("Per-task mode not supported\n");
 		return -EOPNOTSUPP;
 	}
+
+	/* HPCP_EVENT_SEL is 32-bit; reject anything outside known event IDs. */
+	if (event->attr.config >> 32 ||
+	    !xuantie_link_pmu_event_valid(xuantie_link_pmu,
+					  (u32)event->attr.config)) {
+		pr_err("Invalid event ID 0x%llx\n", event->attr.config);
+		return -EINVAL;
+	}
+
+	/*
+	 * Group leader and siblings must belong to this PMU (or be pure
+	 * software events). Mixing other hardware PMUs in the same group is
+	 * not supported because counters here are a shared cluster resource.
+	 */
+	if (event->group_leader != event &&
+	    !is_software_event(event->group_leader) &&
+	    event->group_leader->pmu != event->pmu)
+		return -EINVAL;
+
+	for_each_sibling_event(sibling, event->group_leader) {
+		if (sibling->pmu != event->pmu &&
+		    !is_software_event(sibling))
+			return -EINVAL;
+	}
+
+	if (cpumask_empty(&xuantie_link_pmu->cpumask))
+		return -ENODEV;
 
 	hwc->idx = -1;
 	hwc->config = event->attr.config;
@@ -392,7 +613,7 @@ static void xuantie_link_pmu_update(struct perf_event *event)
 		prev_raw_count = local64_read(&hwc->prev_count);
 		new_raw_count = readq(xuantie_link_pmu->pmu_base +
 				      XUANTIE_LINK_PMU_HPCPCOUNT0 + idx * 8);
-		if (debug_enable)
+		if (xuantie_link_pmu->debug_enable)
 			pr_info("%s: readq idx=%d reg=%x prev_raw_count=%llx new_raw_count=%llx\n",
 				__func__, idx,
 				XUANTIE_LINK_PMU_HPCPCOUNT0 + idx * 8,
@@ -403,7 +624,7 @@ static void xuantie_link_pmu_update(struct perf_event *event)
 	delta = new_raw_count - prev_raw_count;
 	local64_add(delta, &event->count);
 	local64_sub(delta, &hwc->period_left);
-	if (debug_enable)
+	if (xuantie_link_pmu->debug_enable)
 		pr_info("%s: count=%ld count=%lx\n", __func__,
 			local64_read(&event->count),
 			local64_read(&event->count));
@@ -448,20 +669,19 @@ static int xuantie_link_pmu_add(struct perf_event *event, int flags)
 	struct xuantie_link_pmu *xuantie_link_pmu =
 		to_xuantie_link_pmu(event->pmu);
 	struct xuantie_link_hw_events *hw_events =
-		this_cpu_ptr(xuantie_link_pmu->hw_events);
+		&xuantie_link_pmu->hw_events;
 	struct hw_perf_event *hwc = &event->hw;
 	unsigned long *used_mask = hw_events->used_mask;
 	u32 n_events = XUANTIE_LINK_PMU_NUM_COUNTERS;
 	int idx;
 
 	idx = find_first_zero_bit(used_mask, n_events);
-	/* All counter are in use */
-	if (idx < 0)
-		return idx;
+	if (idx >= n_events)
+		return -EAGAIN;
 
 	set_bit(idx, used_mask);
 
-	if (debug_enable)
+	if (xuantie_link_pmu->debug_enable)
 		pr_info("%s: idx=%d used_mask=%lx flags=%d\n", __func__, idx,
 			*used_mask, flags);
 
@@ -482,10 +702,10 @@ static void xuantie_link_pmu_del(struct perf_event *event, int flags)
 	struct xuantie_link_pmu *xuantie_link_pmu =
 		to_xuantie_link_pmu(event->pmu);
 	struct xuantie_link_hw_events *hw_events =
-		this_cpu_ptr(xuantie_link_pmu->hw_events);
+		&xuantie_link_pmu->hw_events;
 	struct hw_perf_event *hwc = &event->hw;
 
-	if (debug_enable)
+	if (xuantie_link_pmu->debug_enable)
 		pr_info("%s: idx=%d flags=%d\n", __func__, hwc->idx, flags);
 
 	xuantie_link_pmu_stop(event, PERF_EF_UPDATE);
@@ -499,7 +719,7 @@ static irqreturn_t xuantie_link_pmu_handle_irq(int irq_num, void *data)
 {
 	struct xuantie_link_pmu *xuantie_link_pmu = data;
 	struct xuantie_link_hw_events *hw_events =
-		this_cpu_ptr(xuantie_link_pmu->hw_events);
+		&xuantie_link_pmu->hw_events;
 	bool handled = false;
 	int idx;
 	u64 overflow_status =
@@ -507,7 +727,7 @@ static irqreturn_t xuantie_link_pmu_handle_irq(int irq_num, void *data)
 	u64 int_pend =
 		readq(xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINTPEND);
 
-	if (debug_enable)
+	if (xuantie_link_pmu->debug_enable)
 		pr_info("%s:%d overflow_status=%llx int_pend=%llx\n",
 			__func__, __LINE__, overflow_status, int_pend);
 
@@ -528,7 +748,7 @@ static irqreturn_t xuantie_link_pmu_handle_irq(int irq_num, void *data)
 		handled = true;
 	}
 
-	if (handled)
+	if (int_pend)
 		writeq(0, xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINTPEND);
 
 	return IRQ_RETVAL(handled);
@@ -540,11 +760,14 @@ static int xuantie_link_pmu_pm_notify(struct notifier_block *b,
 	struct xuantie_link_pmu *xuantie_link_pmu =
 		container_of(b, struct xuantie_link_pmu, pm_nb);
 	struct xuantie_link_hw_events *hw_events =
-		this_cpu_ptr(xuantie_link_pmu->hw_events);
+		&xuantie_link_pmu->hw_events;
 	int enabled = bitmap_weight(hw_events->used_mask,
 				    XUANTIE_LINK_PMU_NUM_COUNTERS);
 	struct perf_event *event;
 	int idx;
+
+	if (!cpumask_test_cpu(smp_processor_id(), &xuantie_link_pmu->cpumask))
+		return NOTIFY_OK;
 
 	if (!enabled)
 		return NOTIFY_OK;
@@ -594,9 +817,8 @@ xuantie_link_pmu_pm_unregister(struct xuantie_link_pmu *xuantie_link_pmu)
 static int xuantie_link_pmu_device_probe(struct platform_device *pdev)
 {
 	struct xuantie_link_pmu *xuantie_link_pmu;
-	struct xuantie_link_hw_events *hw_events;
 	struct resource *res;
-	int cpuid, i, irq, ret;
+	int irq, ret;
 
 	xuantie_link_pmu =
 		devm_kzalloc(&pdev->dev, sizeof(*xuantie_link_pmu), GFP_KERNEL);
@@ -610,47 +832,55 @@ static int xuantie_link_pmu_device_probe(struct platform_device *pdev)
 	if (IS_ERR(xuantie_link_pmu->pmu_base))
 		return PTR_ERR(xuantie_link_pmu->pmu_base);
 
-	xuantie_link_pmu->hw_events =
-		alloc_percpu_gfp(struct xuantie_link_hw_events, GFP_KERNEL);
-	if (!xuantie_link_pmu->hw_events) {
-		dev_err(&pdev->dev, "Failed to allocate per-cpu PMU data\n");
-		return -ENOMEM;
+	xuantie_link_pmu->devtype_data = of_device_get_match_data(&pdev->dev);
+	if (!xuantie_link_pmu->devtype_data) {
+		dev_err(&pdev->dev, "Failed to get device type data\n");
+		return -ENODEV;
 	}
 
-	for_each_possible_cpu(cpuid) {
-		hw_events = per_cpu_ptr(xuantie_link_pmu->hw_events, cpuid);
-		for (i = 0; i < XUANTIE_LINK_PMU_NUM_COUNTERS; i++)
-			hw_events->events[i] = NULL;
+	ret = ida_alloc(xuantie_link_pmu->devtype_data->ida, GFP_KERNEL);
+	if (ret < 0) {
+		dev_err(&pdev->dev, "Failed to allocate instance id\n");
+		return ret;
+	}
+	xuantie_link_pmu->instance_id = ret;
+
+	xuantie_link_pmu->name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s_%d",
+						xuantie_link_pmu->devtype_data->name_prefix,
+						xuantie_link_pmu->instance_id);
+	if (!xuantie_link_pmu->name) {
+		ret = -ENOMEM;
+		goto err_free_ida;
 	}
 
 	irq = platform_get_irq(pdev, 0);
-	if (irq < 0)
-		return -EINVAL;
-
-	ret = devm_request_irq(&pdev->dev, irq, xuantie_link_pmu_handle_irq, 0,
-			       XUANTIE_LINK_PMU_PDEV_NAME, xuantie_link_pmu);
-	if (ret) {
-		dev_err(&pdev->dev, "Failed to request IRQ\n");
-		return -EINVAL;
+	if (irq < 0) {
+		ret = irq;
+		goto err_free_ida;
 	}
 
-	xuantie_link_pmu->irq = irq;
+	ret = devm_request_irq(&pdev->dev, irq, xuantie_link_pmu_handle_irq, 0,
+			       xuantie_link_pmu->name, xuantie_link_pmu);
+	if (ret) {
+		dev_err(&pdev->dev, "Failed to request IRQ\n");
+		goto err_free_ida;
+	}
 
-	xuantie_link_pmu->devtype_data = of_device_get_match_data(&pdev->dev);
+	writeq(GENMASK_ULL(XUANTIE_LINK_PMU_NUM_COUNTERS - 1, 0),
+	       xuantie_link_pmu->pmu_base + XUANTIE_LINK_PMU_HPCPINHIBIT);
+
+	xuantie_link_pmu->irq = irq;
 
 	ret = cpuhp_state_add_instance(xuantie_link_pmu_cpuhp_state,
 				       &xuantie_link_pmu->node);
 	if (ret) {
 		dev_err(&pdev->dev, "Failed to register hotplug\n");
-		return ret;
+		goto err_free_ida;
 	}
 
 	ret = xuantie_link_pmu_pm_register(xuantie_link_pmu);
-	if (ret) {
-		cpuhp_state_remove_instance(xuantie_link_pmu_cpuhp_state,
-					    &xuantie_link_pmu->node);
-		return ret;
-	}
+	if (ret)
+		goto err_cpuhp_remove;
 
 	if (xuantie_link_pmu->devtype_data->quirks == XUANTIE_LINK_DEV_TYPE_XL300)
 		xuantie_link_pmu->identifier =
@@ -673,45 +903,64 @@ static int xuantie_link_pmu_device_probe(struct platform_device *pdev)
 	};
 
 	ret = perf_pmu_register(&xuantie_link_pmu->pmu,
-				XUANTIE_LINK_PMU_PDEV_NAME, -1);
-	if (ret) {
-		xuantie_link_pmu_pm_unregister(xuantie_link_pmu);
-		cpuhp_state_remove_instance(xuantie_link_pmu_cpuhp_state,
-					    &xuantie_link_pmu->node);
-	}
+				xuantie_link_pmu->name, -1);
+	if (ret)
+		goto err_pm_unregister;
 
-	debug_enable = false;
-	pr_info("pmu_base=%pK irq=%d identifier=%llx devtype_data.quirks=%d\n",
-		xuantie_link_pmu->pmu_base, xuantie_link_pmu->irq,
-		xuantie_link_pmu->identifier,
+	platform_set_drvdata(pdev, xuantie_link_pmu);
+
+	pr_info("%s registered: pmu_base=%pK irq=%d identifier=%llx devtype_data.quirks=%d\n",
+		xuantie_link_pmu->name, xuantie_link_pmu->pmu_base,
+		xuantie_link_pmu->irq, xuantie_link_pmu->identifier,
 		xuantie_link_pmu->devtype_data->quirks);
 
+	return 0;
+
+err_pm_unregister:
+	xuantie_link_pmu_pm_unregister(xuantie_link_pmu);
+err_cpuhp_remove:
+	cpuhp_state_remove_instance_nocalls(xuantie_link_pmu_cpuhp_state,
+					    &xuantie_link_pmu->node);
+err_free_ida:
+	ida_free(xuantie_link_pmu->devtype_data->ida,
+		 xuantie_link_pmu->instance_id);
 	return ret;
 }
 
 static int xuantie_link_pmu_device_remove(struct platform_device *pdev)
 {
-	struct xuantie_link_pmu *xuantie_link_pmu =
-		to_xuantie_link_pmu(platform_get_drvdata(pdev));
+	struct xuantie_link_pmu *xuantie_link_pmu = platform_get_drvdata(pdev);
 
 	perf_pmu_unregister(&xuantie_link_pmu->pmu);
 	xuantie_link_pmu_pm_unregister(xuantie_link_pmu);
-	cpuhp_state_remove_instance(xuantie_link_pmu_cpuhp_state,
-				    &xuantie_link_pmu->node);
+	cpuhp_state_remove_instance_nocalls(xuantie_link_pmu_cpuhp_state,
+					    &xuantie_link_pmu->node);
+	ida_free(xuantie_link_pmu->devtype_data->ida,
+		 xuantie_link_pmu->instance_id);
 
 	return 0;
 }
 
+static DEFINE_IDA(xuantie_link_xl100_ida);
+static DEFINE_IDA(xuantie_link_xl200_ida);
+static DEFINE_IDA(xuantie_link_xl300_ida);
+
 static const struct xuantie_link_devtype_data xl100_devtype_data = {
 	.quirks = XUANTIE_LINK_DEV_TYPE_XL100,
+	.ida = &xuantie_link_xl100_ida,
+	.name_prefix = "xuantie_xl100",
 };
 
 static const struct xuantie_link_devtype_data xl200_devtype_data = {
 	.quirks = XUANTIE_LINK_DEV_TYPE_XL200,
+	.ida = &xuantie_link_xl200_ida,
+	.name_prefix = "xuantie_xl200",
 };
 
 static const struct xuantie_link_devtype_data xl300_devtype_data = {
 	.quirks = XUANTIE_LINK_DEV_TYPE_XL300,
+	.ida = &xuantie_link_xl300_ida,
+	.name_prefix = "xuantie_xl300",
 };
 
 static const struct of_device_id xuantie_link_pmu_of_device_ids[] = {
@@ -738,10 +987,10 @@ static int xuantie_link_pmu_online_cpu(unsigned int cpu,
 	struct xuantie_link_pmu *xuantie_link_pmu =
 		hlist_entry_safe(node, struct xuantie_link_pmu, node);
 
-	if (cpumask_empty(&xuantie_link_pmu->cpumask))
+	if (cpumask_empty(&xuantie_link_pmu->cpumask)) {
 		cpumask_set_cpu(cpu, &xuantie_link_pmu->cpumask);
-
-	WARN_ON(irq_set_affinity(xuantie_link_pmu->irq, cpumask_of(cpu)));
+		WARN_ON(irq_set_affinity(xuantie_link_pmu->irq, cpumask_of(cpu)));
+	}
 
 	return 0;
 }
@@ -781,10 +1030,23 @@ static int __init xuantie_link_pmu_init(void)
 
 	xuantie_link_pmu_cpuhp_state = ret;
 
-	return platform_driver_register(&xuantie_link_pmu_driver);
-}
+	ret = platform_driver_register(&xuantie_link_pmu_driver);
+	if (ret)
+		cpuhp_remove_multi_state(xuantie_link_pmu_cpuhp_state);
 
-device_initcall(xuantie_link_pmu_init);
+	return ret;
+}
+module_init(xuantie_link_pmu_init);
+
+static void __exit xuantie_link_pmu_exit(void)
+{
+	platform_driver_unregister(&xuantie_link_pmu_driver);
+	cpuhp_remove_multi_state(xuantie_link_pmu_cpuhp_state);
+	ida_destroy(&xuantie_link_xl100_ida);
+	ida_destroy(&xuantie_link_xl200_ida);
+	ida_destroy(&xuantie_link_xl300_ida);
+}
+module_exit(xuantie_link_pmu_exit);
 
 MODULE_DESCRIPTION("PMU driver for Xuantie Link");
 MODULE_AUTHOR("Chen Pei <cp0613@linux.alibaba.com>");
