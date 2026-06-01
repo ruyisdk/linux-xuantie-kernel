@@ -90,7 +90,7 @@ jobs:
       - name: Install software
         run: |
               sudo apt update && \
-              sudo apt install -y build-essential dwarves ${{ matrix.toolchain_variant == 'arm64_toolchain' && 'gcc-aarch64-linux-gnu' || '' }}
+              sudo apt install -y build-essential flex bison bc libelf-dev libssl-dev dwarves ${{ matrix.toolchain_variant == 'arm64_toolchain' && 'gcc-aarch64-linux-gnu' || '' }}
 
       - name: Checkout source
         uses: actions/checkout@v4
