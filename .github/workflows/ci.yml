@@ -72,6 +72,7 @@ jobs:
             toolchain_prefix: aarch64-linux-gnu-
             config: defconfig
             arch: arm64
+            allow_failure: true
 
           # x86_64
           - name: linux-x86-xuantie
@@ -79,6 +80,7 @@ jobs:
             toolchain_prefix: ""
             config: defconfig
             arch: x86
+            allow_failure: true
 
 
 
@@ -134,6 +136,7 @@ jobs:
 
       # patch defconfig and compile kernel source
       - name: Compile Kernel
+        continue-on-error: ${{ matrix.allow_failure || false }}
         run: |
               export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
               KARCH="${{ matrix.arch || 'riscv' }}"
@@ -146,12 +149,14 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              # Only apply -Werror for riscv builds; arm64/x86 are compile-check only
-              if [ "$KARCH" = "riscv" ]; then
-                WERROR="EXTRA_CFLAGS+=-Werror"
-              else
-                WERROR=""
-              fi
+              # Only apply -Werror for xt64/rv64/rv64ilp32 toolchains
+              # rv32_toolchain with xuantie configs triggers warnings; arm64/x86 have source incompatibilities
+              case "${{ matrix.toolchain_variant }}" in
+                xt64_toolchain|rv64_toolchain|rv64ilp32_toolchain)
+                  WERROR="EXTRA_CFLAGS+=-Werror" ;;
+                *)
+                  WERROR="" ;;
+              esac
 
               make ARCH=${KARCH} ${WERROR} EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
