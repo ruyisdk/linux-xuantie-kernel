@@ -37,6 +37,10 @@ jobs:
             toolchain_variant: xt64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
             config: xuantie_debug_defconfig
+          - name: linux-64lp64-opensource-debug
+            toolchain_variant: rv64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: xuantie_debug_defconfig
 
           # RV32
           - name: linux-32ilp32-upstream
@@ -50,6 +54,10 @@ jobs:
           - name: linux-32ilp32-test
             toolchain_variant: xt64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: xuantie_rv32_debug_defconfig
+          - name: linux-32ilp32-opensource-debug
+            toolchain_variant: rv32_toolchain
+            toolchain_prefix: riscv32-unknown-linux-gnu-
             config: xuantie_rv32_debug_defconfig
 
           # 64ilp32
