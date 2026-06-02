@@ -157,16 +157,7 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              # Only apply -Werror for xt64/rv64/rv64ilp32 toolchains
-              # rv32_toolchain with xuantie configs triggers warnings; arm64/x86 have source incompatibilities
-              case "${{ matrix.toolchain_variant }}" in
-                xt64_toolchain|rv64_toolchain|rv64ilp32_toolchain)
-                  WERROR="EXTRA_CFLAGS+=-Werror" ;;
-                *)
-                  WERROR="" ;;
-              esac
-
-              make ARCH=${KARCH} ${WERROR} EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              make ARCH=${KARCH} EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
