@@ -154,7 +154,7 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=${KARCH} KCFLAGS="-Werror" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
