@@ -44,12 +44,12 @@ jobs:
             toolchain_prefix: riscv32-unknown-linux-gnu-
             config: rv32_defconfig
           - name: linux-32ilp32-xuantie
-            toolchain_variant: rv32_toolchain
-            toolchain_prefix: riscv32-unknown-linux-gnu-
+            toolchain_variant: xt64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
             config: xuantie_rv32_defconfig
           - name: linux-32ilp32-test
-            toolchain_variant: rv32_toolchain
-            toolchain_prefix: riscv32-unknown-linux-gnu-
+            toolchain_variant: xt64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
             config: xuantie_rv32_debug_defconfig
 
           # 64ilp32
