@@ -80,7 +80,6 @@ jobs:
             toolchain_prefix: aarch64-linux-gnu-
             config: defconfig
             arch: arm64
-            allow_failure: true
 
           # x86_64
           - name: linux-x86-xuantie
@@ -88,7 +87,6 @@ jobs:
             toolchain_prefix: ""
             config: defconfig
             arch: x86
-            allow_failure: true
 
 
 
@@ -144,7 +142,6 @@ jobs:
 
       # patch defconfig and compile kernel source
       - name: Compile Kernel
-        continue-on-error: ${{ matrix.allow_failure || false }}
         run: |
               export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
               KARCH="${{ matrix.arch || 'riscv' }}"
@@ -157,7 +154,7 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=${KARCH} EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              make ARCH=${KARCH} ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
