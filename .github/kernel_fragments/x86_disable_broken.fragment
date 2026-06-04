@@ -1,0 +1,8 @@
+# Disable drivers that have compilation issues on x86
+# AMD/Intel IOMMU: xuantie tree has internal API mismatches
+CONFIG_AMD_IOMMU=n
+CONFIG_INTEL_IOMMU=n
+# Canaan K230 drivers: RISC-V only (uses asm/csr.h)
+CONFIG_K230_GNNE_DRIVER=n
+CONFIG_K230_AI2D_DRIVER=n
+CONFIG_K230_MMZ=n

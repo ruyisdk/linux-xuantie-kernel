@@ -154,7 +154,17 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              make ARCH=${KARCH} CROSS_COMPILE=${CROSS_COMPILE} ${{ matrix.config }}
+
+              # Apply arch-specific fixup fragments for non-riscv builds
+              if [ x"${{ matrix.arch }}" = x"x86" ]; then
+                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/x86_disable_broken.fragment
+              fi
+              if [ x"${{ matrix.arch }}" = x"arm64" ]; then
+                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/arm64_disable_broken.fragment
+              fi
+
+              make ARCH=${KARCH} KCFLAGS+="-Werror -g" all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
