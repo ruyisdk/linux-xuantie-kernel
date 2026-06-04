@@ -10,8 +10,8 @@ on:
 env:
   xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1777015432925
   xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0-20260323.tar.gz
-  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
-  rv32_toolchain_file_name: riscv32-glibc-ubuntu-22.04-gcc.tar.xz
+  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.05.19
+  rv32_toolchain_file_name: riscv32-glibc-ubuntu-24.04-gcc.tar.xz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc.tar.xz
   rv64ilp32_toolchain: https://github.com/ruyisdk/riscv-gnu-toolchain-rv64ilp32/releases/download/2025.01.16
@@ -154,17 +154,14 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=${KARCH} CROSS_COMPILE=${CROSS_COMPILE} ${{ matrix.config }}
-
-              # Apply arch-specific fixup fragments for non-riscv builds
-              if [ x"${{ matrix.arch }}" = x"x86" ]; then
-                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/x86_disable_broken.fragment
+              # For arm64/x86: apply fixup fragments to disable broken drivers, then build
+              if [ x"${{ matrix.arch }}" = x"x86" ] || [ x"${{ matrix.arch }}" = x"arm64" ]; then
+                make ARCH=${KARCH} ${{ matrix.config }}
+                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/${KARCH}_disable_broken.fragment
+                make ARCH=${KARCH} KCFLAGS+="-Werror -g" olddefconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              else
+                make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
               fi
-              if [ x"${{ matrix.arch }}" = x"arm64" ]; then
-                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/arm64_disable_broken.fragment
-              fi
-
-              make ARCH=${KARCH} KCFLAGS+="-Werror -g" all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
