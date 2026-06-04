@@ -35,6 +35,8 @@
 #define xlen_t u64
 #elif defined(__riscv)
 #define xlen_t u32
+#else
+#define xlen_t unsigned long
 #endif
 #endif
 
