@@ -154,10 +154,10 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              # For arm64/x86: apply fixup fragments to disable broken drivers, then build
-              if [ x"${{ matrix.arch }}" = x"x86" ] || [ x"${{ matrix.arch }}" = x"arm64" ]; then
+              # For x86: apply fixup fragment to disable broken IOMMU drivers, then build
+              if [ x"${{ matrix.arch }}" = x"x86" ]; then
                 make ARCH=${KARCH} ${{ matrix.config }}
-                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/${KARCH}_disable_broken.fragment
+                scripts/kconfig/merge_config.sh -m .config .github/kernel_fragments/x86_disable_broken.fragment
                 make ARCH=${KARCH} KCFLAGS+="-Werror -g" olddefconfig all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
               else
                 make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)

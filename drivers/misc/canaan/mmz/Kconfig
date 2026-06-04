@@ -1,5 +1,6 @@
 config K230_MMZ
 	tristate "K230 mem zone driver"
+	depends on RISCV
 	default	m
 	help
 		This option enables support for K230
