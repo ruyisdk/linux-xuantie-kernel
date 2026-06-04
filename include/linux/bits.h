@@ -31,10 +31,12 @@
 #endif
 
 #ifndef xlen_t
-#if __riscv_xlen == 64
+#if defined(__riscv) && (__riscv_xlen == 64)
 #define xlen_t u64
-#else
+#elif defined(__riscv)
 #define xlen_t u32
+#else
+#define xlen_t unsigned long
 #endif
 #endif
 
