@@ -35,14 +35,18 @@
 #define xlen_t u64
 #elif defined(__riscv)
 #define xlen_t u32
-#else
-#define xlen_t unsigned long
 #endif
 #endif
 
+#ifdef xlen_t
 #define __GENMASK(h, l) \
 	(ulong)(((~(xlen_t)(0)) - ((xlen_t)(1) << (l)) + 1) & \
 	 (~(xlen_t)(0) >> (sizeof(xlen_t) * BITS_PER_BYTE - 1 - (h))))
+#else
+#define __GENMASK(h, l) \
+	(((~UL(0)) - (UL(1) << (l)) + 1) & \
+	 (~UL(0) >> (BITS_PER_LONG - 1 - (h))))
+#endif
 #define GENMASK(h, l) \
 	(GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
 

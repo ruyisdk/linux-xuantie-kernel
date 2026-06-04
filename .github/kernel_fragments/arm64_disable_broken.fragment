@@ -1,0 +1,3 @@
+# Disable drivers with missing source files on arm64
+# dwc3-rtk.c: referenced in Makefile/Kconfig but source file not present in tree
+CONFIG_USB_DWC3_RTK=n
