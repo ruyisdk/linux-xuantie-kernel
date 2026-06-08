@@ -1,5 +1,6 @@
 config VPU_CANAAN
 	tristate "Linlon VPU support."
+	depends on RISCV
 	depends on VIDEO_DEV
 	depends on COMMON_CLK && HAS_DMA
 	select VIDEO_V4L2_SUBDEV_API
