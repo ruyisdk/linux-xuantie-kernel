@@ -35,14 +35,24 @@
 #define xlen_t u64
 #elif defined(__riscv)
 #define xlen_t u32
-#else
-#define xlen_t unsigned long
 #endif
 #endif
 
+/*
+ * xlen_t-based __GENMASK is only used in RISC-V C code (to keep s64ilp32
+ * working where unsigned long is narrower than the XLEN register width).
+ * Assembly and non-RISC-V targets fall back to the upstream form, which uses
+ * UL()/BITS_PER_LONG and contains no C-style casts that GNU as cannot parse.
+ */
+#if !defined(__ASSEMBLY__) && defined(__riscv)
 #define __GENMASK(h, l) \
-	(ulong)(((~(xlen_t)(0)) - ((xlen_t)(1) << (l)) + 1) & \
+	(unsigned long)(((~(xlen_t)(0)) - ((xlen_t)(1) << (l)) + 1) & \
 	 (~(xlen_t)(0) >> (sizeof(xlen_t) * BITS_PER_BYTE - 1 - (h))))
+#else
+#define __GENMASK(h, l) \
+	(((~UL(0)) - (UL(1) << (l)) + 1) & \
+	 (~UL(0) >> (BITS_PER_LONG - 1 - (h))))
+#endif
 #define GENMASK(h, l) \
 	(GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
 
