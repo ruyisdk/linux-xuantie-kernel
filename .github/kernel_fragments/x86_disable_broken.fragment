@@ -1,4 +1,0 @@
-# Disable drivers that have compilation issues on x86
-# AMD/Intel IOMMU: xuantie tree has internal API mismatches
-CONFIG_AMD_IOMMU=n
-CONFIG_INTEL_IOMMU=n

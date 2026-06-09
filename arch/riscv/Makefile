@@ -250,4 +250,4 @@ xuantie_rv32_defconfig:
 
 PHONY += xuantie_rv32_debug_defconfig
 xuantie_rv32_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config tee.config debuginfo.config xt_test.config ftrace.config ebpf.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig 32-bit.config fs.config tee.config debuginfo.config xt_test.config
