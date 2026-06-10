@@ -142,7 +142,7 @@ void resctrl_arch_rmid_idx_decode(u32 idx, u32 *closid, u32 *rmid)
 	*rmid = idx;
 }
 
-/* RISC-V resctrl interface does not maintain a default sqoscfg value for a given CPU */
+/* RISC-V resctrl interface does not maintain a default srmcfg value for a given CPU */
 void resctrl_arch_set_cpu_default_closid_rmid(int cpu, u32 closid, u32 rmid) { }
 
 void resctrl_sched_in(struct task_struct *tsk)
@@ -157,23 +157,23 @@ void resctrl_arch_sync_cpu_defaults(void *info)
 
 void resctrl_arch_set_closid_rmid(struct task_struct *tsk, u32 closid, u32 rmid)
 {
-	u32 sqoscfg;
+	u32 srmcfg;
 
-	WARN_ON_ONCE((closid & SQOSCFG_RCID_MASK) != closid);
-	WARN_ON_ONCE((rmid & SQOSCFG_MCID_MASK) != rmid);
+	WARN_ON_ONCE((closid & SRMCFG_RCID_MASK) != closid);
+	WARN_ON_ONCE((rmid & SRMCFG_MCID_MASK) != rmid);
 
-	sqoscfg = rmid << SQOSCFG_MCID_SHIFT;
-	sqoscfg |= closid;
-	WRITE_ONCE(tsk->thread.sqoscfg, sqoscfg);
+	srmcfg = rmid << SRMCFG_MCID_SHIFT;
+	srmcfg |= closid;
+	WRITE_ONCE(tsk->thread.srmcfg, srmcfg);
 }
 
 bool resctrl_arch_match_closid(struct task_struct *tsk, u32 closid)
 {
-	u32 sqoscfg;
+	u32 srmcfg;
 	bool match;
 
-	sqoscfg = READ_ONCE(tsk->thread.sqoscfg);
-	match = (sqoscfg & SQOSCFG_RCID_MASK) == closid;
+	srmcfg = READ_ONCE(tsk->thread.srmcfg);
+	match = (srmcfg & SRMCFG_RCID_MASK) == closid;
 	return match;
 }
 
@@ -181,9 +181,9 @@ bool resctrl_arch_match_rmid(struct task_struct *tsk, u32 closid, u32 rmid)
 {
 	u32 tsk_rmid;
 
-	tsk_rmid = READ_ONCE(tsk->thread.sqoscfg);
-	tsk_rmid >>= SQOSCFG_MCID_SHIFT;
-	tsk_rmid &= SQOSCFG_MCID_MASK;
+	tsk_rmid = READ_ONCE(tsk->thread.srmcfg);
+	tsk_rmid >>= SRMCFG_MCID_SHIFT;
+	tsk_rmid &= SRMCFG_MCID_MASK;
 
 	return tsk_rmid == rmid;
 }

@@ -108,7 +108,7 @@ struct thread_struct {
 	unsigned long memory_consistency_model;
 #endif
 #ifdef CONFIG_RISCV_ISA_SSQOSID
-	u32 sqoscfg;
+	u32 srmcfg;
 #endif
 } __attribute__((__aligned__(sizeof(xlen_t))));
 
