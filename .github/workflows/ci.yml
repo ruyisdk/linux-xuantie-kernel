@@ -163,28 +163,7 @@ jobs:
                 cat arch/riscv/configs/debuginfo.config
               fi
 
-              # Compile and capture build log for diagnosis. Show error context
-              # when the build fails so we can identify the root cause from CI output.
-              set -o pipefail
-              if make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc) 2>&1 | tee build.log; then
-                echo "Build succeeded"
-              else
-                rc=$?
-                echo "==================== BUILD FAILED (exit $rc) ===================="
-                echo "--- last 200 lines of build.log ---"
-                tail -n 200 build.log
-                echo "--- error/warning context (first 50 hits with 5 lines context) ---"
-                grep -n -B 2 -A 5 -E "error:|Error|warning:" build.log | head -n 400 || true
-                exit $rc
-              fi
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-build.log
-          path: build.log
-          retention-days: 14
+              make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
