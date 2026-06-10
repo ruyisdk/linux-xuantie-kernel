@@ -10,8 +10,8 @@ on:
 env:
   xt64_toolchain: https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/resource//1777015432925
   xt64_toolchain_file_name: Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0-20260323.tar.gz
-  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.05.19
-  rv32_toolchain_file_name: riscv32-glibc-ubuntu-24.04-gcc.tar.xz
+  rv32_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
+  rv32_toolchain_file_name: riscv32-glibc-ubuntu-22.04-gcc.tar.xz
   rv64_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2026.01.23
   rv64_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc.tar.xz
   rv64ilp32_toolchain: https://github.com/ruyisdk/riscv-gnu-toolchain-rv64ilp32/releases/download/2025.01.16
