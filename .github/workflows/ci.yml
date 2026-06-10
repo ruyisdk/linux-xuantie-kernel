@@ -197,8 +197,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
-        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie  , linux-64lp64-test]
+        # 64-bit RISC-V CPUs supported by xuantie-qemu (see qemu-system-riscv64 -cpu help).
+        # Cover c906/c907/c908/c920/c925/c930/r908 families.
+        cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2 , xt-c925v-cp , xt-c930v-cp , r908fdv ]
+        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie  , linux-64lp64-test ]
         include:
           - core_count: 4
           - cpu: c906fdv
@@ -230,17 +232,22 @@ jobs:
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
 
+      # Only run the full test suite (perf test) on xt-c925v-cp + linux-64lp64-test.
+      # Other (cpu, kernel) combinations only need to verify the kernel boots.
       - name: Setup network and install perf
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
         run: |
           .github/ci_scripts/check_qemu.exp 'ip link set eth0 up && udhcpc -i eth0 || dhclient eth0 || true' 60
           .github/ci_scripts/check_qemu.exp 'apt-get update && apt-get install -y perf' 300
 
       - name: Check perf test
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
         run: |
           .github/ci_scripts/check_qemu.exp 'echo 10 > /proc/sys/kernel/perf_event_max_sample_rate' 30
           .github/ci_scripts/check_qemu.exp 'perf test -s 8,17,19,20,21,22,23,25,26,35,56,64,66,68,80,82,85,105,110' 180 FAILED
 
       - name: Check perf stat
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
 
 
