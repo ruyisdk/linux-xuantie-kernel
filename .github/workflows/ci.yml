@@ -218,8 +218,17 @@ jobs:
 
       - name: Prepare rootfs opensbi and unpack artifacts
         run: |
-              cp ${XUANTIE_LINUX_SDK}/images/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
-              cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
+              # c925 / c930 are RVA23-class cores; use the rva23 rootfs and opensbi.
+              case "${{ matrix.cpu }}" in
+                xt-c925v-cp|xt-c930v-cp)
+                  IMAGE_DIR="${XUANTIE_LINUX_SDK}/images-rva23"
+                  ;;
+                *)
+                  IMAGE_DIR="${XUANTIE_LINUX_SDK}/images"
+                  ;;
+              esac
+              cp ${IMAGE_DIR}/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
+              cp ${IMAGE_DIR}/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
               # resize rootfs to have space for perf install
               e2fsck -fy ./rootfs_rv64.ext4 || true
