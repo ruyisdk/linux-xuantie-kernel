@@ -154,6 +154,15 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
+              # opensource rv32 toolchain (GCC 14) defaults to DWARF 5,
+              # which can break older binutils/pahole/objtool on the host.
+              # Drop CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT to test if
+              # disabling toolchain-default DWARF resolves the late build failure.
+              if [ x"${{ matrix.name }}" = x"linux-32ilp32-opensource-debug" ] || [ x"${{ matrix.name }}" = x"linux-64lp64-opensource-debug" ]; then
+                sed -i '/CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT=y/d' arch/riscv/configs/debuginfo.config
+                cat arch/riscv/configs/debuginfo.config
+              fi
+
               make ARCH=${KARCH} KCFLAGS+="-Werror -g" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
