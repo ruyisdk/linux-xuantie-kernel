@@ -264,19 +264,32 @@ jobs:
         if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
         run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
 
-      # On xt-c930v-cp + linux-64lp64-test, run the xuantie test suite
-      # (Kselftest, LTP, perf-extension, vcrypto).  The orchestrator:
+      # On xt-c930v-cp + linux-64lp64-test, run the full kselftest matrix
+      # (cgroup/fs/ftrace/hotplug/mm/pid/riscv/syscall) plus vcrypto-all.
+      # The orchestrator:
       #   - replaces /lib/modules/<KVER>/ via 9p host-share with freshly compiled modules;
       #   - provisions runner scripts from the repo's kernel_testsuite/ via 9p;
-      #   - apt-installs each test's deps then executes the runner.
-      - name: Run xuantie test suite (kselftest/ltp/perf-ext/vcrypto)
+      #   - apt-installs each test's deps then executes the runner;
+      #   - re-injects compiled modules whenever apt brings in kernel-module-* pkgs.
+      - name: Run xuantie test suite (kselftest/vcrypto) on c930
         if: ${{ matrix.cpu == 'xt-c930v-cp' && matrix.kernel == 'linux-64lp64-test' }}
         env:
           SKIP_BOOT: "1"
         run: |
           .github/ci_scripts/run_xt_test_suite.sh \
             --modules-dir ./modules_install \
-            --filter vcrypto-all,kselftest-riscv
+            --filter kselftest-cgroup,kselftest-fs,kselftest-ftrace,kselftest-hotplug,kselftest-mm,kselftest-pid,kselftest-riscv,kselftest-syscall,vcrypto-all
+
+      # On xt-c925v-cp + linux-64lp64-test, run LTP container/misc test groups
+      # using the same orchestrator as c930.
+      - name: Run xuantie test suite (ltp container/misc) on c925
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        env:
+          SKIP_BOOT: "1"
+        run: |
+          .github/ci_scripts/run_xt_test_suite.sh \
+            --modules-dir ./modules_install \
+            --filter ltp-container,ltp-misc
 
 
   xt-qemu-32ilp32:
