@@ -143,10 +143,10 @@ kselftest-mm	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_testsu
 kselftest-pid	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_testsuite/kselftest_run PID	7200	KSELFTEST TEST pid_namespace PASSED	ERROR!
 kselftest-riscv	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_testsuite/kselftest_run RISCV	7200	KSELFTEST TEST riscv PASSED	ERROR!
 kselftest-syscall	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_testsuite/kselftest_run SYSCALL	7200	KSELFTEST TEST syscall_user_dispatch PASSED	ERROR!
-ltp-container	inetutils-telnet ltp numa*	/etc/init.ci/kernel_testsuite/ltp_run CONTAINER	14400	LTP TEST container PASSED	ERROR!
-ltp-misc	inetutils-telnet ltp numa*	/etc/init.ci/kernel_testsuite/ltp_run MISC	7200	LTP TEST misc PASSED	ERROR!
+ltp-container	inetutils-telnet ltp numa* kernel-module-nls* kernel-module-veth*	/etc/init.ci/kernel_testsuite/ltp_run CONTAINER	14400	LTP TEST container PASSED	ERROR!
+ltp-misc	inetutils-telnet ltp numa* kernel-module-nls* kernel-module-veth* kernel-module-loop*	/etc/init.ci/kernel_testsuite/ltp_run MISC	7200	LTP TEST misc PASSED	ERROR!
 perf-extension-all	_	/etc/init.ci/kernel_testsuite/perf-extension-check_run ALL	1800	ALL EXTENSIONS TEST PASSED	ERROR!
-vcrypto-all	_	/etc/init.ci/kernel_testsuite/vcrypto_run ALL	1800	vcrypto TEST all PASSED	ERROR!
+vcrypto-all	kernel-module-aes* kernel-module-sm* kernel-module-sha* kernel-module-ghash* kernel-module-chacha* kernel-module-tcrypt* kernel-module-cbc* kernel-module-ctr*	/etc/init.ci/kernel_testsuite/vcrypto_run ALL	1800	vcrypto TEST all PASSED	ERROR!
 CASEEOF
 
 declare -a PASSED=() FAILED=() SKIPPED=()
@@ -183,6 +183,12 @@ while IFS=$'\t' read -r ID PKGS CMD TMOUT PASS FAILRE; do
         # but runner expects /usr/lib/kselftests when kernel has no 'yocto' in name
         if [[ "$PKGS" == *kernel-selftest* ]]; then
             "$CHECK_QEMU" 'ln -sf /usr/kernel-selftest /usr/lib/kselftests 2>/dev/null; ls /usr/lib/kselftests/run_kselftest.sh' 30 || true
+        fi
+        # Re-inject compiled modules if apt installed kernel-module-* packages,
+        # so our freshly built .ko files always take precedence over the SDK ones.
+        if [[ "$PKGS" == *kernel-module-* ]]; then
+            log "re-injecting compiled modules (apt kernel-module-* may have overwritten them)"
+            "$INJECT_MOD" hostshare /mnt/hostshare || log "WARN: re-inject after apt failed"
         fi
     fi
 
