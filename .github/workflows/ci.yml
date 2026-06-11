@@ -241,7 +241,7 @@ jobs:
           # xt-c930v-cp + linux-64lp64-test path can replace the in-rootfs
           # /lib/modules/<KVER>/ tree with the freshly compiled one.
           # Other (cpu, kernel) combinations simply ignore this device.
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -netdev user,id=net0 -device virtio-net-device,netdev=net0 -fsdev local,security_model=mapped-xattr,id=fsdev0,path=$(pwd) -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -monitor none -monitor none -serial telnet:localhost:5678,server &
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -m 4G -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -netdev user,id=net0 -device virtio-net-device,netdev=net0 -fsdev local,security_model=mapped-xattr,id=fsdev0,path=$(pwd) -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
