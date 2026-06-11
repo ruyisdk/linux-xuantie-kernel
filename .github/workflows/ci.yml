@@ -230,6 +230,14 @@ jobs:
               cp ${IMAGE_DIR}/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
               cp ${IMAGE_DIR}/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
+              # The modules_install/<KVER>/build and /source are absolute symlinks
+              # back into the kernel build tree.  When this dir is exposed to the
+              # guest via virtio-9p (mapped-xattr), those links resolve into a
+              # 9p loop and trip ELOOP ("Too many levels of symbolic links")
+              # during inject_modules' cp -a.  We do not need them at runtime,
+              # so drop them on the host before launching QEMU.
+              find ./modules_install/lib/modules -mindepth 2 -maxdepth 2 \
+                   \( -name build -o -name source \) -print -delete || true
               # resize rootfs to have space for perf install
               e2fsck -fy ./rootfs_rv64.ext4 || true
               resize2fs ./rootfs_rv64.ext4 2G
@@ -241,7 +249,32 @@ jobs:
           # xt-c930v-cp + linux-64lp64-test path can replace the in-rootfs
           # /lib/modules/<KVER>/ tree with the freshly compiled one.
           # Other (cpu, kernel) combinations simply ignore this device.
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -m 4G -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -netdev user,id=net0 -device virtio-net-device,netdev=net0 -fsdev local,security_model=mapped-xattr,id=fsdev0,path=$(pwd) -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare -monitor none -monitor none -serial telnet:localhost:5678,server &
+          #
+          # For the test-suite combinations (xt-c925v-cp/xt-c930v-cp +
+          # linux-64lp64-test) we beef up the QEMU machine: 8 vCPU, 8G RAM
+          # split into two NUMA nodes, ACLINT + AIA (APLIC/IMSIC) enabled.
+          # ACLINT/AIA give us a complete IRQ topology so kselftest/LTP IRQ
+          # rebalance tests behave; NUMA + larger SMP help LTP misc lock /
+          # mm tests pass.  Other matrix entries keep the lean defaults.
+          SMP="${{ matrix.core_count }}"
+          MEM="4G"
+          MACHINE="virt"
+          NUMA_ARGS=""
+          if [[ "${{ matrix.kernel }}" == "linux-64lp64-test" \
+             && ( "${{ matrix.cpu }}" == "xt-c925v-cp" || "${{ matrix.cpu }}" == "xt-c930v-cp" ) ]]; then
+            SMP=8
+            MEM="8G"
+            MACHINE="virt,aclint=on,aia=aplic-imsic"
+            NUMA_ARGS="-object memory-backend-ram,id=mem0,size=4G -object memory-backend-ram,id=mem1,size=4G -numa node,memdev=mem0,cpus=0-3,nodeid=0 -numa node,memdev=mem1,cpus=4-7,nodeid=1"
+          fi
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp $SMP -m $MEM -M $MACHINE \
+            -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' \
+            -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
+            $NUMA_ARGS \
+            -netdev user,id=net0 -device virtio-net-device,netdev=net0 \
+            -fsdev local,security_model=mapped-xattr,id=fsdev0,path=$(pwd) \
+            -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare \
+            -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180

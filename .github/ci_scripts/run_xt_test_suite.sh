@@ -162,6 +162,40 @@ want_run() {
     return 1
 }
 
+# ---- batch apt install -----------------------------------------------------
+# Collect every apt pkg from the cases that will run, dedupe, and install in
+# a single guest-side apt-get call.  This avoids paying a 1st-time download +
+# unpack per case (the cgroup case alone has hit our 900s per-case timeout).
+# Per-case apt install is still kept below as an idempotent safety net.
+ALL_PKGS=""
+while IFS=$'\t' read -r ID PKGS _CMD _TMOUT _PASS _FAIL; do
+    [[ -z "${ID:-}" ]] && continue
+    if ! want_run "$ID"; then continue; fi
+    [[ -z "${PKGS// }" || "$PKGS" == "_" ]] && continue
+    ALL_PKGS+=" $PKGS"
+done <<< "$CASE_TABLE"
+# Dedup whitespace-separated pkg list.
+ALL_PKGS="$(printf '%s\n' $ALL_PKGS | awk 'NF && !seen[$0]++' | tr '\n' ' ')"
+HAS_KMOD=0
+if [[ "$ALL_PKGS" == *kernel-module-* ]]; then HAS_KMOD=1; fi
+HAS_KSELF=0
+if [[ "$ALL_PKGS" == *kernel-selftest* ]]; then HAS_KSELF=1; fi
+
+if [[ -n "${ALL_PKGS// }" ]]; then
+    log "batch apt-install for selected cases:"
+    log "  pkgs = $ALL_PKGS"
+    if ! "$CHECK_QEMU" "dpkg --configure -a 2>/dev/null; apt-get install -y -qq ${ALL_PKGS}; echo APT_EXIT=\$?" 2400; then
+        log "WARN: batch apt install reported errors; per-case installs will retry"
+    fi
+    if [[ $HAS_KSELF -eq 1 ]]; then
+        "$CHECK_QEMU" 'ln -sf /usr/kernel-selftest /usr/lib/kselftests 2>/dev/null; ls /usr/lib/kselftests/run_kselftest.sh' 30 || true
+    fi
+    if [[ $HAS_KMOD -eq 1 ]]; then
+        log "re-injecting compiled modules after batch apt install"
+        "$INJECT_MOD" hostshare /mnt/hostshare || log "WARN: re-inject after batch apt failed"
+    fi
+fi
+
 while IFS=$'\t' read -r ID PKGS CMD TMOUT PASS FAILRE; do
     [[ -z "${ID:-}" ]] && continue
     if ! want_run "$ID"; then continue; fi
@@ -176,19 +210,15 @@ while IFS=$'\t' read -r ID PKGS CMD TMOUT PASS FAILRE; do
     log "============================================================"
 
     if [[ -n "${PKGS// }" && "$PKGS" != "_" ]]; then
-        if ! "$CHECK_QEMU" "dpkg --configure -a 2>/dev/null; apt-get install -y -qq ${PKGS}; echo APT_EXIT=\$?" 900; then
+        # Idempotent retry: pkgs were already installed in the batch step,
+        # so this should return immediately.  Short timeout is fine.
+        if ! "$CHECK_QEMU" "dpkg --configure -a 2>/dev/null; apt-get install -y -qq ${PKGS}; echo APT_EXIT=\$?" 300; then
             log "WARN: apt install for $ID failed; running test anyway"
         fi
         # compat: kernel-selftest pkg installs to /usr/kernel-selftest (yocto)
         # but runner expects /usr/lib/kselftests when kernel has no 'yocto' in name
         if [[ "$PKGS" == *kernel-selftest* ]]; then
             "$CHECK_QEMU" 'ln -sf /usr/kernel-selftest /usr/lib/kselftests 2>/dev/null; ls /usr/lib/kselftests/run_kselftest.sh' 30 || true
-        fi
-        # Re-inject compiled modules if apt installed kernel-module-* packages,
-        # so our freshly built .ko files always take precedence over the SDK ones.
-        if [[ "$PKGS" == *kernel-module-* ]]; then
-            log "re-injecting compiled modules (apt kernel-module-* may have overwritten them)"
-            "$INJECT_MOD" hostshare /mnt/hostshare || log "WARN: re-inject after apt failed"
         fi
     fi
 
