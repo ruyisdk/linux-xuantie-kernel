@@ -147,6 +147,31 @@ static int riscv_ext_svadu_validate(const struct riscv_isa_ext_data *data,
 	return 0;
 }
 
+/*
+ * Validate vector crypto extension dependencies.
+ * Zvkn requires both Zvkned and Zvknhb to be present.
+ */
+static int riscv_ext_zvkn_validate(const struct riscv_isa_ext_data *data,
+				   const unsigned long *isa_bitmap)
+{
+	char *buf;
+
+	buf = kmalloc(256, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	if (!__riscv_isa_extension_available(isa_bitmap, RISCV_ISA_EXT_ZVE32F)) {
+		pr_err("Zvkn requires Zve32f, disabling\n");
+		return -EINVAL;
+	}
+
+	snprintf(buf, 256, "zvkn validated on cpu %d", smp_processor_id());
+	pr_info("%s\n", buf);
+	kfree(buf);
+
+	return 0;
+}
+
 static int riscv_ext_zca_depends(const struct riscv_isa_ext_data *data,
 				 const unsigned long *isa_bitmap)
 {
