@@ -312,7 +312,7 @@ jobs:
         run: |
           .github/ci_scripts/run_xt_test_suite.sh \
             --modules-dir ./modules_install \
-            --filter kselftest-cgroup,kselftest-fs,kselftest-ftrace,kselftest-hotplug,kselftest-mm,kselftest-pid,kselftest-riscv,kselftest-syscall,vcrypto-all
+            --filter kselftest-cgroup,kselftest-fs,kselftest-ftrace,kselftest-hotplug,kselftest-mm,kselftest-pid,kselftest-riscv,kselftest-syscall,vcrypto-all,bitops,random,perf-record
 
       # On xt-c925v-cp + linux-64lp64-test, run LTP container/misc test groups
       # using the same orchestrator as c930.

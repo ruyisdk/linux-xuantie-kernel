@@ -1,0 +1,97 @@
+#!/bin/bash
+
+echo "Start test_bitops"
+
+count=3
+
+for i in $(seq 1 $count); do
+
+    # 运行 test_bitops 并将输出保存在变量
+    output=$( { time modprobe test_bitops; } 2>&1 )
+
+
+    # 打印 test_bitops 的完整输出
+    echo "$output"
+    score=0
+
+
+    # 使用 grep 和 awk 从输出中提取时间
+    # 提取时间值
+    time_info=$(echo "$output" | grep 'real')
+    if [[ -n $time_info ]]; then
+        echo "$time_info" | awk '{print $2}' | while read minutes_seconds; do
+            minutes=${minutes_seconds%m*}
+            seconds=${minutes_seconds#*m}
+            seconds=${seconds%s*}
+            echo "Minutes: $minutes, Seconds: $seconds"
+            
+            
+            # 转换为秒
+            minutes_in_seconds=$(echo "$minutes * 60" | bc)
+            total_seconds=$(printf "%.3f" "$(echo "$seconds" | bc)")
+
+            # 计算总秒数
+            score=$(echo "$minutes_in_seconds + $total_seconds" | bc)
+            
+            echo "Second: $score"
+
+            echo "one TEST PASSED"
+
+        done
+    else
+        echo "ERROR! Couldn't modprobe test_bitops"
+        exit 1
+    fi
+
+    rmmod test_bitops
+
+done
+
+echo "Start test_bitops(string)"
+
+count=3
+
+for i in $(seq 1 $count); do
+
+    # 运行 test_bitops(string) 并将输出保存在变量
+    output=$( { time modprobe test_string; } 2>&1 )
+
+
+    # 打印 test_bitops 的完整输出
+    echo "$output"
+    score=0
+
+
+    # 使用 grep 和 awk 从输出中提取时间
+    # 提取时间值
+    time_info=$(echo "$output" | grep 'real')
+    if [[ -n $time_info ]]; then
+        echo "$time_info" | awk '{print $2}' | while read minutes_seconds; do
+            minutes=${minutes_seconds%m*}
+            seconds=${minutes_seconds#*m}
+            seconds=${seconds%s*}
+            echo "Minutes: $minutes, Seconds: $seconds"
+            
+            
+            # 转换为秒
+            minutes_in_seconds=$(echo "$minutes * 60" | bc)
+            total_seconds=$(printf "%.3f" "$(echo "$seconds" | bc)")
+
+            # 计算总秒数
+            score=$(echo "$minutes_in_seconds + $total_seconds" | bc)
+            
+            echo "Second: $score"
+
+            echo "one TEST PASSED"
+
+        done
+    else
+        echo "ERROR! Couldn't modprobe test_string"
+        exit 1
+    fi
+
+    rmmod test_string
+
+done
+
+echo "bitops TEST PASSED"

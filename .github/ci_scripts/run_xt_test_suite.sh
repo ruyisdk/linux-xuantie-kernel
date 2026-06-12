@@ -145,6 +145,9 @@ kselftest-riscv	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_tes
 kselftest-syscall	perl* kernel-selftest util-linux-taskset	/etc/init.ci/kernel_testsuite/kselftest_run SYSCALL	7200	KSELFTEST TEST syscall_user_dispatch PASSED	ERROR!
 ltp-container	inetutils-telnet ltp numa* kernel-module-nls* kernel-module-veth*	/etc/init.ci/kernel_testsuite/ltp_run CONTAINER	14400	LTP TEST container PASSED	ERROR!
 ltp-misc	inetutils-telnet ltp numa* kernel-module-nls* kernel-module-veth* kernel-module-loop*	/etc/init.ci/kernel_testsuite/ltp_run MISC	7200	LTP TEST misc PASSED	ERROR!
+bitops	bc kernel-module-test-bitops* kernel-module-test-string*	/etc/init.ci/kernel_testsuite/bitops_run	1800	bitops TEST PASSED	ERROR!
+random	bc	/etc/init.ci/kernel_testsuite/random_run	1800	ZKR TEST PASSED	ERROR!
+perf-record	perf lmbench bc	/etc/init.ci/kernel_testsuite/perf_record_run	1800	PERF RECORD TEST PASSED	ERROR!
 perf-extension-all	_	/etc/init.ci/kernel_testsuite/perf-extension-check_run ALL	1800	ALL EXTENSIONS TEST PASSED	ERROR!
 vcrypto-all	kernel-module-aes* kernel-module-sm* kernel-module-sha* kernel-module-ghash* kernel-module-chacha* kernel-module-tcrypt* kernel-module-cbc* kernel-module-ctr*	/etc/init.ci/kernel_testsuite/vcrypto_run ALL	1800	vcrypto TEST all PASSED	ERROR!
 CASEEOF

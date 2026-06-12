@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# echo "deb [trusted=yes] http://11.122.132.234/xuantie-v/deb/dev/1.x/kernel_6.6/riscv64/zhijiang ./" | tee /etc/apt/sources.list > /dev/null
+# echo "deb [trusted=yes] http://11.122.132.234/xuantie-v/deb/dev/1.x/kernel_6.6/riscv64/common ./" >> /etc/apt/sources.list
+# echo "deb [trusted=yes] http://11.122.132.234/xuantie-v/deb/dev/1.x/kernel_6.6/riscv64/kernel_6.6_debug ./" >> /etc/apt/sources.list 
+
+# apt update
+# apt install -y perf
+
+GLOBAL_SCALE=4
+
+convert_to_float() {
+    local value="$1"
+    echo "$value" | awk '{printf "%.'$GLOBAL_SCALE'f\n", $1}'
+}
+
+get_average() {
+    local values=("$@")
+    local sum=0
+    local count=${#values[@]}
+
+    for value in "${values[@]}"; do
+        value=$(convert_to_float "$value")
+        sum=$(echo "scale=$GLOBAL_SCALE; $sum + $value" | bc -l)
+    done
+
+    local average=$(echo "scale=$GLOBAL_SCALE; $sum / $count" | bc -l)
+    printf "%.${GLOBAL_SCALE}f\n" "$average"
+}
+
+# get cpu frequency via mhz
+get_cpu_frequency() {
+    if ! command -v mhz &> /dev/null; then
+        echo "1000.0000"
+        return 0
+    fi
+    
+    local results=()
+    for i in $(seq 1 3); do
+        local mhz_val
+        mhz_val=$(timeout 30 mhz -c 2>/dev/null)
+        if [ $? -ne 0 ] || [ -z "$mhz_val" ]; then
+            echo "1000.0000"
+            return 0
+        fi
+        results+=("$(echo "scale=$GLOBAL_SCALE; 1000 / $mhz_val" | bc -l)")
+    done
+
+    printf "%.${GLOBAL_SCALE}f\n" "$(get_average "${results[@]}")"
+}
+
+CPU_MHZ=$(get_cpu_frequency)
+
+# 忽略权限报错，避免非 root 环境直接中断脚本
+sysctl -w kernel.perf_event_max_sample_rate=10 2>/dev/null || true
+
+# ==============================================================================
+# 统一测试执行器：负责运行命令、捕获调试信息、生成报告、清理临时文件
+# ==============================================================================
+run_perf_cmd() {
+    local cmd="$1"
+    echo "Running: $cmd"
+    
+    local tmp_err="/tmp/perf_debug_$$.err"
+    
+    # 执行命令，仅将标准错误重定向到临时文件
+    $cmd 2>"$tmp_err"
+    local rc=$?
+    
+    if [ $rc -ne 0 ]; then
+        echo "ERROR! Failed: $cmd (exit code: $rc)"
+        if [ -s "$tmp_err" ]; then
+            echo "[Debug Output]"
+            cat "$tmp_err"
+            echo "[End Debug Output]"
+        fi
+        echo "Hint: Please refer to 'perf record -h' for valid parameters."
+        rm -f "$tmp_err"
+        return 1
+    fi
+    
+    rm -f "$tmp_err"
+    # 保持原脚本的 report 生成与清理逻辑
+    perf --no-pager report 2>&1 | tee perf_record.log > /dev/null
+    rm -rf perf_record.log
+    return 0
+}
+
+# ==============================================================================
+# 主流程
+# ==============================================================================
+if ! command -v perf &> /dev/null; then
+    echo "ERROR! perf does NOT exist!"
+    exit 1
+fi
+
+FAIL_COUNT=0
+
+# 1. 基础 callgraph 测试
+run_perf_cmd "perf record -g /etc/init.ci/kernel_testsuite/callchain_test" || ((FAIL_COUNT++))
+
+# 2. 根据频率和内核类型决定是否运行 fp/dwarf 测试
+if [ "$(echo "$CPU_MHZ < 100" | bc)" -eq 1 ]; then
+    echo "CPU Freq $CPU_MHZ less than 100MHZ, assume it runs on FPGA"
+else
+    echo "CPU Freq $CPU_MHZ more than 100MHZ, assume it runs on Qemu"
+    if uname -a | grep -q "ali6000"; then
+        echo "Kernel is ali6000, not support ctr callgraph"
+    else
+        run_perf_cmd "perf record -F 10 --call-graph fp ls" || ((FAIL_COUNT++))
+        run_perf_cmd "perf record -F 10 --call-graph dwarf ls" || ((FAIL_COUNT++))
+    fi
+fi
+
+# 最终结果汇总
+if [ $FAIL_COUNT -eq 0 ]; then
+    echo "PERF RECORD TEST PASSED"
+else
+    echo "ERROR! PERF RECORD TEST COMPLETED WITH $FAIL_COUNT FAILURE(S)"
+    exit 1
+fi
