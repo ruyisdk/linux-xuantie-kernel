@@ -243,6 +243,7 @@ jobs:
               resize2fs ./rootfs_rv64.ext4 2G
 
       - name: Run Qemu
+        shell: bash
         run: |
           # Expose the workspace (which holds modules_install/ after tar -xvf)
           # to the guest via virtio-9p with mount_tag=hostshare, so the
