@@ -1,0 +1,227 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+
+
+
+# apt update
+# apt install -y kernel-module*
+
+# 检查 tcrypt 是否存在
+if ! find /lib/modules/ -name tcrypt.ko > /dev/null 2>&1; then
+    echo "ERROR! tcrypt does NOT exist!!! !ERROR!"; exit 1
+fi
+
+# 定义加解密算法和其对应的扩展
+declare -A module_extensions=(
+    ["aes_riscv64"]="zvkb zvkg zvkned zvbb"
+    ["sm3_riscv64"]="zvksh zvkb"
+    ["sha512_riscv64"]="zvknhb zvkb"
+    ["sha384_riscv64"]="zvknhb zvkb"
+    ["sha256_riscv64"]="zvkb zvknha zvknhb"
+    ["chacha_riscv64"]="zvkb"
+    ["ghash_riscv64"]="zvkg"
+    ["sm4_riscv64"]="zvksed zvkb"
+    ["sha224_riscv64"]="zvknha zvknhb zvkb"
+)
+
+# 定义 GROUP 到模块的映射
+declare -A group_modules=(
+    [sm3]="sm3_riscv64"
+    [sm4]="sm4_riscv64"
+    [sha256]="sha256_riscv64"
+    [sha384]="sha384_riscv64"
+    [sha512]="sha512_riscv64"
+    [sha224]="sha224_riscv64"
+    [ghash]="ghash_riscv64"
+    [chacha]="chacha_riscv64"
+    [aes]="aes_riscv64"
+)
+
+# 定义日志目录
+RESULT_DIR="$PWD/vcrypto-result"
+mkdir -p "$RESULT_DIR"
+
+# 日志文件
+log_file="$RESULT_DIR/vcrypto_test.log"
+
+print_help() {
+    echo "Usage: $0 [test_group]" | tee -a "$log_file"
+    echo "test_group can be one of: { SM3 | SM4 | SHA256 | SHA384 | SHA512 | SHA224 | GHASH | CHACHA20 | AES | ALL }" | tee -a "$log_file"
+    echo "ERROR! Missing Args !ERROR" | tee -a "$log_file"
+    exit 1
+}
+
+check_crypto_extensions() {
+    local module=$1
+    local proc_module_name=$(echo $module | tr '_' '-')
+
+    # modprobe chacha_riscv64 后对应的grep chacha20-riscv64 /proc/crypto ；chacha20-riscv64名称不统一导致需要特殊处理
+    local check_module=$module
+    if [ "$module" = "chacha_riscv64" ]; then
+        proc_module_name="chacha20-riscv64"
+    fi
+    local extensions=${module_extensions[$module]}
+
+    if [ -z "$extensions" ]; then
+        echo "No extensions defined for module: $module" | tee -a "$log_file"; exit 1
+    fi
+
+    output=$(grep "$proc_module_name" /proc/crypto)
+    if [ -n "$output" ]; then
+        all_extensions_found=true
+        for ext in $extensions; do
+            if ! echo "$output" | grep -q "$ext"; then
+                all_extensions_found=false
+                echo "Extension $ext not found for module: $module" | tee -a "$log_file"
+                echo "ERROR! vcrypto test contains failure !ERROR!" | tee -a "$log_file"; exit 1
+            else
+                echo "Found extension: $ext for module: $module" | tee -a "$log_file"
+            fi
+        done
+
+        if [ "$all_extensions_found" = true ]; then
+            echo "All supported extensions found for $module" | tee -a "$log_file"
+        else
+            echo "Not all supported extensions found for $module" | tee -a "$log_file"
+            echo "ERROR! vcrypto test contains failure !ERROR!" | tee -a "$log_file"; exit 1
+        fi
+    else
+        echo "$module not found in /proc/crypto" | tee -a "$log_file"
+        echo "ERROR! vcrypto test contains failure !ERROR!" | tee -a "$log_file"; exit 1
+    fi
+}
+
+run_vcrypto_test() {
+    local GROUP=$1
+    local TESTLIST=$2
+    local SKIPLIST=$3
+
+    echo 8 > /proc/sys/kernel/printk
+
+    echo "==== Test List $TESTLIST in Group $GROUP" | tee -a "$log_file"
+
+    # 根据 GROUP 加载相关模块
+    if [ "$GROUP" = "all" ]; then
+        modules=("${!module_extensions[@]}")
+    else
+        modules=(${group_modules[$GROUP]})
+        if [ -z "${modules[0]}" ]; then
+            echo "Unknown GROUP: $GROUP" | tee -a "$log_file"
+            print_help
+            exit 1
+        fi
+    fi
+
+    # 加载模块并检查扩展,其中ssh224的会在256加载的时候加载，384会在512加载的时候加载
+    for module in "${modules[@]}"; do
+        # echo "modprobe $module"
+        if [ "$module" = "sha224_riscv64" ]; then
+            modprobe sha256_riscv64
+        elif [ "$module" = "sha384_riscv64" ]; then
+            modprobe sha512_riscv64
+        else
+            modprobe $module
+        fi
+        support_vcrypt=$(grep "zvkg" /proc/cpuinfo)
+        if [ -n "$support_vcrypt" ]; then
+            check_crypto_extensions $module || exit 1
+        else
+            echo "Warning! Not support vcrypt(may not add vcrypt isa)"
+        fi
+    done
+
+    for case in $TESTLIST; do
+      dmesg -c
+      modprobe tcrypt mode=$case dyndbg
+      dmesg | tee -a "$log_file"
+    done
+
+    # 卸载模块
+    for module in "${modules[@]}"; do
+        rmmod $module
+    done
+
+    cat "$log_file"
+    if grep -q "tcrypt: one or more tests failed!" "$log_file"; then
+      grep "failed to" "$log_file" > "$RESULT_DIR/error_$GROUP.log"
+
+      # 将 SKIPLIST 转换为数组
+      read -r -a skip_items <<< "$SKIPLIST"
+
+      # 遍历 skip_items，删除err 中包含 skip_items 的行
+      for skip_item in "${skip_items[@]}"; do
+          sed -i "/$skip_item/d" "$RESULT_DIR/error_$GROUP.log"
+      done
+      if [ ! -s "$RESULT_DIR/error_$GROUP.log" ]; then
+        echo "vcrypto TEST ${GROUP} PASSED" | tee -a "$log_file"
+      else
+        if [ -n "$support_vcrypt" ]; then
+            echo "ERROR! vcrypto test contains failure !ERROR!" | tee -a "$log_file"; exit 1
+        else
+            echo "Warning! Not support vcrypt(may not add vcrypt isa),just test crypt-generic"
+            echo "vcrypto TEST ${GROUP} PASSED" | tee -a "$log_file"
+        fi
+      fi
+    else
+        echo "vcrypto TEST ${GROUP} PASSED" | tee -a "$log_file"
+    fi
+}
+
+# main body of the script
+
+case $1 in
+    SM3)
+        GROUP=sm3
+        TESTLIST="52 326 422"
+        ;;
+    SM4)
+        GROUP=sm4
+        TESTLIST="191 218 518"
+        SKIPLIST="ecb(sm4) cts(cbc(sm4)) cfb(sm4) xts(sm4)"
+        ;;
+    SHA256)
+        GROUP=sha256
+        TESTLIST="6 304 404"
+        ;;
+    SHA384)
+        GROUP=sha384
+        TESTLIST="11 305 405"
+        ;;
+    SHA512)
+        GROUP=sha512
+        TESTLIST="12 306 406"
+        ;;
+    SHA224)
+        GROUP=sha224
+        TESTLIST="33 313 413"
+        ;;
+    GHASH)
+        GROUP=ghash
+        TESTLIST="46 318"
+        ;;
+    CHACHA20)
+        GROUP=chacha20
+        TESTLIST="214"
+        ;;
+    AES)
+        GROUP=aes
+        TESTLIST="10 200 500"
+        SKIPLIST="lrw(aes) cts(cbc(aes)) cfb(aes) ofb(aes) xctr(aes)"
+        ;;
+    ALL)
+        GROUP=all
+        TESTLIST="52 326 422 191 218 518 11 305 405 12 306 406 33 313 413 46 318 214 10 200 500 6 304 404"
+        SKIPLIST="ecb(sm4) cts(cbc(sm4)) cfb(sm4) xts(sm4) lrw(aes) cts(cbc(aes)) cfb(aes) ofb(aes) xctr(aes)"
+        ;;
+    *)
+        print_help
+        ;;
+esac
+
+echo "==== Running vcrypto Test ===="  | tee $log_file
+start_time=$(date +"%Y-%m-%d %H:%M:%S")
+echo "==== StartTime: $start_time ====" | tee -a $log_file
+run_vcrypto_test "$GROUP" "$TESTLIST" "${SKIPLIST:-}"
+# 记录结束时间
+end_time=$(date +"%Y-%m-%d %H:%M:%S")
+echo "==== EndTime: $end_time ====" | tee -a $log_file

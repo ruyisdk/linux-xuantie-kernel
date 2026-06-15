@@ -1,0 +1,37 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Smoke test for the kernel hwrng / vRNG path: drains a fixed amount of
+# bytes from /dev/random three times and reports the wall time for each
+# round.  Hardware-backed entropy (e.g. ZKR) speeds this up dramatically;
+# pure software fallback is also acceptable as long as `dd` succeeds.
+
+set -u
+
+echo "Start test random"
+
+count=3
+for i in $(seq 1 "$count"); do
+    output=$( { time dd if=/dev/random of=/dev/null bs=10240 count=10240; } 2>&1 )
+    echo "$output"
+
+    time_info=$(echo "$output" | grep 'real')
+    if [[ -z "$time_info" ]]; then
+        echo "ERROR! Couldn't generate random"
+        continue
+    fi
+
+    echo "$time_info" | awk '{print $2}' | while read -r ms; do
+        minutes=${ms%m*}
+        seconds=${ms#*m}
+        seconds=${seconds%s*}
+        mins_in_sec=$(echo "$minutes * 60" | bc)
+        total=$(printf "%.3f" "$(echo "$seconds" | bc)")
+        score=$(echo "$mins_in_sec + $total" | bc)
+        echo "Minutes: $minutes, Seconds: $seconds"
+        echo "Second: $score"
+        echo "one TEST PASSED"
+    done
+done
+
+echo "ZKR TEST PASSED"

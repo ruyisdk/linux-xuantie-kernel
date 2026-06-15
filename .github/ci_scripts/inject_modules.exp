@@ -1,0 +1,94 @@
+#!/usr/bin/expect -f
+# SPDX-License-Identifier: MIT
+#
+# Inject freshly compiled kernel modules into the running QEMU guest, fully
+# replacing /lib/modules/$(uname -r) with the build artifact's modules_install/
+# tree.  The host directory is exposed to the guest via virtio-9p with
+# mount_tag=hostshare; the QEMU launch line in run_xt_test_suite.sh sets up
+# the -fsdev so this script just has to mount and copy.
+#
+# We 9p-share the artifact's modules_install/ straight into the guest and
+# overlay /lib/modules/<KVER> with cp -a + depmod -a, guaranteeing the
+# modules match the Image we booted.
+
+set timeout 240
+
+set TAG    [lindex $argv 0]
+set GMOUNT [lindex $argv 1]
+if { $TAG    == "" } { set TAG    "hostshare" }
+if { $GMOUNT == "" } { set GMOUNT "/mnt/hostshare" }
+
+send_user "\n== InjectModules ==\n"
+send_user "  9p mount tag : $TAG\n"
+send_user "  guest mount  : $GMOUNT\n"
+send_user "===================\n\n"
+
+spawn telnet localhost 5678
+send "\r"
+
+# Helper: send a short command and wait for the prompt
+proc run_cmd {cmd} {
+    send "$cmd\r"
+    expect {
+        "# " {}
+        timeout { send_user "\nERROR: timeout after: $cmd\n"; exit 1 }
+    }
+}
+
+expect {
+    "# " {}
+    "login:" {
+        send "root\r"
+        exp_continue
+    }
+    timeout {
+        send_user "\n== InjectModules == ERROR: shell prompt not seen\n"
+        exit 1
+    }
+}
+
+# Step 1: get kernel version
+run_cmd "KVER=\$(uname -r); echo INJECT_KVER=\$KVER"
+
+# Step 2: load 9p modules
+run_cmd "modprobe 9p 2>/dev/null || true"
+run_cmd "modprobe 9pnet_virtio 2>/dev/null || true"
+
+# Step 3: mount 9p if not already mounted
+run_cmd "mkdir -p $GMOUNT"
+run_cmd "mountpoint -q $GMOUNT || mount -t 9p -o trans=virtio,version=9p2000.L $TAG $GMOUNT"
+
+# Step 4: verify source modules exist
+run_cmd "SRC=$GMOUNT/modules_install/lib/modules/\$KVER; test -d \$SRC && echo SRC_OK || echo MODULES_NOT_FOUND_AT \$SRC"
+
+# Step 5: inject modules and depmod
+send "rm -rf /lib/modules/\$KVER && mkdir -p /lib/modules/\$KVER\r"
+expect "# "
+send "cp -a \$SRC/. /lib/modules/\$KVER/\r"
+set timeout 600
+expect "# "
+send "depmod -a \$KVER\r"
+expect "# "
+send "echo MODULES_INJECTED_OK; echo Finished 0 ExitCode\r"
+
+expect {
+    "MODULES_NOT_FOUND_AT" {
+        send_user "\n== InjectModules == FAILED: artifact missing modules_install/lib/modules/<KVER>\n"
+        exit 1
+    }
+    "MODULES_INJECTED_OK" {
+        exp_continue
+    }
+    "Finished 0 ExitCode" {
+        send_user "\n== InjectModules == PASSED\n"
+        exit 0
+    }
+    -re "Finished \\d+ ExitCode" {
+        send_user "\n== InjectModules == FAILED: non-zero exit\n"
+        exit 2
+    }
+    timeout {
+        send_user "\n== InjectModules == ERROR: timeout while injecting modules\n"
+        exit 3
+    }
+}

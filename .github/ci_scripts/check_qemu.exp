@@ -1,4 +1,5 @@
 #!/usr/bin/expect -f
+# SPDX-License-Identifier: MIT
 
 if { $argc < 1 } {
     puts "Usage: $argv0 <COMMAND> <TIMEOUT> <FAIL STR> <PASS STR>"

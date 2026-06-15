@@ -1,0 +1,179 @@
+########################################
+# skiplist for LTP Version 20240129
+########################################
+
+################################
+#  FS ALL PASSED
+################################
+
+################################
+#  SYSCALL ALL PASSED
+# all test passed
+################################
+
+# msgstress test taking too long time
+# skip cases moved to stress testing
+msgstress01
+msgstress02
+msgstress03
+msgstress04
+
+# time accuracy tests failed because
+# Qemu not able to provide accurate timer
+clock_nanosleep02
+epoll_wait02
+epoll_pwait03
+getrusage04
+nanosleep01
+poll02
+prctl09
+pselect01
+pselect01_64
+select02
+futex_wait05
+clock_gettime03
+clock_gettime04
+
+# fpga is too slow
+clock_adjtime01
+clock_adjtime02
+leapsec01
+
+# functions below are not supported yet
+logrotate_sh         # do not support logrotate
+mkswap01_sh          # do not support udevadm
+mkfs01_ntfs_sh       # do not support ntfs
+fanotify10           # do not support fanotify
+prot_hsymlinks       # do not support userdel
+get_mempolicy01      # do not support numa
+
+# Testcases below could pass without BPF.fragment
+delete_module01
+delete_module03
+finit_module01
+finit_module02
+init_module01
+init_module02
+
+################################
+#  MM
+################################
+vma05 # this test needs to enable debug function for buildroot and ltp, thus may introduce instability to the overall testing
+
+################################
+#  IO
+# all test passed
+################################
+
+
+################################
+#  MISC
+################################
+unshare01_sh          # skip wrong test
+ftrace-stress-test    # skip in qemu(timeout 90 may not enough in qemu)
+
+# single core cpu can not handle 1000 threads, takes too long time, always timeout, take hackbench outside of LTP run seprately,
+hackbench01
+hackbench02
+
+#BUSYBOX
+ar_sh
+
+# functions below are not supported yet
+irqbalance01          # lack irqbalance daemon
+file01_sh             # do not support file command
+gzip01_sh             # do not support gzip command
+mv01_sh               # do not support mv command
+df01_sh               # do not support df command
+ping602               # do not support ping6 command
+
+# Needs to enable dynamic debug, which may affect performance. This testcase has passed the manual testing and it is skipped in CI.
+dynamic_debug01
+# This test case requires the -l parameter to set the loop count, otherwise, it will exceed the timeout.
+starvation
+# This testcase is not valid and lock torture is tested in RVA-SPEC Atomic
+lock_torture
+# This testcase is not valid and nm command is tested mannually
+nm01_sh
+
+# Testcases below could pass without BPF.fragment
+fw_load
+tpci
+uaccess
+insmod01_sh
+
+################################
+#  CONTAINER
+################################
+
+#BUSYBOX
+netns_netlink
+netns_breakns_ns_exec_ipv4_netlink
+netns_breakns_ns_exec_ipv6_netlink
+netns_breakns_ns_exec_ipv4_ioctl
+netns_breakns_ns_exec_ipv6_ioctl
+netns_comm_ns_exec_ipv4_netlink
+netns_comm_ns_exec_ipv6_netlink
+netns_comm_ns_exec_ipv4_ioctl
+netns_comm_ns_exec_ipv6_ioctl
+
+
+
+################################
+#  CVE
+################################
+
+
+################################
+#  NET
+################################
+cve-2020-25705 # Test network card
+icmp_rate_limit01 # Test network card
+ftp #ftp test always hangs, skip it temporarily
+
+# Testcases below could not be successfully executed because IP command from BUSYBOX could not create veth peer.
+bind_noport01
+bind_noport01_ipv6
+busy_poll01
+busy_poll01_ipv6
+busy_poll02
+busy_poll02_ipv6
+busy_poll03
+busy_poll03_ipv6
+dccp01
+dccp01_ipv6
+sctp01
+sctp01_ipv6
+ping601
+ipneigh6_ip
+mc_cmds
+mc_commo
+mc_member
+mc_opts
+ipneigh01_arp
+ipneigh01_ip
+arping01
+ping01
+ping02
+iproute
+traceroute01
+
+
+# Below test cases run successful, but take too long time,
+# Skip for now in NET test
+vxlan_multi_03 # 2684s
+vxlan_uni_03 # 2680s
+vxlan_ipv6_multi_03 # 2778
+vxlan_ipv6_uni_03 #2779
+vxlan_uni_04 #1719
+vxlan_ipv6_uni_04 #1777
+vlan03 #3522
+
+
+# The slow operation of the FPGA led to failure.
+mmap16
+epoll_wait04
+mtest01w
+timerfd04
+clockdiff01
+perf_event_open01

@@ -1,0 +1,266 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+
+print_help() {
+  echo "Usage: $0 [test_group]"
+  echo "test_group can be one of: { SYSCALL | MM | IO | FS | NET | CONTAINER | CVE | MISC | HOTPLUG | all }"
+  echo "also can be one of stress: { SYSCALL-STRESS | IO-STRESS | NET-STRESS | CONTAINER-STRESS }"
+  echo "ERROR! Missing Args !ERROR"
+  exit 1
+}
+
+# ========================
+# Loop 设备管理函数（智能检测版本）
+# ========================
+setup_loop_device() {
+    echo "==== Setting up loop device for FS/MISC tests ===="
+    LOOP_IMG="/tmp/ltpdevice.img"
+    MOUNT_POINT="/opt/ltp/mnt"
+
+    mkdir -p "$MOUNT_POINT"
+
+    # 清理旧状态 - 更彻底的清理
+    if mountpoint -q "$MOUNT_POINT"; then
+        umount "$MOUNT_POINT" || { echo "Failed to unmount $MOUNT_POINT"; exit 1; }
+    fi
+
+    # 查找并清理所有可能相关的 loop 设备
+    for loop_dev in /dev/loop[0-9]*; do
+        if [ -e "$loop_dev" ] && losetup "$loop_dev" 2>/dev/null | grep -q "$LOOP_IMG"; then
+            losetup -d "$loop_dev" || echo "Warning: failed to detach $loop_dev"
+        fi
+    done
+
+    rm -f "$LOOP_IMG"
+
+    # 智能检测 loop 支持方式
+    if [ -e "/dev/loop0" ]; then
+        echo "Loop device support is built-in (CONFIG_BLK_DEV_LOOP=y)"
+    else
+        echo "Loop device support is modular (CONFIG_BLK_DEV_LOOP=m), loading module..."
+        # 尝试加载模块
+        if ! modprobe loop; then
+            echo "Failed to load loop module, checking if module exists..."
+            # 检查模块是否存在
+            if [ -f "/lib/modules/$(uname -r)/kernel/drivers/block/loop.ko" ] || \
+               [ -f "/lib/modules/$(uname -r)/kernel/drivers/block/loop.ko.xz" ] || \
+               [ -f "/lib/modules/$(uname -r)/kernel/drivers/block/loop.ko.gz" ]; then
+                echo "Loop module exists but failed to load"
+                exit 1
+            else
+                echo "Loop module not found in system"
+                exit 1
+            fi
+        fi
+
+        # 确保设备节点存在
+        if [ ! -e "/dev/loop0" ]; then
+            echo "Creating loop device nodes..."
+            # 创建基本的 loop 设备节点 (0-7)
+            for i in $(seq 0 7); do
+                if [ ! -e "/dev/loop$i" ]; then
+                    if command -v mknod &> /dev/null; then
+                        mknod "/dev/loop$i" b 7 $i 2>/dev/null || echo "Warning: failed to create /dev/loop$i"
+                    else
+                        echo "Warning: mknod not available, cannot create /dev/loop$i"
+                    fi
+                fi
+            done
+        fi
+    fi
+
+    # 验证 loop 设备可用性
+    if [ ! -e "/dev/loop0" ]; then
+        echo "Error: No loop devices available after setup"
+        exit 1
+    fi
+
+    # 创建 256MB 镜像
+    dd if=/dev/zero of="$LOOP_IMG" bs=1M count=256 || { echo "Failed to create loop image"; exit 1; }
+
+    # 动态分配 loop 设备
+    LOOP_DEV=$(losetup -f --show "$LOOP_IMG") || { echo "Failed to bind loop device"; exit 1; }
+
+    # mkfs.ext4 -F "$LOOP_DEV" || { echo "Failed to format loop device"; exit 1; }
+    # mount "$LOOP_DEV" "$MOUNT_POINT" || { echo "Failed to mount loop device"; exit 1; }
+
+    echo "==== Loop device ready at $MOUNT_POINT (device: $LOOP_DEV) ===="
+
+    # 导出设备名供后续使用
+    export LOOP_DEV
+    export LOOP_IMG
+    export MOUNT_POINT
+}
+
+cleanup_loop_device() {
+    echo "==== Cleaning up loop device ===="
+
+    # 使用导出的变量
+    local LOOP_IMG="${LOOP_IMG:-/tmp/ltpdevice.img}"
+    local MOUNT_POINT="${MOUNT_POINT:-/opt/ltp/mnt}"
+
+    # 强制卸载
+    if mountpoint -q "$MOUNT_POINT"; then
+        umount -l "$MOUNT_POINT" || echo "Warning: failed to lazy unmount $MOUNT_POINT"
+    fi
+
+    # 分离 loop 设备（如果 LOOP_DEV 已设置）
+    if [ -n "$LOOP_DEV" ] && [ -e "$LOOP_DEV" ]; then
+        losetup -d "$LOOP_DEV" || echo "Warning: failed to detach $LOOP_DEV"
+    else
+        # 如果没有 LOOP_DEV，查找并清理所有相关的设备
+        for loop_dev in /dev/loop[0-9]*; do
+            if [ -e "$loop_dev" ] && losetup "$loop_dev" 2>/dev/null | grep -q "$LOOP_IMG"; then
+                losetup -d "$loop_dev" || echo "Warning: failed to detach $loop_dev"
+            fi
+        done
+    fi
+
+    rm -f "$LOOP_IMG"
+    echo "==== Loop device cleaned up ===="
+}
+
+# ========================
+# 主逻辑
+# ========================
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+LTP_BASE=${LTP_BASE:=/opt/ltp}
+LTP_VERSION=$($LTP_BASE/runltp -e 2>/dev/null || echo "unknown")
+SKIPLIST=${SCRIPT_DIR}/ltp-$LTP_VERSION-skiplist
+if grep -q "sv39" /proc/cpuinfo; then
+  echo -e "\n" >> "$SKIPLIST"
+  echo "hugemmap24" >> "$SKIPLIST"
+fi
+export LTP_TIMEOUT_MUL=1000
+
+# 初始化变量
+BLOCK_DEVICE=""
+LOOP_DEV=""
+LOOP_IMG=""
+MOUNT_POINT=""
+
+case $1 in
+  SYSCALL)
+    GROUP=syscall
+    TESTLIST=syscalls,
+    test "$MACHINE" = qemu && udhcpc
+    ;;
+  SYSCALL-STRESS)
+    GROUP=syscall-stress
+    TESTLIST=syscalls-ipc,
+    SKIPLIST=${SCRIPT_DIR}/ltp-$LTP_VERSION-stress-skiplist
+    ;;
+  MM)
+    GROUP=mm
+    TESTLIST=mm,hugetlb,numa,
+    ;;
+  IO)
+    GROUP=io
+    TESTLIST=dma_thread_diotest,io,ltp-aiodio.part1,ltp-aiodio.part2,ltp-aiodio.part4,
+    ;;
+  IO-STRESS)
+    GROUP=io-stress
+    TESTLIST=dio,ltp-aio-stress,ltp-aiodio.part3,
+    SKIPLIST=${SCRIPT_DIR}/ltp-$LTP_VERSION-stress-skiplist
+    ;;
+  FS)
+    GROUP=fs
+    TESTLIST=fcntl-locktests,filecaps,fs,fs_bind,fs_perms_simple,fs_readonly,
+    ;;
+  NET)
+    GROUP=net
+    TESTLIST=net.features,net.ipv6,net.ipv6_lib,net.multicast,net.nfs,net.rpc_tests,net.sctp,net.tcp_cmds,net.tirpc_tests,
+    test "$MACHINE" = qemu && udhcpc
+    ;;
+  NET-STRESS)
+    GROUP=net-stress
+    TESTLIST=net_stress.appl,net_stress.broken_ip,net_stress.interface,net_stress.ipsec_dccp,net_stress.ipsec_icmp,
+    TESTLIST+=net_stress.ipsec_sctp,net_stress.ipsec_tcp,net_stress.ipsec_udp,net_stress.multicast,net_stress.route,
+    SKIPLIST=${SCRIPT_DIR}/ltp-$LTP_VERSION-stress-skiplist
+    test "$MACHINE" = qemu && udhcpc
+    ;;
+  CONTAINER)
+    GROUP=container
+    TESTLIST=containers,
+    ;;
+  CONTAINER-STRESS)
+    GROUP=container-stress
+    TESTLIST=controllers,
+    SKIPLIST=${SCRIPT_DIR}/ltp-$LTP_VERSION-stress-skiplist
+    ;;
+  CVE)
+    GROUP=cve
+    TESTLIST=cve,
+    test "$MACHINE" = qemu && udhcpc
+    ;;
+  MISC)
+    GROUP=misc
+    TESTLIST=sched,input,ipc,irq,kernel_misc,pty,tracing,uevent,watchqueue,math,crypto,commands,nptl,smoketest,
+    setup_loop_device
+    BLOCK_DEVICE="$LOOP_DEV"
+    ;;
+  HOTPLUG)
+    GROUP=hotplug
+    TESTLIST=cpuhotplug
+    ;;
+  *)
+    print_help
+    ;;
+esac
+
+echo "==== StartTime: $(date) ===="
+if [ -d "${LTP_BASE}" ]; then
+  RESULT_DIR=$PWD/ltp-result
+  mkdir -p $RESULT_DIR
+  rm -rf $RESULT_DIR/*_$GROUP.log
+
+  echo "==== Start LTP $LTP_VERSION test"
+  echo "==== Test List $TESTLIST in Group $GROUP"
+
+  modprobe tun >/dev/null 2>&1
+  if [ "$GROUP" == "cve" ]; then
+        mount -t cgroup2 none /sys/fs/cgroup -o nsdelegate
+  fi
+
+  # 构建 runltp 命令
+  RUNLTP_CMD="$LTP_BASE/runltp -f $TESTLIST -S $SKIPLIST -p -l $RESULT_DIR/result_$GROUP.log -o $RESULT_DIR/output_$GROUP.log -C $RESULT_DIR/failed_$GROUP.log -T $RESULT_DIR/tconf_$GROUP.log"
+
+  # 如果需要块设备，添加 -z 参数
+  # if [ -n "$BLOCK_DEVICE" ] && [ -e "$BLOCK_DEVICE" ]; then
+  #     RUNLTP_CMD="$RUNLTP_CMD -z $BLOCK_DEVICE"
+  #     echo "==== Using block device for LTP: $BLOCK_DEVICE ===="
+  # fi
+
+  # 执行测试
+  $RUNLTP_CMD
+
+  # 清理 loop 设备（如果使用了）
+  if [ -n "$BLOCK_DEVICE" ]; then
+      cleanup_loop_device
+  fi
+
+  cat $RESULT_DIR/result_$GROUP.log
+
+  if grep -q "Total Failures: 0" $RESULT_DIR/result_$GROUP.log ; then
+    echo "LTP TEST ${GROUP} PASSED, Version $LTP_VERSION"
+  else
+    grep "FAIL" $RESULT_DIR/result_$GROUP.log
+    echo
+    cat $RESULT_DIR/tconf_$GROUP.log
+    echo "==== check output_$GROUP.log ===="
+    cat $RESULT_DIR/output_$GROUP.log
+    echo
+    echo "==== run fail cases again ===="
+    cat $RESULT_DIR/failed_$GROUP.log > $LTP_BASE/runtest/fail
+    $LTP_BASE/runltp -f fail -S $SKIPLIST -p -l $RESULT_DIR/result_${GROUP}_fail.log -o $RESULT_DIR/output_${GROUP}_fail.log -C $RESULT_DIR/failed_${GROUP}_fail.log -T $RESULT_DIR/tconf_${GROUP}_fail.log
+    cat $RESULT_DIR/result_${GROUP}_fail.log
+    if grep -q "Total Failures: 0" $RESULT_DIR/result_${GROUP}_fail.log ; then
+        echo "ERROR! LTP test contains failure, but it can pass when run alone"; exit 1
+    fi
+    echo "ERROR: LTP test contains failure !ERROR!"; exit 1
+  fi
+
+else
+  echo "ERROR: ltp testsuite does NOT exist!!! !ERROR!"; exit 1
+fi
+echo "==== EndTime: $(date) ===="

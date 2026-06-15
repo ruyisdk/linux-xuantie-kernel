@@ -1,0 +1,73 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+
+print_help() {
+    echo "Usage: $0 [test_group]"
+    echo "test_group can be one of: { ALL | SSCSRIND | SSCCFG | SMCDELEG | SSCTR | SMCTR | SMCNTRPMF }"
+    echo "ERROR! Missing Args !ERROR"
+    exit 1
+}
+
+check_extension() {
+    local ext=$1
+    if grep -q "$ext" /proc/cpuinfo; then
+        echo "${ext^^} EXTENSION TEST PASSED"
+    else
+        echo "ERROR! ${ext^^} EXTENSION NOT exist!!! !ERROR!"
+        exit 1
+    fi
+}
+
+# ========================
+# 通用函数：检查 dmesg 或 KER_CPU 环境变量是否包含指定 CPU 类型（不区分大小写）
+# 用法: is_cpu_type "c930"
+# ========================
+is_cpu_type() {
+    local cpu_type="$1"
+    if [ -z "$cpu_type" ]; then
+        return 1  # 未提供参数
+    fi
+
+    # 方法1: 检查 dmesg
+    if dmesg 2>/dev/null | grep -iq "$cpu_type"; then
+        return 0
+    fi
+
+    # 方法2: 检查 KER_CPU 环境变量（如果已设置）
+    if [ -n "${KER_CPU+x}" ] && echo "$KER_CPU" | grep -iq "$cpu_type"; then
+        return 0
+    fi
+
+    return 1
+}
+
+
+# 检查是否为 C930 CPU（使用 dmesg 方法）
+C930_CPU=false
+if is_cpu_type "c930"; then
+    C930_CPU=true
+    echo "==== Detected C930 CPU ===="
+fi
+
+case $1 in
+  SSCSRIND) check_extension "sscsrind" ;;
+  SSCCFG) check_extension "ssccfg" ;;
+  SMCDELEG) check_extension "smcdeleg" ;;
+  SSCTR) check_extension "ssctr" ;;
+  SMCTR) check_extension "smctr" ;;
+  SMCNTRPMF) check_extension "smcntrpmf" ;;
+  ALL)
+    check_extension "sscsrind"
+    if [ "$C930_CPU" = false ]; then
+        check_extension "ssccfg"
+        check_extension "smcdeleg"
+        check_extension "smcntrpmf"
+    fi
+    check_extension "ssctr"
+    check_extension "smctr"
+    echo "ALL EXTENSIONS TEST PASSED"
+    ;;
+  *)
+    print_help
+    ;;
+esac

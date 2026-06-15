@@ -1,0 +1,62 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# perf record smoke test: exercises three call-graph capture modes
+#   1) default callgraph on a small native ELF (./callchain_test)
+#   2) frame-pointer based callgraph on /bin/ls
+#   3) DWARF-unwind based callgraph on /bin/ls
+#
+# Each invocation must exit 0; we then run `perf report` to make sure the
+# perf.data is consumable.  The script is self-contained -- it does NOT
+# depend on lmbench/mhz or any external CPU-frequency probe.
+
+set -u
+
+# Lower the max sample rate so a slow QEMU does not get rate-limited away;
+# ignore the error when running as a non-root user.
+sysctl -w kernel.perf_event_max_sample_rate=10 2>/dev/null || true
+
+run_perf_cmd() {
+    local cmd="$1"
+    echo "Running: $cmd"
+
+    local tmp_err="/tmp/perf_debug_$$.err"
+    $cmd 2>"$tmp_err"
+    local rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "ERROR! Failed: $cmd (exit code: $rc)"
+        if [ -s "$tmp_err" ]; then
+            echo "[Debug Output]"
+            cat "$tmp_err"
+            echo "[End Debug Output]"
+        fi
+        echo "Hint: please refer to 'perf record -h' for valid parameters."
+        rm -f "$tmp_err"
+        return 1
+    fi
+
+    rm -f "$tmp_err"
+    # Make sure the captured perf.data is decodable.
+    perf --no-pager report 2>&1 | tee perf_record.log > /dev/null
+    rm -f perf_record.log perf.data perf.data.old
+    return 0
+}
+
+if ! command -v perf &> /dev/null; then
+    echo "ERROR! perf does NOT exist!"
+    exit 1
+fi
+
+FAIL_COUNT=0
+
+run_perf_cmd "perf record -g /etc/init.ci/kernel_testsuite/callchain_test" || ((FAIL_COUNT++))
+run_perf_cmd "perf record -F 10 --call-graph fp ls"                        || ((FAIL_COUNT++))
+run_perf_cmd "perf record -F 10 --call-graph dwarf ls"                     || ((FAIL_COUNT++))
+
+if [ $FAIL_COUNT -eq 0 ]; then
+    echo "PERF RECORD TEST PASSED"
+else
+    echo "ERROR! PERF RECORD TEST COMPLETED WITH $FAIL_COUNT FAILURE(S)"
+    exit 1
+fi

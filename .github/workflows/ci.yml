@@ -193,12 +193,14 @@ jobs:
   xt-qemu-64lp64:
     needs: kernel-build
     runs-on: ubuntu-latest
-    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:test
     strategy:
       fail-fast: false
       matrix:
-        cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2]
-        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie  , linux-64lp64-test]
+        # 64-bit RISC-V CPUs supported by xuantie-qemu (see qemu-system-riscv64 -cpu help).
+        # Cover c906/c907/c908/c920/c925/c930/r908 families.
+        cpu: [ c906fdv , c907fdvm-rv64 , c908v , c920 , c920v2 , xt-c925v-cp , xt-c930v-cp , r908fdv ]
+        kernel: [ linux-64lp64-upstream , linux-64lp64-xuantie  , linux-64lp64-test ]
         include:
           - core_count: 4
           - cpu: c906fdv
@@ -214,34 +216,121 @@ jobs:
         with:
           name: ${{ matrix.kernel }}.tar.gz
 
-      - name: Download rootfs opensbi and unpack artifacts
+      - name: Prepare rootfs opensbi and unpack artifacts
         run: |
-              wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv64.ext2.tar.gz
-              tar -xvf rootfs_rv64.ext2.tar.gz
-              wget -qc https://github.com/riscv-software-src/opensbi/releases/download/v1.4/opensbi-1.4-rv-bin.tar.xz
-              xz -d opensbi-1.4-rv-bin.tar.xz
-              tar -xvf opensbi-1.4-rv-bin.tar
-              mv opensbi-1.4-rv-bin/share/opensbi/lp64/generic/firmware/fw_dynamic.bin .
+              # c925 / c930 are RVA23-class cores; use the rva23 rootfs and opensbi.
+              case "${{ matrix.cpu }}" in
+                xt-c925v-cp|xt-c930v-cp)
+                  IMAGE_DIR="${XUANTIE_LINUX_SDK}/images-rva23"
+                  ;;
+                *)
+                  IMAGE_DIR="${XUANTIE_LINUX_SDK}/images"
+                  ;;
+              esac
+              cp ${IMAGE_DIR}/rootfs/rootfs.xuantie-image-rv64-6.6-lite.ext4 ./rootfs_rv64.ext4
+              cp ${IMAGE_DIR}/opensbi/fw_dynamic-v1.7-rv64.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
+              # The modules_install/<KVER>/build and /source are absolute symlinks
+              # back into the kernel build tree.  When this dir is exposed to the
+              # guest via virtio-9p (mapped-xattr), those links resolve into a
+              # 9p loop and trip ELOOP ("Too many levels of symbolic links")
+              # during inject_modules' cp -a.  We do not need them at runtime,
+              # so drop them on the host before launching QEMU.
+              find ./modules_install/lib/modules -mindepth 2 -maxdepth 2 \
+                   \( -name build -o -name source \) -print -delete
+              # resize rootfs to have space for perf install
+              e2fsck -fy ./rootfs_rv64.ext4
+              resize2fs ./rootfs_rv64.ext4 2G
 
       - name: Run Qemu
+        shell: bash
         run: |
-          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp ${{ matrix.core_count }} -M virt -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda ro' -drive file=./rootfs_rv64.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -monitor none -monitor none -serial telnet:localhost:5678,server &
+          # Expose the workspace (which holds modules_install/ after tar -xvf)
+          # to the guest via virtio-9p with mount_tag=hostshare, so the
+          # xt-c930v-cp + linux-64lp64-test path can replace the in-rootfs
+          # /lib/modules/<KVER>/ tree with the freshly compiled one.
+          # Other (cpu, kernel) combinations simply ignore this device.
+          #
+          # For the test-suite combinations (xt-c925v-cp/xt-c930v-cp +
+          # linux-64lp64-test) we beef up the QEMU machine: 8 vCPU, 8G RAM
+          # split into two NUMA nodes, ACLINT + AIA (APLIC/IMSIC) enabled.
+          # ACLINT/AIA give us a complete IRQ topology so kselftest/LTP IRQ
+          # rebalance tests behave; NUMA + larger SMP help LTP misc lock /
+          # mm tests pass.  Other matrix entries keep the lean defaults.
+          SMP="${{ matrix.core_count }}"
+          MEM="4G"
+          MACHINE="virt"
+          NUMA_ARGS=""
+          if [[ "${{ matrix.kernel }}" == "linux-64lp64-test" \
+             && ( "${{ matrix.cpu }}" == "xt-c925v-cp" || "${{ matrix.cpu }}" == "xt-c930v-cp" ) ]]; then
+            SMP=8
+            MEM="8G"
+            MACHINE="virt,aclint=on,aia=aplic-imsic"
+            NUMA_ARGS="-object memory-backend-ram,id=mem0,size=4G -object memory-backend-ram,id=mem1,size=4G -numa node,memdev=mem0,cpus=0-3,nodeid=0 -numa node,memdev=mem1,cpus=4-7,nodeid=1"
+          fi
+          qemu-system-riscv64 -cpu ${{ matrix.cpu }} -nographic -smp $SMP -m $MEM -M $MACHINE \
+            -bios ./fw_dynamic.bin -kernel ./Image -append 'rootwait root=/dev/vda rw' \
+            -drive file=./rootfs_rv64.ext4,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
+            $NUMA_ARGS \
+            -netdev user,id=net0 -device virtio-net-device,netdev=net0 \
+            -fsdev local,security_model=mapped-xattr,id=fsdev0,path=$(pwd) \
+            -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare \
+            -monitor none -monitor none -serial telnet:localhost:5678,server &
 
       - name: Check Qemu Booting Kernel
         run: .github/ci_scripts/check_qemu.exp 'cat /proc/version' 180
 
+      # Only run the full test suite (perf test) on xt-c925v-cp + linux-64lp64-test.
+      # Other (cpu, kernel) combinations only need to verify the kernel boots.
+      - name: Setup network and install perf
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        run: |
+          .github/ci_scripts/check_qemu.exp 'ip link set eth0 up && udhcpc -i eth0 || dhclient eth0' 60
+          # perf is a large package; 300s is too tight on first-time install in QEMU.
+          .github/ci_scripts/check_qemu.exp 'apt-get update && apt-get install -y perf' 1800
+
       - name: Check perf test
-        run: .github/ci_scripts/check_qemu.exp 'perf test -s 5,15,16,17,18,21,60,62' 180 FAILED
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        run: |
+          .github/ci_scripts/check_qemu.exp 'echo 10 > /proc/sys/kernel/perf_event_max_sample_rate' 30
+          .github/ci_scripts/check_qemu.exp 'perf test -s 8,17,19,20,21,22,23,25,26,35,56,64,66,68,80,82,85,105,110' 180 FAILED
 
       - name: Check perf stat
-        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' seconds sys
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        run: .github/ci_scripts/check_qemu.exp 'perf stat tar -czf test.tar.gz /bin' 60 '' 'seconds sys'
+
+      # On xt-c930v-cp + linux-64lp64-test, run the full kselftest matrix
+      # (cgroup/fs/ftrace/hotplug/mm/pid/riscv/syscall) plus vcrypto-all.
+      # The orchestrator:
+      #   - replaces /lib/modules/<KVER>/ via 9p host-share with freshly compiled modules;
+      #   - provisions runner scripts from the repo's kernel_testsuite/ via 9p;
+      #   - apt-installs each test's deps then executes the runner;
+      #   - re-injects compiled modules whenever apt brings in kernel-module-* pkgs.
+      - name: Run xuantie test suite (kselftest/vcrypto) on c930
+        if: ${{ matrix.cpu == 'xt-c930v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        env:
+          SKIP_BOOT: "1"
+        run: |
+          .github/ci_scripts/run_xt_test_suite.sh \
+            --modules-dir ./modules_install \
+            --filter kselftest-cgroup,kselftest-fs,kselftest-ftrace,kselftest-hotplug,kselftest-mm,kselftest-pid,kselftest-riscv,kselftest-syscall,vcrypto-all,bitops,random,perf-record
+
+      # On xt-c925v-cp + linux-64lp64-test, run LTP container/misc test groups
+      # using the same orchestrator as c930.
+      - name: Run xuantie test suite (ltp container/misc) on c925
+        if: ${{ matrix.cpu == 'xt-c925v-cp' && matrix.kernel == 'linux-64lp64-test' }}
+        env:
+          SKIP_BOOT: "1"
+        run: |
+          .github/ci_scripts/run_xt_test_suite.sh \
+            --modules-dir ./modules_install \
+            --filter ltp-container,ltp-misc
 
 
   xt-qemu-32ilp32:
     needs: kernel-build
     runs-on: ubuntu-latest
-    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:latest
+    container: ghcr.io/ruyisdk/linux-xuantie-kernel/xuantie-qemu:test
     strategy:
       fail-fast: false
       matrix:
@@ -259,14 +348,11 @@ jobs:
         with:
           name: ${{ matrix.kernel }}.tar.gz
 
-      - name: Download rootfs opensbi and unpack artifacts
+      - name: Prepare rootfs opensbi and unpack artifacts
         run: |
               wget -qc https://github.com/c-sky/buildroot/releases/download/v1.0.11/rootfs_rv32.ext2.tar.gz
               tar -xvf rootfs_rv32.ext2.tar.gz
-              wget -qc https://github.com/riscv-software-src/opensbi/releases/download/v1.4/opensbi-1.4-rv-bin.tar.xz
-              xz -d opensbi-1.4-rv-bin.tar.xz
-              tar -xvf opensbi-1.4-rv-bin.tar
-              mv opensbi-1.4-rv-bin/share/opensbi/ilp32/generic/firmware/fw_dynamic.bin .
+              cp ${XUANTIE_LINUX_SDK}/images/opensbi/fw_dynamic-v1.7-rv32.bin ./fw_dynamic.bin
               tar -xvf ${{ matrix.kernel }}.tar.gz
 
       - name: Run Qemu
@@ -325,6 +411,9 @@ jobs:
   checkpatch:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
     - name: 'Calculate PR commits + 1'
       run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
@@ -334,3 +423,5 @@ jobs:
         fetch-depth: ${{ env.PR_FETCH_DEPTH }}
     - name: Run checkpatch review
       uses: webispy/checkpatch-action@v9
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

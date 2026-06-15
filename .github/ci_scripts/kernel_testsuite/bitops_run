@@ -1,0 +1,51 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Smoke test for the in-kernel bitops/string self-test modules.
+# Both modules emit their results to dmesg via __init when loaded;
+# we just need to confirm `modprobe` succeeds three times in a row
+# and capture the elapsed wall time for visibility.
+
+set -u
+
+run_modprobe_loop() {
+    local mod="$1"
+    local count=3
+    local i
+    echo "Start $mod"
+
+    for i in $(seq 1 "$count"); do
+        local output
+        output=$( { time modprobe "$mod"; } 2>&1 )
+        echo "$output"
+
+        local time_info
+        time_info=$(echo "$output" | grep 'real')
+        if [[ -z "$time_info" ]]; then
+            echo "ERROR! Couldn't modprobe $mod"
+            return 1
+        fi
+
+        echo "$time_info" | awk '{print $2}' | while read -r ms; do
+            local minutes=${ms%m*}
+            local seconds=${ms#*m}
+            seconds=${seconds%s*}
+            local mins_in_sec
+            mins_in_sec=$(echo "$minutes * 60" | bc)
+            local total
+            total=$(printf "%.3f" "$(echo "$seconds" | bc)")
+            local score
+            score=$(echo "$mins_in_sec + $total" | bc)
+            echo "Minutes: $minutes, Seconds: $seconds"
+            echo "Second: $score"
+            echo "one TEST PASSED"
+        done
+
+        rmmod "$mod"
+    done
+}
+
+run_modprobe_loop test_bitops || exit 1
+run_modprobe_loop test_string || exit 1
+
+echo "bitops TEST PASSED"
