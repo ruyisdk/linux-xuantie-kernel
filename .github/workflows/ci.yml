@@ -30,14 +30,17 @@ jobs:
             toolchain_prefix: riscv64-unknown-linux-gnu-
             config: defconfig
           - name: linux-64lp64-xuantie
-            toolchain_variant: rv64_toolchain
+            toolchain_variant: xt64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
-            config: defconfig
+            config: xuantie_defconfig
           - name: linux-64lp64-test
+            toolchain_variant: xt64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: xuantie_debug_defconfig
+          - name: linux-64lp64-opensource-debug
             toolchain_variant: rv64_toolchain
             toolchain_prefix: riscv64-unknown-linux-gnu-
-            config: defconfig
-
+            config: xuantie_debug_defconfig
 
           # RV32
           - name: linux-32ilp32-upstream
@@ -45,13 +48,17 @@ jobs:
             toolchain_prefix: riscv32-unknown-linux-gnu-
             config: rv32_defconfig
           - name: linux-32ilp32-xuantie
-            toolchain_variant: rv32_toolchain
-            toolchain_prefix: riscv32-unknown-linux-gnu-
-            config: rv32_defconfig
+            toolchain_variant: xt64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: xuantie_rv32_defconfig
           - name: linux-32ilp32-test
+            toolchain_variant: xt64_toolchain
+            toolchain_prefix: riscv64-unknown-linux-gnu-
+            config: xuantie_rv32_debug_defconfig
+          - name: linux-32ilp32-opensource-debug
             toolchain_variant: rv32_toolchain
             toolchain_prefix: riscv32-unknown-linux-gnu-
-            config: rv32_defconfig
+            config: xuantie_rv32_debug_defconfig
 
           # 64ilp32
           - name: linux-64ilp32-sv39
@@ -67,6 +74,20 @@ jobs:
             toolchain_prefix: riscv64-unknown-elf-
             config: rv64ilp32_defconfig
 
+          # ARM64
+          - name: linux-arm64-xuantie
+            toolchain_variant: arm64_toolchain
+            toolchain_prefix: aarch64-linux-gnu-
+            config: defconfig
+            arch: arm64
+
+          # x86_64
+          - name: linux-x86-xuantie
+            toolchain_variant: x86_toolchain
+            toolchain_prefix: ""
+            config: defconfig
+            arch: x86
+
 
 
     runs-on: ubuntu-22.04
@@ -77,7 +98,7 @@ jobs:
       - name: Install software
         run: |
               sudo apt update && \
-              sudo apt install -y build-essential
+              sudo apt install -y build-essential flex bison bc libelf-dev libssl-dev dwarves ${{ matrix.toolchain_variant == 'arm64_toolchain' && 'gcc-aarch64-linux-gnu' || '' }}
 
       - name: Checkout source
         uses: actions/checkout@v4
@@ -94,11 +115,17 @@ jobs:
                 tar -xvf ${rv64_toolchain_file_name} -C /opt
                 rm -v ${rv64_toolchain_file_name}
               fi
+              if [ x"${{ matrix.toolchain_variant }}" = x"xt64_toolchain" ]; then
+                wget -qc ${xt64_toolchain}/${xt64_toolchain_file_name}
+                tar -xvf ${xt64_toolchain_file_name} -C /opt
+                rm -v ${xt64_toolchain_file_name}
+              fi
               if [ x"${{ matrix.toolchain_variant }}" = x"rv64ilp32_toolchain" ]; then
                 wget -qc ${rv64ilp32_toolchain}/${rv64ilp32_toolchain_file_name}
                 tar -xvf ${rv64ilp32_toolchain_file_name} -C /opt
                 rm -v ${rv64ilp32_toolchain_file_name}
               fi
+              # arm64 and x86 toolchains are installed via apt or use native compiler
 
       # while building upstream version, remove local source, use upstream version
       - name: Set Upstream Source
@@ -116,12 +143,8 @@ jobs:
       # patch defconfig and compile kernel source
       - name: Compile Kernel
         run: |
-              export PATH="/opt/riscv/bin:$PATH"
-
-              if [ x"${{ matrix.name }}" = x"linux-64lp64-test" ] || [ x"${{ matrix.name }}" = x"linux-32ilp32-test" ] ; then
-                scripts/kconfig/merge_config.sh -m arch/riscv/configs/${{ matrix.config }} .github/kernel_fragments/ftrace.fragment
-                mv .config arch/riscv/configs/${{ matrix.config }}
-              fi
+              export PATH="/opt/Xuantie-900-gcc-linux-6.6.36-glibc-x86_64-V3.4.0/bin:/opt/riscv/bin:$PATH"
+              KARCH="${{ matrix.arch || 'riscv' }}"
 
               if [ x"${{ matrix.name }}" = x"linux-64ilp32-sv32xt" ]; then
                 echo CONFIG_MMU_SV32=y >> arch/riscv/configs/64ilp32.config
@@ -131,18 +154,32 @@ jobs:
                 mv .config arch/riscv/configs/64ilp32.config
               fi
 
-              make ARCH=riscv EXTRA_CFLAGS+=-Werror EXTRA_CFLAGS+=-g ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
+              # opensource rv32 toolchain (GCC 15.2.0 + binutils 2.45) defaults to
+              # DWARF 5, which triggers a linker bug on rv32: all exported symbols
+              # get LOCAL binding, causing ~10k modpost "local symbol was exported"
+              # errors when CONFIG_FUSE_FS=y. Force DWARF 4 for these jobs.
+              DWARF_FLAG="-g"
+              if [ x"${{ matrix.name }}" = x"linux-32ilp32-opensource-debug" ] || [ x"${{ matrix.name }}" = x"linux-64lp64-opensource-debug" ]; then
+                DWARF_FLAG="-gdwarf-4"
+              fi
+
+              make ARCH=${KARCH} KCFLAGS+="-Werror ${DWARF_FLAG}" ${{ matrix.config }} all INSTALL_MOD_PATH=./modules_install modules_install INSTALL_HDR_PATH=./headers_install headers_install -j$(nproc)
 
 
       - name: Packaging Tarball
         run: |
+              KARCH="${{ matrix.arch || 'riscv' }}"
               if [ -d .git ] ; then
                 git log --oneline -500 > git.log
               else
                 touch git.log
               fi
-              mv arch/riscv/boot/Image ./
-              cp Documentation/admin-guide/kdump/gdbmacros.txt ./
+              if [ "$KARCH" = "x86" ]; then
+                cp arch/x86/boot/bzImage ./Image
+              else
+                mv arch/${KARCH}/boot/Image ./
+              fi
+              cp Documentation/admin-guide/kdump/gdbmacros.txt ./ 2>/dev/null || touch gdbmacros.txt
               tar czvf ${{ matrix.name }}.tar.gz Image vmlinux modules_install headers_install gdbmacros.txt git.log .config
 
       - name: 'Upload Artifact'
