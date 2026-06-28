@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+menuconfig RISCV_CBQRI
+	bool "RISC-V CBQRI support"
+	depends on RISCV && RISCV_ISA_SSQOSID
+	help
+	  Capacity and Bandwidth QoS Register Interface (CBQRI) support for
+	  RISC-V cache QoS resources. CBQRI exposes cache capacity
+	  allocation through the resctrl filesystem at /sys/fs/resctrl when
+	  RESCTRL_FS is also enabled.
+
+if RISCV_CBQRI
+
+endif
