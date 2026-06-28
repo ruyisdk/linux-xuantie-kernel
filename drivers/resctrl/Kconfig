@@ -12,3 +12,7 @@ menuconfig RISCV_CBQRI
 if RISCV_CBQRI
 
 endif
+
+config RISCV_CBQRI_RESCTRL_FS
+	bool
+	default y if RISCV_CBQRI && RESCTRL_FS

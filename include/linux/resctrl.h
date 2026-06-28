@@ -413,6 +413,9 @@ u32 resctrl_arch_system_num_rmid_idx(void);
 
 int resctrl_arch_update_domains(struct rdt_resource *r, u32 closid);
 
+struct rdt_domain_hdr *resctrl_find_domain(struct list_head *h, int id,
+					   struct list_head **pos);
+
 bool resctrl_arch_is_evt_configurable(enum resctrl_event_id evt);
 
 /**
@@ -434,8 +437,8 @@ void resctrl_arch_enable_mon(void);
 void resctrl_arch_disable_mon(void);
 
 /* Monitor context allocation/free (used by MPAM-like backends; may stub). */
-void *resctrl_arch_mon_ctx_alloc(struct rdt_resource *r, int evtid);
-void resctrl_arch_mon_ctx_free(struct rdt_resource *r, int evtid, void *ctx);
+void *resctrl_arch_mon_ctx_alloc(struct rdt_resource *r, enum resctrl_event_id evtid);
+void resctrl_arch_mon_ctx_free(struct rdt_resource *r, enum resctrl_event_id evtid, void *ctx);
 
 /* Reset all control values for the given resource to defaults. */
 void resctrl_arch_reset_all_ctrls(struct rdt_resource *r);
