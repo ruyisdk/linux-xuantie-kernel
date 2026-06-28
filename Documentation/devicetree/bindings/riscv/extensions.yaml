@@ -181,9 +181,21 @@ properties:
 
         - const: ssnpm
           description: |
-            The standard Ssnpm extension for next-mode pointer masking as defined
-            at commit 654a5c4a7725 ("Update PDF and version number.") of
-            riscv-j-extension.
+            The standard Ssnpm extension for next-mode pointer masking as
+            ratified at commit d70011dde6c2 ("Update to ratified state")
+            of riscv-j-extension.
+
+        - const: ssqosid
+          description: |
+            The standard Ssqosid extension for Quality of Service ID is
+            ratified as v1.0 in commit d9c616497fde ("Merge pull
+            request #7 from ved-rivos/Ratified") of riscv-ssqosid.
+
+        - const: ssstateen
+          description: |
+            The standard Ssstateen extension for supervisor-mode view of the
+            state-enable extension, as ratified in RISC-V Profiles Version 1.0,
+            with commit b1d806605f87 ("Updated to ratified state.")
 
         - const: sstc
           description: |
