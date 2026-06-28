@@ -572,8 +572,8 @@ config RISCV_ISA_SSQOSID
 	  Adds support for the Ssqosid ISA extension (Supervisor-mode
 	  Quality of Service ID).
 
-	  Ssqosid defines the sqoscfg CSR which allows the system to tag
-	  the running process with RCID (Resource Control ID) and MCID
+	  Ssqosid defines the srmcfg CSR which allows the system to tag
+	  the running process with an RCID (Resource Control ID) and MCID
 	  (Monitoring Counter ID). The RCID is used to determine resource
 	  allocation. The MCID is used to track resource usage in event
 	  counters.

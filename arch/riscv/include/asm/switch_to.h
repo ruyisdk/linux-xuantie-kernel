@@ -108,8 +108,9 @@ do {							\
 		__switch_to_xuantie_csr_ext(__prev, __next);	\
 	if (has_dtso()) 				\
 		dtso_sched_in(__next);	\
+	if (has_srmcfg())				\
+		__switch_to_srmcfg(__next);		\
 	__switch_to_envcfg(__next);			\
-	qos_sched_in(__next);				\
 	((last) = __switch_to(__prev, __next));		\
 } while (0)
 

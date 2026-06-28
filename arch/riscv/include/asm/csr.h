@@ -103,11 +103,10 @@
 #endif
 
 /* SRMCFG fields */
-#define SRMCFG_RCID_MASK	_AC(0x00000FFF, UL)
-#define SRMCFG_MCID_MASK	SRMCFG_RCID_MASK
+#define SRMCFG_RCID_MASK	GENMASK(11, 0)
+#define SRMCFG_MCID_MASK	GENMASK(27, 16)
 #define SRMCFG_MCID_SHIFT	16
-#define SRMCFG_MASK		((SRMCFG_MCID_MASK << SRMCFG_MCID_SHIFT) | \
-				  SRMCFG_RCID_MASK)
+#define SRMCFG_MASK		(SRMCFG_RCID_MASK | SRMCFG_MCID_MASK)
 
 /* Exception cause high bit - is an interrupt if set */
 #define CAUSE_IRQ_FLAG		(_AC(1, UXL) << (__riscv_xlen - 1))
