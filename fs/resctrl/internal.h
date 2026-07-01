@@ -24,6 +24,7 @@
 static inline unsigned int
 cpumask_any_housekeeping(const struct cpumask *mask, int exclude_cpu)
 {
+#ifdef CONFIG_NO_HZ_FULL
 	unsigned int cpu;
 
 	/* Try to find a CPU that isn't nohz_full to use in preference */
@@ -32,6 +33,7 @@ cpumask_any_housekeeping(const struct cpumask *mask, int exclude_cpu)
 		if (cpu < nr_cpu_ids)
 			return cpu;
 	}
+#endif
 
 	return cpumask_any_but(mask, exclude_cpu);
 }

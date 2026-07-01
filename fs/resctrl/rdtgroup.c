@@ -986,7 +986,7 @@ static void *rdt_kn_parent_priv(struct kernfs_node *kn)
 	 * replaced.
 	 */
 	guard(rcu)();
-	return rcu_dereference(kn->__parent)->priv;
+	return rcu_dereference(kn->parent)->priv;
 }
 
 static int rdt_num_closids_show(struct kernfs_open_file *of,
@@ -2370,7 +2370,7 @@ static struct rdtgroup *kernfs_to_rdtgroup(struct kernfs_node *kn)
 		 * have rdtgroup structures, so return NULL here.
 		 */
 		if (kn == kn_info ||
-		    rcu_access_pointer(kn->__parent) == kn_info)
+		    rcu_access_pointer(kn->parent) == kn_info)
 			return NULL;
 		else
 			return kn->priv;
@@ -3778,7 +3778,7 @@ static struct kernfs_node *rdt_kn_parent(struct kernfs_node *kn)
 	 * Valid within the RCU section it was obtained or while rdtgroup_mutex
 	 * is held.
 	 */
-	return rcu_dereference_check(kn->__parent, lockdep_is_held(&rdtgroup_mutex));
+	return rcu_dereference_check(kn->parent, lockdep_is_held(&rdtgroup_mutex));
 }
 
 static int rdtgroup_rmdir(struct kernfs_node *kn)

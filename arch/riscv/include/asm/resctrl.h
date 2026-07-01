@@ -144,4 +144,10 @@ static inline void resctrl_arch_disable_mon(void) { }
 static inline void resctrl_arch_enable_alloc(void) { }
 static inline void resctrl_arch_disable_alloc(void) { }
 
+static inline bool resctrl_arch_is_llc_occupancy_enabled(void) { return false; }
+static inline bool resctrl_arch_is_mbm_total_enabled(void) { return false; }
+static inline bool resctrl_arch_is_mbm_local_enabled(void) { return false; }
+
+void resctrl_arch_sync_cpu_closid_rmid(void *info);
+
 #endif /* _ASM_RISCV_RESCTRL_H */
