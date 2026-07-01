@@ -564,7 +564,7 @@ config RISCV_ISA_POINTER_MASKING
 config RISCV_ISA_SSQOSID
 	bool "Ssqosid extension support for supervisor mode Quality of Service ID"
 	depends on 64BIT
-	default n
+	default y
 	select ARCH_HAS_CPU_RESCTRL
 	select RISCV_CBQRI
 	select RESCTRL_FS
