@@ -180,6 +180,7 @@ static void hwprobe_isa_ext0(struct riscv_hwprobe *pair,
 		EXT_KEY(ZICBOM);
 		EXT_KEY(ZICBOP);
 		EXT_KEY(ZICBOZ);
+		EXT_KEY(ZICFILP);
 		EXT_KEY(ZICNTR);
 		EXT_KEY(ZICOND);
 		EXT_KEY(ZIHINTNTL);
@@ -198,6 +199,11 @@ static void hwprobe_isa_ext0(struct riscv_hwprobe *pair,
 		if (has_vector()) {
 			EXT_KEY(ZVBB);
 			EXT_KEY(ZVBC);
+			EXT_KEY(ZVE32F);
+			EXT_KEY(ZVE32X);
+			EXT_KEY(ZVE64D);
+			EXT_KEY(ZVE64F);
+			EXT_KEY(ZVE64X);
 			EXT_KEY(ZVFBFMIN);
 			EXT_KEY(ZVFBFWMA);
 			EXT_KEY(ZVFH);
@@ -221,18 +227,8 @@ static void hwprobe_isa_ext0(struct riscv_hwprobe *pair,
 			EXT_KEY(ZFHMIN);
 		}
 
-		if (IS_ENABLED(CONFIG_RISCV_ISA_SUPM))
+		if (IS_ENABLED(CONFIG_RISCV_ISA_POINTER_MASKING))
 			EXT_KEY(SUPM);
-
-		EXT_KEY(SSDBLTRP);
-		EXT_KEY(SMCDELEG);
-		EXT_KEY(SSCCFG);
-		EXT_KEY(SSCTR);
-		EXT_KEY(SMCTR);
-		EXT_KEY(SSDTSO);
-		EXT_KEY(SSCSRIND);
-		EXT_KEY(SMCSRIND);
-		EXT_KEY(SSQOSID);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
@@ -261,6 +257,42 @@ static void hwprobe_isa_ext1(struct riscv_hwprobe *pair,
 		 * in the hart_isa bitmap, are made.
 		 */
 		EXT_KEY(ZICFISS);
+	}
+
+	/* Now turn off reporting features if any CPU is missing it. */
+	pair->value &= ~missing;
+}
+
+static void hwprobe_isa_ext2(struct riscv_hwprobe *pair,
+			     const struct cpumask *cpus)
+{
+	int cpu;
+	u64 missing = 0;
+
+	pair->value = 0;
+
+	/*
+	 * Loop through and record extensions that 1) anyone has, and 2) anyone
+	 * doesn't have.
+	 */
+	for_each_cpu(cpu, cpus) {
+		struct riscv_isainfo *isainfo = &hart_isa[cpu];
+
+		/*
+		 * Only use EXT_KEY() for extensions which can be
+		 * exposed to userspace, regardless of the kernel's
+		 * configuration, as no other checks, besides presence
+		 * in the hart_isa bitmap, are made.
+		 */
+		EXT_KEY(SSDBLTRP);
+		EXT_KEY(SMCDELEG);
+		EXT_KEY(SSCCFG);
+		EXT_KEY(SSCTR);
+		EXT_KEY(SMCTR);
+		EXT_KEY(SSDTSO);
+		EXT_KEY(SSCSRIND);
+		EXT_KEY(SMCSRIND);
+		EXT_KEY(SSQOSID);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
@@ -354,6 +386,10 @@ static void hwprobe_one_pair(struct riscv_hwprobe *pair,
 
 	case RISCV_HWPROBE_KEY_IMA_EXT_1:
 		hwprobe_isa_ext1(pair, cpus);
+		break;
+
+	case RISCV_HWPROBE_KEY_IMA_EXT_2:
+		hwprobe_isa_ext2(pair, cpus);
 		break;
 
 	case RISCV_HWPROBE_KEY_CPUPERF_0:
