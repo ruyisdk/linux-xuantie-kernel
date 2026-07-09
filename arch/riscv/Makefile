@@ -242,7 +242,7 @@ xuantie_defconfig:
 
 PHONY += xuantie_debug_defconfig
 xuantie_debug_defconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config rv64_nonportable.config vdpa.config vfio.config virtio_iommu.config sched.config fs.config tee.config xt_test.config numa.config kvm_guest.config vdebug.config rv64_cfi.config rv64_tso.config
+	$(Q)$(MAKE) -f $(srctree)/Makefile defconfig bench.config cgroup.config kvm_host.config rv64_crypto.config rv64_perf.config rv64_nonportable.config vdpa.config vfio.config virtio_iommu.config sched.config fs.config tee.config xt_test.config numa.config kvm_guest.config xt-debug.config rv64_cfi.config rv64_tso.config
 
 PHONY += xuantie_rv32_defconfig
 xuantie_rv32_defconfig:
