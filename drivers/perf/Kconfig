@@ -86,10 +86,11 @@ config RISCV_PMU_SBI
 	  full perf feature support i.e. counter overflow, privilege mode
 	  filtering, counter configuration.
 
-	config XUANTIE_LINK_PMU
+config XUANTIE_LINK_PMU
 	bool "Enable support for Xuantie Link"
 	depends on 64BIT
 	depends on PERF_EVENTS
+	default y
 	help
 	  Provide support for Xuantie Link Hardware Profiling Co-Processor (HPCP).
 	  Xuantie Link HPCP integrates one or more cores with an L3 memory system.
