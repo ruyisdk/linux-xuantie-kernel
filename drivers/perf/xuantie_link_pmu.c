@@ -4,6 +4,7 @@
 #define pr_fmt(fmt) XUANTIE_LINK_PMU_PDEV_NAME ": " fmt
 
 #include <linux/bitmap.h>
+#include <linux/cpumask.h>
 #include <linux/cpu_pm.h>
 #include <linux/idr.h>
 #include <linux/io.h>
@@ -65,14 +66,15 @@
 #define C0_L3_WVLD		0x047 // XL300
 #define C0_L3_WSTALL	0x048 // XL300
 /* CN=0..7 */
-#define L3_DA(CN)		(C0_L3_DA + 0x040 * CN)
-#define L3_DM(CN)		(C0_L3_DM + 0x040 * CN)
-#define L3_IA(CN)		(C0_L3_IA + 0x040 * CN)
-#define L3_IM(CN)		(C0_L3_IM + 0x040 * CN)
-#define L3_RVLD(CN)		(C0_L3_RVLD + 0x040 * CN)
-#define L3_RSTALL(CN)	(C0_L3_RSTALL + 0x040 * CN)
-#define L3_WVLD(CN)		(C0_L3_WVLD + 0x040 * CN)
-#define L3_WSTALL(CN)	(C0_L3_WSTALL + 0x040 * CN)
+#define XUANTIE_LINK_PMU_EVENT_STRIDE	0x40
+#define L3_DA(CN)		(C0_L3_DA + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_DM(CN)		(C0_L3_DM + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_IA(CN)		(C0_L3_IA + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_IM(CN)		(C0_L3_IM + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_RVLD(CN)		(C0_L3_RVLD + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_RSTALL(CN)	(C0_L3_RSTALL + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_WVLD(CN)		(C0_L3_WVLD + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
+#define L3_WSTALL(CN)	(C0_L3_WSTALL + XUANTIE_LINK_PMU_EVENT_STRIDE * CN)
 /* XL300 RCID events */
 #define R0_L3_DA		0x100001
 #define R0_L3_DM		0x100002
@@ -83,14 +85,14 @@
 #define R0_L3_WVLD		0x100007
 #define R0_L3_WSTALL	0x100008
 /* RN=0..7 */
-#define RCID_L3_DA(RN)		(R0_L3_DA + 0x040 * RN)
-#define RCID_L3_DM(RN)		(R0_L3_DM + 0x040 * RN)
-#define RCID_L3_IA(RN)		(R0_L3_IA + 0x040 * RN)
-#define RCID_L3_IM(RN)		(R0_L3_IM + 0x040 * RN)
-#define RCID_L3_RVLD(RN)	(R0_L3_RVLD + 0x040 * RN)
-#define RCID_L3_RSTALL(RN)	(R0_L3_RSTALL + 0x040 * RN)
-#define RCID_L3_WVLD(RN)	(R0_L3_WVLD + 0x040 * RN)
-#define RCID_L3_WSTALL(RN)	(R0_L3_WSTALL + 0x040 * RN)
+#define RCID_L3_DA(RN)		(R0_L3_DA + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_DM(RN)		(R0_L3_DM + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_IA(RN)		(R0_L3_IA + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_IM(RN)		(R0_L3_IM + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_RVLD(RN)	(R0_L3_RVLD + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_RSTALL(RN)	(R0_L3_RSTALL + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_WVLD(RN)	(R0_L3_WVLD + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
+#define RCID_L3_WSTALL(RN)	(R0_L3_WSTALL + XUANTIE_LINK_PMU_EVENT_STRIDE * RN)
 
 #define to_xuantie_link_pmu(p) (container_of(p, struct xuantie_link_pmu, pmu))
 
@@ -356,8 +358,13 @@ xuantie_link_pmu_event_attr_is_visible(struct kobject *kobj,
 	u32 id = (u32)eattr->id;
 
 	if (xuantie_link_pmu->devtype_data->quirks ==
-	    XUANTIE_LINK_DEV_TYPE_XL300)
+	    XUANTIE_LINK_DEV_TYPE_XL300) {
+		if (id >= C0_L3_DA && id <= L3_WSTALL(7) &&
+		    (id - C0_L3_DA) / XUANTIE_LINK_PMU_EVENT_STRIDE >=
+				(u32)num_possible_cpus())
+			return 0;
 		return attr->mode;
+	}
 
 	/* ALL_L3_WVLD/WSTALL are XL300-only. */
 	if (id == ALL_L3_WVLD || id == ALL_L3_WSTALL)
@@ -365,7 +372,7 @@ xuantie_link_pmu_event_attr_is_visible(struct kobject *kobj,
 
 	/* CORE_N domain WVLD/WSTALL sub-offsets are XL300-only. */
 	if (id >= C0_L3_DA && id <= L3_WSTALL(7)) {
-		u32 sub = (id - C0_L3_DA) % 0x40;
+		u32 sub = (id - C0_L3_DA) % XUANTIE_LINK_PMU_EVENT_STRIDE;
 
 		if (sub == (C0_L3_WVLD - C0_L3_DA) ||
 		    sub == (C0_L3_WSTALL - C0_L3_DA))
@@ -520,8 +527,8 @@ xuantie_link_pmu_event_valid(struct xuantie_link_pmu *xuantie_link_pmu,
 	/* CORE_N domain (N=0..7): base 0x041 + N*0x40. */
 	base = C0_L3_DA;
 	if (cfg >= base && cfg <= L3_WSTALL(7)) {
-		idx = (cfg - base) / 0x40;
-		sub = (cfg - base) % 0x40;
+		idx = (cfg - base) / XUANTIE_LINK_PMU_EVENT_STRIDE;
+		sub = (cfg - base) % XUANTIE_LINK_PMU_EVENT_STRIDE;
 		if (idx <= 7 && sub <= max_sub)
 			return true;
 	}
@@ -530,8 +537,8 @@ xuantie_link_pmu_event_valid(struct xuantie_link_pmu *xuantie_link_pmu,
 	if (xl300) {
 		base = R0_L3_DA;
 		if (cfg >= base && cfg <= RCID_L3_WSTALL(7)) {
-			idx = (cfg - base) / 0x40;
-			sub = (cfg - base) % 0x40;
+			idx = (cfg - base) / XUANTIE_LINK_PMU_EVENT_STRIDE;
+			sub = (cfg - base) % XUANTIE_LINK_PMU_EVENT_STRIDE;
 			if (idx <= 7 && sub <= (R0_L3_WSTALL - R0_L3_DA))
 				return true;
 		}
