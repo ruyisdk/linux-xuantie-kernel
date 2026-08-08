@@ -26,7 +26,10 @@
 									\
 		__asm__ __volatile__ (					\
 			prepend						\
+			"	.option push\n"					\
+			"	.option arch, +zabha\n"			\
 			"	amoswap" swap_sfx " %0, %z2, %1\n"	\
+			"	.option pop\n"					\
 			swap_append					\
 			: "=&r" (r), "+A" (*(p))			\
 			: "rJ" (n)					\
@@ -151,7 +154,10 @@ end:;									\
 									\
 		__asm__ __volatile__ (					\
 			cas_prepend					\
+			"	.option push\n"					\
+			"	.option arch, +zacas, +zabha\n"			\
 			"	amocas" cas_sfx " %0, %z2, %1\n"	\
+			"	.option pop\n"					\
 			cas_append					\
 			: "+&r" (r), "+A" (*(p))			\
 			: "rJ" (n)					\
@@ -205,7 +211,10 @@ end:;									\
 									\
 		__asm__ __volatile__ (					\
 			cas_prepend					\
+			"	.option push\n"					\
+			"	.option arch, +zacas\n"			\
 			"	amocas" cas_sfx " %0, %z2, %1\n"	\
+			"	.option pop\n"					\
 			cas_append					\
 			: "+&r" (r), "+A" (*(p))			\
 			: "rJ" (n)					\
@@ -453,7 +462,10 @@ union __u128_halves {
 	register unsigned long x29 asm ("x29") = __ho.high;			\
 										\
 	__asm__ __volatile__ (							\
-		"	amocas.q" cas_sfx " %0, %z3, %2"			\
+			"	.option push\n"					\
+			"	.option arch, +zacas\n"			\
+		"	amocas.q" cas_sfx " %0, %z3, %2\n"			\
+			"	.option pop\n"					\
 		: "+&r" (x28), "+&r" (x29), "+A" (*(p))				\
 		: "rJ" (x6), "rJ" (x7)						\
 		: "memory");							\
