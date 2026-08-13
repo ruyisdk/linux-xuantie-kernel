@@ -448,6 +448,8 @@ static const char *normalize_arch(char *arch)
 		return "sh";
 	if (!strncmp(arch, "loongarch", 9))
 		return "loongarch";
+	if (!strncmp(arch, "riscv", 5))
+		return "riscv";
 
 	return arch;
 }
