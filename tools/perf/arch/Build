@@ -1,3 +1,8 @@
 perf-y += common.o
 perf-y += $(SRCARCH)/
+# riscv64/ carries XuanTie additions (rdtime asm in util/tsc.c, ntrace);
+# only build it for riscv-family targets, otherwise x86 builds fail on rv asm.
+# When SRCARCH=riscv64 it is already covered by $(SRCARCH)/ above.
+ifeq ($(SRCARCH),riscv)
 perf-y += riscv64/
+endif
