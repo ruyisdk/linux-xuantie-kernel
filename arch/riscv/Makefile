@@ -162,15 +162,6 @@ KBUILD_IMAGE				:= $(boot)/$(boot-image-y)
 libs-y += arch/riscv/lib/
 libs-$(CONFIG_EFI_STUB) += $(objtree)/drivers/firmware/efi/libstub/lib.a
 
-PHONY += vdso_install
-vdso_install:
-	$(if $(CONFIG_VDSO32),$(Q)$(MAKE) \
-		$(build)=arch/riscv/kernel/vdso vdso32_install
-	$(if $(CONFIG_VDSO64),$(Q)$(MAKE) \
-		$(build)=arch/riscv/kernel/vdso vdso64_install
-	$(if $(CONFIG_VDSO64ILP32),$(Q)$(MAKE) \
-		$(build)=arch/riscv/kernel/vdso vdso64ilp32_install
-
 ifeq ($(KBUILD_EXTMOD),)
 ifeq ($(CONFIG_MMU),y)
 prepare: vdso_prepare
@@ -184,7 +175,9 @@ vdso_prepare: prepare0
 endif
 endif
 
-vdso-install-y			+= arch/riscv/kernel/vdso/vdso.so.dbg
+vdso-install-$(CONFIG_VDSO32)		+= arch/riscv/kernel/vdso/vdso32.so.dbg
+vdso-install-$(CONFIG_VDSO64)		+= arch/riscv/kernel/vdso/vdso64.so.dbg
+vdso-install-$(CONFIG_VDSO64ILP32)	+= arch/riscv/kernel/vdso/vdso64ilp32.so.dbg
 vdso-install-$(CONFIG_COMPAT)	+= arch/riscv/kernel/compat_vdso/compat_vdso.so.dbg:../compat_vdso/compat_vdso.so
 
 ifneq ($(CONFIG_XIP_KERNEL),y)
