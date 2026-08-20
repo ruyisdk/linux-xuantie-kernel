@@ -1481,7 +1481,7 @@
 			status = "disabled";
 		};
 
-		qspi0: qspi@ffea000000 {
+		qspi0: spi@ffea000000 {
 			compatible = "snps,dw-apb-ssi-quad";
 			reg = <0xff 0xea000000 0x0 0x1000>;
 			interrupts = <52 IRQ_TYPE_LEVEL_HIGH>;
@@ -1493,7 +1493,7 @@
 			status = "disabled";
 		};
 
-		qspi1: qspi@fff8000000 {
+		qspi1: spi@fff8000000 {
 			compatible = "snps,dw-apb-ssi-quad";
 			reg = <0xff 0xf8000000 0x0 0x1000>;
 			interrupts = <53 IRQ_TYPE_LEVEL_HIGH>;

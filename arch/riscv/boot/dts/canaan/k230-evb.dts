@@ -58,7 +58,7 @@
 
 &i2c4 {
 	status = "okay";
-	gt911: touchscreen@5d {
+	gt911: touchscreen@14 {
 		compatible = "goodix,gt911";
 		reg = <0x14>;
 

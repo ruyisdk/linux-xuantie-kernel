@@ -765,7 +765,7 @@
 			vo_out: port {
 				#address-cells = <1>;
 				#size-cells = <0>;
-				vop_out_dsi: endpoint@1 {
+				vop_out_dsi: endpoint@0 {
 					reg = <0>;
 					remote-endpoint = <&dsi_in_vop>;
 				};
