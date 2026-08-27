@@ -834,10 +834,13 @@ static int xuantie_link_pmu_device_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	xuantie_link_pmu->pmu_base =
-		devm_platform_get_and_ioremap_resource(pdev, 0, &res);
-	if (IS_ERR(xuantie_link_pmu->pmu_base))
-		return PTR_ERR(xuantie_link_pmu->pmu_base);
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!res)
+		return -EINVAL;
+	xuantie_link_pmu->pmu_base = devm_ioremap(&pdev->dev, res->start,
+						  resource_size(res));
+	if (!xuantie_link_pmu->pmu_base)
+		return -ENOMEM;
 
 	xuantie_link_pmu->devtype_data = of_device_get_match_data(&pdev->dev);
 	if (!xuantie_link_pmu->devtype_data) {
