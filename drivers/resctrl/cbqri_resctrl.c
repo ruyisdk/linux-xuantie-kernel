@@ -462,6 +462,7 @@ static void cbqri_resctrl_control_init(struct cbqri_resctrl_res *cbqri_res)
 		res->ctrl_scope = (res->rid == RDT_RESOURCE_L2) ?
 				    RESCTRL_L2_CACHE : RESCTRL_L3_CACHE;
 		res->cache.cbm_len = ctrl->cc.ncblks;
+		res->default_ctrl = GENMASK(ctrl->cc.ncblks - 1, 0);
 		res->cache.shareable_bits = 0;
 		res->cache.min_cbm_bits = 1;
 		res->cache.arch_has_sparse_bitmasks = false;
