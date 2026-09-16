@@ -13,7 +13,7 @@
 #include "../../kselftest_harness.h"
 
 #ifndef RISCV_HWPROBE_EXT_SSDTSO
-#define RISCV_HWPROBE_EXT_SSDTSO        (1ULL << 36)
+#define RISCV_HWPROBE_EXT_SSDTSO        (1ULL << 5)
 #endif
 
 #ifndef PR_SET_MEMORY_CONSISTENCY_MODEL
@@ -63,10 +63,16 @@ TEST(dtso)
 	}
 	TH_LOG("ssdtso_configured = %s", (ret < 0) ? "false" : "true");
 
-	pair.key = RISCV_HWPROBE_KEY_IMA_EXT_0;
+	pair.key = RISCV_HWPROBE_KEY_IMA_EXT_2;
 	ret = riscv_hwprobe(&pair, 1, 0, NULL, 0);
 	ASSERT_GE(ret, 0);
-	ASSERT_EQ(pair.key, RISCV_HWPROBE_KEY_IMA_EXT_0);
+
+	if (pair.key == -1) {
+		ksft_test_result_skip("RISCV_HWPROBE_KEY_IMA_EXT_2 not supported\n");
+		return;
+	}
+
+	ASSERT_EQ(pair.key, RISCV_HWPROBE_KEY_IMA_EXT_2);
 	ssdtso_available = !!(pair.value & RISCV_HWPROBE_EXT_SSDTSO);
 	TH_LOG("ssdtso_available = %s", ssdtso_available ? "true" : "false");
 

@@ -2,6 +2,7 @@
 # Copyright (C) 2023 VRULL
 
 CFLAGS += -I$(top_srcdir)/tools/include
+CFLAGS += -I$(top_srcdir)/arch/riscv/include
 
 TEST_GEN_PROGS := dtso
 
