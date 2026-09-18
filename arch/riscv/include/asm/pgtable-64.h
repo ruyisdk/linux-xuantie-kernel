@@ -212,7 +212,11 @@ static inline void pud_clear(pud_t *pudp)
 
 static inline pud_t pfn_pud(u64 pfn, pgprot_t prot)
 {
-	return __pud((pfn << _PAGE_PFN_SHIFT) | pgprot_val(prot));
+	u64 prot_val = pgprot_val(prot);
+
+	ALT_THEAD_PMA(prot_val);
+
+	return __pud((pfn << _PAGE_PFN_SHIFT) | prot_val);
 }
 
 static inline u64 _pud_pfn(pud_t pud)
@@ -315,7 +319,11 @@ static inline void p4d_clear(p4d_t *p4d)
 
 static inline p4d_t pfn_p4d(u64 pfn, pgprot_t prot)
 {
-	return __p4d((pfn << _PAGE_PFN_SHIFT) | pgprot_val(prot));
+	u64 prot_val = pgprot_val(prot);
+
+	ALT_THEAD_PMA(prot_val);
+
+	return __p4d((pfn << _PAGE_PFN_SHIFT) | prot_val);
 }
 
 static inline u64 _p4d_pfn(p4d_t p4d)
