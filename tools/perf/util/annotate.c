@@ -198,7 +198,7 @@ static struct arch architectures[] = {
 		.init = powerpc__annotate_init,
 	},
 	{
-		.name = "riscv64",
+		.name = "riscv",
 		.init = riscv64__annotate_init,
 	},
 	{
