@@ -178,6 +178,8 @@ static int perf_env__lookup_binutils_path(struct perf_env *env,
 		path_list = arm64_triplets;
 	else if (!strcmp(arch, "powerpc"))
 		path_list = powerpc_triplets;
+	else if (!strcmp(arch, "riscv"))
+		path_list = perf_env__kernel_is_64_bit(env) ? riscv64_triplets : riscv32_triplets;
 	else if (!strcmp(arch, "riscv32"))
 		path_list = riscv32_triplets;
 	else if (!strcmp(arch, "riscv64"))
