@@ -7,9 +7,9 @@ ARCH ?= $(shell uname -m 2>/dev/null || echo not)
 
 ifneq (,$(filter $(ARCH),riscv))
 	ifeq ($(shell $(CC) -dM -E - < /dev/null 2>/dev/null | grep -c "__riscv_xlen 64"),1)
-		RISCV_SUBTARGETS ?= dtso hwprobe vector mm pm string_zbb cfi3
+		RISCV_SUBTARGETS ?= xuantie_dtso hwprobe vector mm pm string_zbb cfi3
 	else
-		RISCV_SUBTARGETS ?= dtso hwprobe vector mm pm string_zbb
+		RISCV_SUBTARGETS ?= xuantie_dtso hwprobe vector mm pm string_zbb
 	endif
 else
 	RISCV_SUBTARGETS :=

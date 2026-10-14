@@ -122,10 +122,9 @@ struct riscv_hwprobe {
 #define		RISCV_HWPROBE_EXT_SSCCFG	(1ULL << 2)
 #define		RISCV_HWPROBE_EXT_SSCTR		(1ULL << 3)
 #define		RISCV_HWPROBE_EXT_SMCTR		(1ULL << 4)
-#define		RISCV_HWPROBE_EXT_SSDTSO	(1ULL << 5)
-#define		RISCV_HWPROBE_EXT_SSCSRIND	(1ULL << 6)
-#define		RISCV_HWPROBE_EXT_SMCSRIND	(1ULL << 7)
-#define		RISCV_HWPROBE_EXT_SSQOSID	(1ULL << 8)
+#define		RISCV_HWPROBE_EXT_SSCSRIND	(1ULL << 5)
+#define		RISCV_HWPROBE_EXT_SMCSRIND	(1ULL << 6)
+
 /* Increase RISCV_HWPROBE_MAX_KEY when adding items. */
 
 #endif

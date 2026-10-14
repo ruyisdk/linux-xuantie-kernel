@@ -168,9 +168,6 @@ The following keys are defined:
        defined in the RISC-V ISA manual starting from commit 056b6ff467c7
        ("Zfa is ratified").
 
-  * :c:macro:`RISCV_HWPROBE_EXT_SSDTSO`: The Ssdtso extension is supported, as
-       in version v1.0-draft3 of the corresponding extension.
-
   * :c:macro:`RISCV_HWPROBE_EXT_ZICBOM`: The Zicbom extension is supported, as
        ratified in commit 3dd606f ("Create cmobase-v1.0.pdf") of riscv-CMOs.
 
@@ -224,6 +221,17 @@ The following keys are defined:
 
 * :c:macro:`RISCV_HWPROBE_KEY_ZICBOM_BLOCK_SIZE`: An unsigned int which
   represents the size of the Zicbom block in bytes.
+
+* :c:macro:`RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0`: A bitmask containing the
+  T-Head vendor extensions that are compatible with the
+  :c:macro:`RISCV_HWPROBE_BASE_BEHAVIOR_IMA`: base system behavior.
+
+  * XUANTIE
+
+    * :c:macro:`RISCV_HWPROBE_VENDOR_EXT_XUANTIE_SSDTSO`: The Ssdtso vendor
+        extension is supported, as in version v1.0-draft3 of the corresponding
+        extension. Ssdtso is not a ratified standard extension, so it is
+        reported as a XuanTie vendor extension.
 
 * :c:macro:`RISCV_HWPROBE_KEY_VENDOR_EXT_SIFIVE_0`: A bitmask containing the
   sifive vendor extensions that are compatible with the

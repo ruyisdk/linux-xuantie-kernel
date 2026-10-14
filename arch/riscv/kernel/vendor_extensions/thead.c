@@ -21,6 +21,9 @@ static const struct riscv_isa_ext_data riscv_isa_vendor_ext_thead[] = {
 	__RISCV_ISA_EXT_DATA(xtheadcbop, RISCV_ISA_VENDOR_EXT_XTHEADCBOP),
 	__RISCV_ISA_EXT_DATA(xtheadaioe, RISCV_ISA_VENDOR_EXT_XTHEADAIOE),
 	__RISCV_ISA_EXT_DATA(xtheadcrc, RISCV_ISA_VENDOR_EXT_XTHEADCRC),
+#ifdef CONFIG_RISCV_ISA_XUANTIE_SSDTSO
+	__RISCV_ISA_EXT_DATA(xtheadssdtso, RISCV_ISA_VENDOR_EXT_XUANTIE_SSDTSO),
+#endif
 };
 
 struct riscv_isa_vendor_ext_data_list riscv_isa_vendor_ext_list_thead = {

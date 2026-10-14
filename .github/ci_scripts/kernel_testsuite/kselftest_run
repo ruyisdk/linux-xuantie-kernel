@@ -72,7 +72,7 @@ case $1 in
     ;;
   RISCV)
     GROUP=riscv
-    TESTLIST="riscv:hwprobe riscv:cbo riscv:string_zbb_bench riscv:dtso riscv:vstate_prctl riscv:v_initval_nolibc riscv:run_mmap.sh riscv:pointer_masking riscv:run_cfi.sh"
+    TESTLIST="riscv:hwprobe riscv:cbo riscv:string_zbb_bench riscv:xuantie_dtso riscv:vstate_prctl riscv:v_initval_nolibc riscv:run_mmap.sh riscv:pointer_masking riscv:run_cfi.sh"
     ;;
   LIVEPATCH)
     GROUP=livepatch
