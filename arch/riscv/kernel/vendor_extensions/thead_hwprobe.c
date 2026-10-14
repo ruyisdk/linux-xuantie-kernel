@@ -15,6 +15,7 @@ void hwprobe_isa_vendor_ext_thead_0(struct riscv_hwprobe *pair, const struct cpu
 	VENDOR_EXTENSION_SUPPORTED(pair, cpus,
 				   riscv_isa_vendor_ext_list_thead.per_hart_isa_bitmap, {
 		VENDOR_EXT_KEY(XTHEADVECTOR);
+		VENDOR_EXT_KEY(XUANTIE_SSDTSO);
 		VENDOR_EXT_KEY(XTHEADVDOT);
 		VENDOR_EXT_KEY(XTHEADVARITH);
 		VENDOR_EXT_KEY(XTHEADVCRYPTO);
@@ -25,6 +26,5 @@ void hwprobe_isa_vendor_ext_thead_0(struct riscv_hwprobe *pair, const struct cpu
 		VENDOR_EXT_KEY(XTHEADCBOP);
 		VENDOR_EXT_KEY(XTHEADAIOE);
 		VENDOR_EXT_KEY(XTHEADCRC);
-		VENDOR_EXT_KEY(XUANTIE_SSDTSO);
 	});
 }
