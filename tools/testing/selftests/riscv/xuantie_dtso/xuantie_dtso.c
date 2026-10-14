@@ -9,12 +9,9 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <uapi/asm/vendor/thead.h>
 #include "../hwprobe/hwprobe.h"
 #include "../../kselftest_harness.h"
-
-#ifndef RISCV_HWPROBE_EXT_SSDTSO
-#define RISCV_HWPROBE_EXT_SSDTSO        (1ULL << 5)
-#endif
 
 #ifndef PR_SET_MEMORY_CONSISTENCY_MODEL
 #define PR_SET_MEMORY_CONSISTENCY_MODEL         77
@@ -63,17 +60,17 @@ TEST(dtso)
 	}
 	TH_LOG("ssdtso_configured = %s", (ret < 0) ? "false" : "true");
 
-	pair.key = RISCV_HWPROBE_KEY_IMA_EXT_2;
+	pair.key = RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0;
 	ret = riscv_hwprobe(&pair, 1, 0, NULL, 0);
 	ASSERT_GE(ret, 0);
 
 	if (pair.key == -1) {
-		ksft_test_result_skip("RISCV_HWPROBE_KEY_IMA_EXT_2 not supported\n");
+		ksft_test_result_skip("RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0 not supported\n");
 		return;
 	}
 
-	ASSERT_EQ(pair.key, RISCV_HWPROBE_KEY_IMA_EXT_2);
-	ssdtso_available = !!(pair.value & RISCV_HWPROBE_EXT_SSDTSO);
+	ASSERT_EQ(pair.key, RISCV_HWPROBE_KEY_VENDOR_EXT_THEAD_0);
+	ssdtso_available = !!(pair.value & RISCV_HWPROBE_VENDOR_EXT_XUANTIE_SSDTSO);
 	TH_LOG("ssdtso_available = %s", ssdtso_available ? "true" : "false");
 
 	if (ssdtso_configured) {

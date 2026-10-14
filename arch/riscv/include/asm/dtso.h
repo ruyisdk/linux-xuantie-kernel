@@ -9,15 +9,19 @@
 #define RISCV_MEMORY_CONSISTENCY_MODEL_WMO     0
 #define RISCV_MEMORY_CONSISTENCY_MODEL_TSO     1
 
-#ifdef CONFIG_RISCV_ISA_SSDTSO
+#ifdef CONFIG_RISCV_ISA_XUANTIE_SSDTSO
 
 #include <linux/sched/task_stack.h>
 #include <asm/cpufeature.h>
 #include <asm/csr.h>
+#include <asm/vendor_extensions.h>
+#include <asm/vendor_extensions/thead.h>
+#include <asm/vendorid_list.h>
 
 static __always_inline bool has_dtso(void)
 {
-	return riscv_has_extension_unlikely(RISCV_ISA_EXT_SSDTSO);
+	return riscv_isa_vendor_extension_available(THEAD_VENDOR_ID,
+						    XUANTIE_SSDTSO);
 }
 
 static __always_inline bool has_ztso(void)
@@ -69,7 +73,7 @@ static inline void dtso_sched_in(struct task_struct *next)
 	}
 }
 
-#else /* ! CONFIG_RISCV_ISA_SSDTSO */
+#else /* ! CONFIG_RISCV_ISA_XUANTIE_SSDTSO */
 
 static __always_inline bool has_dtso(void) { return false; }
 static __always_inline bool dtso_is_enabled(void) { return false; }
@@ -77,6 +81,6 @@ static __always_inline bool dtso_is_enabled(void) { return false; }
 #define dtso_enable() do { } while (0)
 #define dtso_sched_in(next) do { } while (0)
 
-#endif /* CONFIG_RISCV_ISA_SSDTSO */
+#endif /* CONFIG_RISCV_ISA_XUANTIE_SSDTSO */
 
 #endif /* ! __ASM_RISCV_DTSO_H */

@@ -103,7 +103,6 @@ static const unsigned long kvm_isa_ext_arr[] = {
 	KVM_ISA_EXT_ARR(ZVKSH),
 	KVM_ISA_EXT_ARR(ZVKT),
 	KVM_ISA_EXT_ARR(ZALASR),
-	KVM_ISA_EXT_ARR(SSDTSO),
 	KVM_ISA_EXT_ARR(SSQOSID),
 	KVM_ISA_EXT_ARR(SSDBLTRP),
 	KVM_ISA_EXT_ARR(XTHEADFXCR),
@@ -208,7 +207,6 @@ static bool kvm_riscv_vcpu_isa_disable_allowed(unsigned long ext)
 	case KVM_RISCV_ISA_EXT_ZVKSH:
 	case KVM_RISCV_ISA_EXT_ZVKT:
 	case KVM_RISCV_ISA_EXT_ZALASR:
-	case KVM_RISCV_ISA_EXT_SSDTSO:
 	case KVM_RISCV_ISA_EXT_SSQOSID:
 	case KVM_RISCV_ISA_EXT_SSDBLTRP:
 		return false;

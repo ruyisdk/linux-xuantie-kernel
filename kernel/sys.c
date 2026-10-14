@@ -146,11 +146,13 @@
 #ifndef RISCV_V_GET_CONTROL
 # define RISCV_V_GET_CONTROL()		(-EINVAL)
 #endif
+#ifdef CONFIG_DYNAMIC_MEMORY_CONSISTENCY_MODEL
 #ifndef SET_MEMORY_CONSISTENCY_MODEL
 # define SET_MEMORY_CONSISTENCY_MODEL(a)	(-EINVAL)
 #endif
 #ifndef GET_MEMORY_CONSISTENCY_MODEL
 # define GET_MEMORY_CONSISTENCY_MODEL()		(-EINVAL)
+#endif
 #endif
 
 /*
@@ -2813,12 +2815,14 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 			return -EINVAL;
 		error = arch_lock_indir_br_lp_status(me, arg2);
 		break;
+#ifdef CONFIG_DYNAMIC_MEMORY_CONSISTENCY_MODEL
 	case PR_SET_MEMORY_CONSISTENCY_MODEL:
 		error = SET_MEMORY_CONSISTENCY_MODEL(arg2);
 		break;
 	case PR_GET_MEMORY_CONSISTENCY_MODEL:
 		error = GET_MEMORY_CONSISTENCY_MODEL();
 		break;
+#endif
 	default:
 		error = -EINVAL;
 		break;

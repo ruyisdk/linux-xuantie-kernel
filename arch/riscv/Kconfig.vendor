@@ -40,6 +40,20 @@ config RISCV_ISA_XTHEADVECTOR
 	  contains xtheadvector rather than the standard vector.
 
 	  If you don't know what to do here, say Y.
+
+config RISCV_ISA_XUANTIE_SSDTSO
+	bool "xuantie ssdtso extension support for dynamic TSO memory ordering"
+	depends on RISCV_ISA_VENDOR_EXT_THEAD
+	select DYNAMIC_MEMORY_CONSISTENCY_MODEL
+	help
+	  Adds support to dynamically detect the presence of the XuanTie
+	  Ssdtso vendor extension and allows user-space processes to
+	  activate/deactivate the TSO memory ordering model at run-time.
+
+	  The Ssdtso specification is not ratified yet, so it is handled as
+	  a vendor extension instead of a standard ISA extension.
+
+	  If you don't know what to do here, say Y.
 endmenu
 
 endmenu

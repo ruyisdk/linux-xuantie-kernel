@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	long out;
 
 	ksft_print_header();
-	ksft_set_plan(79);
+	ksft_set_plan(78);
 
 	/* Initialize CPU set */
 	cpus = 1; /* Check first CPU */
@@ -270,9 +270,6 @@ int main(int argc, char **argv)
 		ksft_test_result(pairs[4].value & RISCV_HWPROBE_EXT_ZIHPM,
 			"Extension Zihpm (Hardware Performance Counters) %s\n",
 			(pairs[4].value & RISCV_HWPROBE_EXT_ZIHPM) ? "present" : "absent");
-		ksft_test_result(pairs[4].value & RISCV_HWPROBE_EXT_SSDTSO,
-			"Extension Ssdtso (Dynamic Total Store Ordering) %s\n",
-			(pairs[4].value & RISCV_HWPROBE_EXT_SSDTSO) ? "present" : "absent");
 		ksft_test_result(pairs[4].value & RISCV_HWPROBE_EXT_ZICFILP,
 			"Extension Zicfilp (Landing Pads) %s\n",
 			(pairs[4].value & RISCV_HWPROBE_EXT_ZICFILP) ? "present" : "absent");

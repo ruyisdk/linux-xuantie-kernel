@@ -289,10 +289,8 @@ static void hwprobe_isa_ext2(struct riscv_hwprobe *pair,
 		EXT_KEY(SSCCFG);
 		EXT_KEY(SSCTR);
 		EXT_KEY(SMCTR);
-		EXT_KEY(SSDTSO);
 		EXT_KEY(SSCSRIND);
 		EXT_KEY(SMCSRIND);
-		EXT_KEY(SSQOSID);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
