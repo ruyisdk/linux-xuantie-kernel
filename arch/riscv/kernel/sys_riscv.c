@@ -257,6 +257,7 @@ static void hwprobe_isa_ext1(struct riscv_hwprobe *pair,
 		 * in the hart_isa bitmap, are made.
 		 */
 		EXT_KEY(ZICFISS);
+		EXT_KEY(ZICCLSM);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
