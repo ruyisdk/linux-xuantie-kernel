@@ -258,6 +258,10 @@ static void hwprobe_isa_ext1(struct riscv_hwprobe *pair,
 		 */
 		EXT_KEY(ZICFISS);
 		EXT_KEY(ZICCLSM);
+		EXT_KEY(ZICCAMOA);
+		EXT_KEY(ZICCIF);
+		EXT_KEY(ZICCRSE);
+		EXT_KEY(ZA64RS);
 	}
 
 	/* Now turn off reporting features if any CPU is missing it. */
