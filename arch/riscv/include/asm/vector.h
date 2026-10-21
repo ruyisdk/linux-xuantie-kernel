@@ -20,10 +20,14 @@
 #include <asm/asm.h>
 #include <asm/insn-def.h>
 #include <asm/errata_list.h>
+#include <asm/vendor_extensions.h>
+#include <asm/vendor_extensions/thead.h>
+#include <asm/vendorid_list.h>
 
 static __always_inline bool has_matrix(void)
 {
-	return riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADMATRIX);
+	return riscv_has_vendor_extension_unlikely(THEAD_VENDOR_ID,
+						   RISCV_ISA_VENDOR_EXT_XTHEADMATRIX);
 }
 
 static inline void __riscv_m_mstate_clean(struct pt_regs *regs)
@@ -124,15 +128,15 @@ static inline u32 riscv_v_flags(void)
 	return current->thread.riscv_v_flags;
 }
 
-static __always_inline bool has_vector(void)
-{
-	return riscv_has_extension_unlikely(RISCV_ISA_EXT_v) ||
-	  riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADVECTOR);
-}
-
 static __always_inline bool has_xtheadvector(void)
 {
-        return riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADVECTOR);
+	return IS_ENABLED(CONFIG_RISCV_ISA_XTHEADVECTOR) &&
+		riscv_isa_vendor_extension_available(THEAD_VENDOR_ID, XTHEADVECTOR);
+}
+
+static __always_inline bool has_vector(void)
+{
+	return riscv_has_extension_unlikely(RISCV_ISA_EXT_v) || has_xtheadvector();
 }
 
 static inline void __riscv_v_vstate_clean(struct pt_regs *regs)

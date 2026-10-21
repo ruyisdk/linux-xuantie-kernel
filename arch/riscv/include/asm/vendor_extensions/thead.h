@@ -21,6 +21,9 @@
 #define RISCV_ISA_VENDOR_EXT_XUANTIE_CBOP		9
 #define RISCV_ISA_VENDOR_EXT_XUANTIE_AIOE		10
 #define RISCV_ISA_VENDOR_EXT_XUANTIE_CRC		11
+#define RISCV_ISA_VENDOR_EXT_XTHEADMATRIX		12
+#define RISCV_ISA_VENDOR_EXT_XTHEADFXCR		13
+#define RISCV_ISA_VENDOR_EXT_XTHEADUTNMODE		14
 
 extern struct riscv_isa_vendor_ext_data_list riscv_isa_vendor_ext_list_thead;
 

@@ -105,11 +105,6 @@ static const unsigned long kvm_isa_ext_arr[] = {
 	KVM_ISA_EXT_ARR(ZALASR),
 	KVM_ISA_EXT_ARR(SSQOSID),
 	KVM_ISA_EXT_ARR(SSDBLTRP),
-	KVM_ISA_EXT_ARR(XTHEADFXCR),
-	KVM_ISA_EXT_ARR(XTHEADUTNMODE),
-	KVM_ISA_EXT_ARR(XTHEAD_CAE),
-	KVM_ISA_EXT_ARR(XTHEADSER),
-	KVM_ISA_EXT_ARR(XTHEADMATRIX),
 };
 
 static unsigned long kvm_riscv_vcpu_base2isa_ext(unsigned long base_ext)

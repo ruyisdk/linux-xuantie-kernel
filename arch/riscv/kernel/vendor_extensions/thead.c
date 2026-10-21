@@ -24,6 +24,9 @@ static const struct riscv_isa_ext_data riscv_isa_vendor_ext_thead[] = {
 	__RISCV_ISA_EXT_DATA(xtheadcbop, RISCV_ISA_VENDOR_EXT_XUANTIE_CBOP),
 	__RISCV_ISA_EXT_DATA(xtheadaioe, RISCV_ISA_VENDOR_EXT_XUANTIE_AIOE),
 	__RISCV_ISA_EXT_DATA(xtheadcrc, RISCV_ISA_VENDOR_EXT_XUANTIE_CRC),
+	__RISCV_ISA_EXT_DATA(xtheadmatrix, RISCV_ISA_VENDOR_EXT_XTHEADMATRIX),
+	__RISCV_ISA_EXT_DATA(xtheadfxcr, RISCV_ISA_VENDOR_EXT_XTHEADFXCR),
+	__RISCV_ISA_EXT_DATA(xtheadutnmode, RISCV_ISA_VENDOR_EXT_XTHEADUTNMODE),
 };
 
 struct riscv_isa_vendor_ext_data_list riscv_isa_vendor_ext_list_thead = {
