@@ -5,26 +5,32 @@
 #ifdef CONFIG_XUANTIE_CSR_EXT
 
 #include <asm/csr.h>
-#include <asm/hwcap.h>
+#include <asm/vendor_extensions.h>
+#include <asm/vendor_extensions/thead.h>
+#include <asm/vendorid_list.h>
 #include <linux/sched.h>
 
 static __always_inline bool has_xuantie_csr_ext(void)
 {
-	return riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADFXCR) |
-		riscv_has_extension_unlikely(RISCV_ISA_EXT_XTHEADUTNMODE);
+	return riscv_has_vendor_extension_unlikely(THEAD_VENDOR_ID,
+						   RISCV_ISA_VENDOR_EXT_XTHEADFXCR) |
+		riscv_has_vendor_extension_unlikely(THEAD_VENDOR_ID,
+						    RISCV_ISA_VENDOR_EXT_XTHEADUTNMODE);
 }
 
 static inline void __switch_to_xuantie_csr_ext(struct task_struct *prev,
-				      struct task_struct *next)
+					      struct task_struct *next)
 {
-	if (riscv_has_extension_likely(RISCV_ISA_EXT_XTHEADFXCR)) {
+	if (riscv_has_vendor_extension_likely(THEAD_VENDOR_ID,
+					      RISCV_ISA_VENDOR_EXT_XTHEADFXCR)) {
 		csr_set(CSR_STATUS, SR_FS);
 		prev->thread.fxcr = csr_read(CSR_FXCR);
 		csr_write(CSR_FXCR, next->thread.fxcr);
 		csr_clear(CSR_STATUS, SR_FS);
 	}
 
-	if (riscv_has_extension_likely(RISCV_ISA_EXT_XTHEADUTNMODE)) {
+	if (riscv_has_vendor_extension_likely(THEAD_VENDOR_ID,
+					      RISCV_ISA_VENDOR_EXT_XTHEADUTNMODE)) {
 		prev->thread.utnmode = csr_read(CSR_UTNMODE);
 		csr_write(CSR_UTNMODE, next->thread.utnmode);
 	}

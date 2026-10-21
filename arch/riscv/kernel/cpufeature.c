@@ -514,11 +514,6 @@ const struct riscv_isa_ext_data riscv_isa_ext[] = {
 	__RISCV_ISA_EXT_DATA(smctr, RISCV_ISA_EXT_SMCTR),
 	__RISCV_ISA_EXT_DATA(sscsrind, RISCV_ISA_EXT_SSCSRIND),
 	__RISCV_ISA_EXT_DATA(smcsrind, RISCV_ISA_EXT_SMCSRIND),
-
-	__RISCV_ISA_EXT_DATA(xtheadmatrix, RISCV_ISA_EXT_XTHEADMATRIX),
-	__RISCV_ISA_EXT_DATA(xtheadvector, RISCV_ISA_EXT_XTHEADVECTOR),
-	__RISCV_ISA_EXT_DATA(xtheadfxcr, RISCV_ISA_EXT_XTHEADFXCR),
-	__RISCV_ISA_EXT_DATA(xtheadutnmode, RISCV_ISA_EXT_XTHEADUTNMODE),
 };
 
 const size_t riscv_isa_ext_count = ARRAY_SIZE(riscv_isa_ext);
@@ -1011,7 +1006,7 @@ void __init riscv_fill_hwcap(void)
 		elf_hwcap &= ~COMPAT_HWCAP_ISA_F;
 	}
 
-	if ((elf_hwcap & COMPAT_HWCAP_ISA_V) || test_bit(RISCV_ISA_EXT_XTHEADVECTOR, hart_isa[0].isa)) {
+	if ((elf_hwcap & COMPAT_HWCAP_ISA_V) || has_xtheadvector()) {
 		riscv_v_setup_vsize();
 		/*
 		 * ISA string in device tree might have 'v' flag, but

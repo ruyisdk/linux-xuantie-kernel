@@ -46,4 +46,60 @@ bool __riscv_isa_vendor_extension_available(int cpu, unsigned long vendor, unsig
 	__riscv_isa_vendor_extension_available(VENDOR_EXT_ALL_CPUS, vendor, \
 					       RISCV_ISA_VENDOR_EXT_##ext)
 
+static __always_inline bool
+riscv_has_vendor_extension_likely(const unsigned long vendor, const unsigned long ext)
+{
+	compiletime_assert(ext < RISCV_ISA_VENDOR_EXT_MAX,
+			   "ext must be < RISCV_ISA_VENDOR_EXT_MAX");
+
+	if (!IS_ENABLED(CONFIG_RISCV_ISA_VENDOR_EXT))
+		return false;
+
+	if (IS_ENABLED(CONFIG_RISCV_ALTERNATIVE)) {
+		asm goto(
+		ALTERNATIVE("j	%l[l_no]", "nop", %[vendor], %[patch_id], 1)
+		:
+		: [vendor] "i" (vendor),
+		  [patch_id] "i" (ext + RISCV_VENDOR_EXT_ALTERNATIVES_BASE)
+		:
+		: l_no);
+	} else {
+		if (!__riscv_isa_vendor_extension_available(VENDOR_EXT_ALL_CPUS,
+							    vendor, ext))
+			goto l_no;
+	}
+
+	return true;
+l_no:
+	return false;
+}
+
+static __always_inline bool
+riscv_has_vendor_extension_unlikely(const unsigned long vendor, const unsigned long ext)
+{
+	compiletime_assert(ext < RISCV_ISA_VENDOR_EXT_MAX,
+			   "ext must be < RISCV_ISA_VENDOR_EXT_MAX");
+
+	if (!IS_ENABLED(CONFIG_RISCV_ISA_VENDOR_EXT))
+		return false;
+
+	if (IS_ENABLED(CONFIG_RISCV_ALTERNATIVE)) {
+		asm goto(
+		ALTERNATIVE("nop", "j	%l[l_yes]", %[vendor], %[patch_id], 1)
+		:
+		: [vendor] "i" (vendor),
+		  [patch_id] "i" (ext + RISCV_VENDOR_EXT_ALTERNATIVES_BASE)
+		:
+		: l_yes);
+	} else {
+		if (__riscv_isa_vendor_extension_available(VENDOR_EXT_ALL_CPUS,
+							   vendor, ext))
+			goto l_yes;
+	}
+
+	return false;
+l_yes:
+	return true;
+}
+
 #endif /* _ASM_VENDOR_EXTENSIONS_H */

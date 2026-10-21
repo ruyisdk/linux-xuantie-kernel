@@ -26,5 +26,8 @@ void hwprobe_isa_vendor_ext_thead_0(struct riscv_hwprobe *pair, const struct cpu
 		VENDOR_EXT_KEY(XUANTIE_CBOP);
 		VENDOR_EXT_KEY(XUANTIE_AIOE);
 		VENDOR_EXT_KEY(XUANTIE_CRC);
+		VENDOR_EXT_KEY(XTHEADMATRIX);
+		VENDOR_EXT_KEY(XTHEADFXCR);
+		VENDOR_EXT_KEY(XTHEADUTNMODE);
 	});
 }
