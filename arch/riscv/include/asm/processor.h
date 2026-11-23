@@ -104,9 +104,6 @@ struct thread_struct {
 	u32 fxcr;
 	u32 utnmode;
 #endif
-#ifdef CONFIG_DYNAMIC_MEMORY_CONSISTENCY_MODEL
-	unsigned long memory_consistency_model;
-#endif
 #ifdef CONFIG_RISCV_ISA_SSQOSID
 	u32 srmcfg;
 #endif

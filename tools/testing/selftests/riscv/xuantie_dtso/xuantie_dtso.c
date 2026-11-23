@@ -14,11 +14,11 @@
 #include "../../kselftest_harness.h"
 
 #ifndef PR_SET_MEMORY_CONSISTENCY_MODEL
-#define PR_SET_MEMORY_CONSISTENCY_MODEL         77
+#define PR_SET_MEMORY_CONSISTENCY_MODEL         0x4d434d53 /* "MCMS" */
 #endif
 
 #ifndef PR_GET_MEMORY_CONSISTENCY_MODEL
-#define PR_GET_MEMORY_CONSISTENCY_MODEL         78
+#define PR_GET_MEMORY_CONSISTENCY_MODEL         0x4d434d47 /* "MCMG" */
 #endif
 
 #ifndef PR_MEMORY_CONSISTENCY_MODEL_RISCV_WMO

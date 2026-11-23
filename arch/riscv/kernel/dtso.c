@@ -12,6 +12,14 @@
 
 #include <trace/events/ipi.h>
 
+static void dtso_apply_model_on_cpu(void *info)
+{
+	struct task_struct *task = info;
+
+	if (current->mm == task->mm)
+		dtso_sched_in(current);
+}
+
 int dtso_set_memory_consistency_model(unsigned long arg)
 {
 	unsigned long cur_model = get_memory_consistency_model(current);
@@ -40,10 +48,11 @@ int dtso_set_memory_consistency_model(unsigned long arg)
 	if (new_model == RISCV_MEMORY_CONSISTENCY_MODEL_WMO)
 		return -EINVAL;
 
-	/* Set the new model(TSO) in the task struct. */
-	set_memory_consitency_model(current, new_model);
-	current->thread_info.envcfg |= ENVCFG_DTSO;
-	dtso_enable();
+	/* Stored in the mm, so threads created during the switch see it too. */
+	set_memory_consistency_model(current, new_model);
+
+	/* Apply the new model on every CPU right away. */
+	on_each_cpu(dtso_apply_model_on_cpu, current, 1);
 
 	return 0;
 }

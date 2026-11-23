@@ -11,6 +11,7 @@
 
 #ifdef CONFIG_RISCV_ISA_XUANTIE_SSDTSO
 
+#include <linux/mm_types.h>
 #include <linux/sched/task_stack.h>
 #include <asm/cpufeature.h>
 #include <asm/csr.h>
@@ -51,13 +52,19 @@ static inline void dtso_enable(void)
 static inline unsigned long get_memory_consistency_model(
 		struct task_struct *task)
 {
-	return task->thread.memory_consistency_model;
+	struct mm_struct *mm = task->mm;
+
+	/* Kernel threads have no mm and always use the default model. */
+	if (!mm)
+		return RISCV_MEMORY_CONSISTENCY_MODEL_WMO;
+
+	return READ_ONCE(mm->context.memory_consistency_model);
 }
 
-static inline void set_memory_consitency_model(struct task_struct *task,
+static inline void set_memory_consistency_model(struct task_struct *task,
 		unsigned long model)
 {
-	task->thread.memory_consistency_model = model;
+	WRITE_ONCE(task->mm->context.memory_consistency_model, model);
 }
 
 static inline void dtso_sched_in(struct task_struct *next)

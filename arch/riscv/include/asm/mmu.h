@@ -28,6 +28,9 @@ typedef struct {
 	unsigned long flags;
 	u8 pmlen;
 #endif
+#ifdef CONFIG_DYNAMIC_MEMORY_CONSISTENCY_MODEL
+	unsigned long memory_consistency_model;
+#endif
 } mm_context_t;
 
 /* Lock the pointer masking mode because this mm is multithreaded */
