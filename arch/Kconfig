@@ -1523,7 +1523,7 @@ config DYNAMIC_MEMORY_CONSISTENCY_MODEL
 	default n
 	help
 	  This option turns on the support to switch the memory consistency
-	  model at runtime on a per-process-base.
+	  model at runtime on a per-process basis.
 
 source "kernel/gcov/Kconfig"
 

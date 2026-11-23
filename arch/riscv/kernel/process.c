@@ -173,6 +173,10 @@ void flush_thread(void)
 		current->thread_info.pmlen = 0;
 	}
 #endif
+#ifdef CONFIG_RISCV_ISA_XUANTIE_SSDTSO
+	set_memory_consistency_model(current, RISCV_MEMORY_CONSISTENCY_MODEL_WMO);
+	dtso_sched_in(current);
+#endif
 }
 
 void arch_release_task_struct(struct task_struct *tsk)
